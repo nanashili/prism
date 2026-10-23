@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::project::archive::Archive;
 use crate::storage::Store;
 use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufReader, Seek};
 use std::path::Path;
@@ -25,6 +26,7 @@ struct Thread {
 }
 
 pub(super) fn import(root: &Path, store: &Store, report: &mut Report) -> Result<()> {
+    let mut projects = ProjectLookup::default();
     let directory = root.join("support/threads");
     let mut paths = Vec::new();
     if directory.is_dir() {
@@ -47,12 +49,17 @@ pub(super) fn import(root: &Path, store: &Store, report: &mut Report) -> Result<
         } else {
             continue;
         };
-        insert(root, store, thread, report)?;
+        insert(root, store, thread, report, &mut projects)?;
     }
-    import_documents(root, store, report)
+    import_documents(root, store, report, &mut projects)
 }
 
-fn import_documents(root: &Path, store: &Store, report: &mut Report) -> Result<()> {
+fn import_documents(
+    root: &Path,
+    store: &Store,
+    report: &mut Report,
+    projects: &mut ProjectLookup,
+) -> Result<()> {
     let folder = root.join("documents");
     if !folder.is_dir() {
         return Ok(());
@@ -72,20 +79,20 @@ fn import_documents(root: &Path, store: &Store, report: &mut Report) -> Result<(
         // Unknown tool payloads are skipped while parsing, rather than held in memory.
         let threads: Vec<Thread> = serde_json::from_reader(BufReader::new(temporary))?;
         for thread in threads {
-            insert(root, store, thread, report)?;
+            insert(root, store, thread, report, projects)?;
         }
     }
     Ok(())
 }
 
-fn insert(root: &Path, store: &Store, thread: Thread, report: &mut Report) -> Result<()> {
-    let project = match thread.project {
-        Some(project) => Some(project),
-        None => super::projects::index(root)?
-            .into_iter()
-            .find(|project| thread.target.as_deref() == project.original.to_str())
-            .map(|project| project.id),
-    };
+fn insert(
+    root: &Path,
+    store: &Store,
+    thread: Thread,
+    report: &mut Report,
+    projects: &mut ProjectLookup,
+) -> Result<()> {
+    let project = projects.resolve(root, thread.project, thread.target.as_deref())?;
     let messages: Vec<_> = thread
         .messages
         .into_iter()
@@ -105,3 +112,37 @@ fn insert(root: &Path, store: &Store, thread: Thread, report: &mut Report) -> Re
     }
     Ok(())
 }
+
+#[derive(Default)]
+struct ProjectLookup {
+    by_target: Option<BTreeMap<String, String>>,
+}
+
+impl ProjectLookup {
+    fn resolve(
+        &mut self,
+        root: &Path,
+        project: Option<String>,
+        target: Option<&str>,
+    ) -> Result<Option<String>> {
+        if project.is_some() {
+            return Ok(project);
+        }
+        // Import snapshots are immutable. Load lazily so chats with an explicit
+        // project keep working without an index, and reuse it across both sources.
+        if self.by_target.is_none() {
+            let mut by_target = BTreeMap::new();
+            for project in super::projects::index(root)? {
+                if let Some(path) = project.original.to_str() {
+                    // Preserve the previous first-match behavior for duplicate paths.
+                    by_target.entry(path.to_owned()).or_insert(project.id);
+                }
+            }
+            self.by_target = Some(by_target);
+        }
+        Ok(target.and_then(|target| self.by_target.as_ref()?.get(target).cloned()))
+    }
+}
+
+#[cfg(test)]
+mod tests;

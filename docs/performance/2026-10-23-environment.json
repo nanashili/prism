@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-23T16:39:07.796442+00:00",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "logical_cpus": 5,
+  "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)\nbinary: rustc\ncommit-hash: 01f6ddf7588f42ae2d7eb0a2f21d44e8e96674cf\ncommit-date: 2026-02-11\nhost: x86_64-unknown-linux-gnu\nrelease: 1.93.1\nLLVM version: 21.1.8",
+  "baseline": "4c0040dacea5dc22fe61e0ff1cf3fd5a6a380e34",
+  "candidate_head": "4c0040dacea5dc22fe61e0ff1cf3fd5a6a380e34",
+  "candidate_status": "M src/analysis/graph.rs\n M src/bridge/server.rs\n M src/mcp/endpoint.rs\n M src/mcp/transport.rs\n M src/migration/chats.rs\n M src/migration/projects.rs\n M src/migration/snapshot.rs\n M src/reconstruction/modules.rs\n M src/storage/database.rs\n M src/storage/functions.rs\n M src/ui/message/markdown.rs\n M src/ui/syntax.rs\n?? scripts/benchmark-performance.py\n?? src/analysis/graph/\n?? src/mcp/transport/\n?? src/migration/chats/\n?? src/migration/projects/\n?? src/reconstruction/modules/\n?? src/storage/functions/\n?? src/ui/message/markdown/\n?? src/ui/syntax/",
+  "profile": "repository release defaults; benchmarks run serially",
+  "candidate_src_sha256": "7991a05eda33c74195402e2fd9eb3d909027d49195c49a6b3291d93ef7760bae"
+}

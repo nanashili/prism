@@ -1,0 +1,51 @@
+   Compiling prism v0.1.0 (/workspace/prism)
+    Finished `release` profile [optimized] target(s) in 28.55s
+     Running unittests src/lib.rs (target/release/deps/prism-ec0dae9d9cf2ff7f)
+
+running 1 test
+test mcp::transport::tests::benchmark_mcp_receive ... mcp_receive bytes=16384 samples=11 baseline_median_us=78.598 current_median_us=80.963 speedup=0.97 baseline_range_us=63.850..322.258 current_range_us=66.445..92.775
+mcp_receive bytes=1048576 samples=11 baseline_median_us=10054.285 current_median_us=729.328 speedup=13.79 baseline_range_us=9754.800..10294.709 current_range_us=580.316..1680.604
+mcp_receive bytes=8388608 samples=11 baseline_median_us=588411.231 current_median_us=2632.862 speedup=223.49 baseline_range_us=586646.157..595218.491 current_range_us=2150.831..5872.379
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 7.31s
+
+     Running unittests src/main.rs (target/release/deps/prism-4a5a75ddbf1b67af)
+
+running 6 tests
+test analysis::graph::tests::benchmark_graph_lines ... graph_lines case=sorted-small blocks=128 rows=1024 baseline_us=52.317 indexed_us=53.087 speedup=0.99x
+graph_lines case=scrambled-small blocks=128 rows=1024 baseline_us=133.015 indexed_us=69.553 speedup=1.91x
+graph_lines case=sorted-large blocks=4096 rows=32768 baseline_us=1722.331 indexed_us=1778.036 speedup=0.97x
+graph_lines case=scrambled-large blocks=4096 rows=32768 baseline_us=90818.168 indexed_us=2857.853 speedup=31.78x
+graph_lines case=wide-overlapping blocks=128 rows=32768 baseline_us=103.913 indexed_us=99.172 speedup=1.05x
+graph_lines case=duplicate-addresses blocks=128 rows=32768 baseline_us=101.834 indexed_us=94.776 speedup=1.07x
+graph_lines case=one-wide-block blocks=1 rows=32768 baseline_us=27.469 indexed_us=27.942 speedup=0.98x
+ok
+test migration::projects::tests::benchmark_project_index ... project_index projects=2000 bytes=344671 samples=7 baseline_median_us=64398.424 current_median_us=3642.644 speedup=17.68 baseline_range_us=63907.417..69123.111 current_range_us=3571.880..4296.438
+ok
+test reconstruction::modules::tests::benchmark_reconstruction_invalidation ... reconstruction_invalidation nodes=128 roots=1 samples=7 before_ms=5.460 after_ms=5.543 speedup=0.98x
+reconstruction_invalidation nodes=128 roots=32 samples=7 before_ms=136.545 after_ms=5.761 speedup=23.70x
+reconstruction_invalidation nodes=512 roots=32 samples=7 before_ms=2025.049 after_ms=68.157 speedup=29.71x
+ok
+test storage::functions::tests::benchmark_exact_function_lookup ... function_lookup fixture=baseline rows=200000 import_ms=353.343 database_bytes=17006592
+function_lookup fixture=candidate rows=200000 import_ms=582.285 database_bytes=26570752
+function_lookup case=address samples=21 baseline_ms=31.699134 candidate_ms=0.002939 speedup=10785.69x
+function_lookup case=name samples=21 baseline_ms=31.037917 candidate_ms=0.003181 speedup=9757.28x
+function_lookup case=missing samples=21 baseline_ms=30.655877 candidate_ms=0.002705 speedup=11333.04x
+function_lookup case=100k_duplicate_names samples=21 baseline_ms=0.005180 candidate_ms=0.003201 speedup=1.62x
+ok
+test ui::message::markdown::tests::benchmark_without_syntax_hints ... without_syntax_hints: blocks=8 source_bytes=1728 iterations=2000 samples=7 median_ns=4726 min_ns=4493 max_ns=5110
+without_syntax_hints: blocks=4096 source_bytes=895914 iterations=10 samples=7 median_ns=2223840 min_ns=2098686 max_ns=2267400
+ok
+test ui::syntax::tests::benchmark_syntax_highlighting ... syntax_highlighting: workload=viewport rows=64 source_bytes=3544 iterations=10000 samples=7 median_ns=41221 min_ns=40942 max_ns=41573 sections=384 section_capacity_bytes=53248
+syntax_highlighting: workload=long_expression rows=1 source_bytes=63488 iterations=100 samples=7 median_ns=629484 min_ns=628613 max_ns=643335 sections=1 section_capacity_bytes=416
+ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 27.97s
+
+     Running unittests src/bin/prism-mcp.rs (target/release/deps/prism_mcp-6c57f786ec64a296)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

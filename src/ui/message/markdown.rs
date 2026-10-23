@@ -4,6 +4,9 @@ use egui_commonmark_extended::{CommonMarkCache, CommonMarkViewer};
 use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
 use std::borrow::Cow;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn show(ui: &mut egui::Ui, text: &str, style: &ChatStyle) {
     let rendered = if style.appearance.block_colors {
         Cow::Borrowed(text)
@@ -56,7 +59,7 @@ pub(super) fn show_cached(
 }
 
 pub(super) fn without_syntax_hints(text: &str) -> Cow<'_, str> {
-    let hints: Vec<_> = Parser::new(text)
+    let mut hints = Parser::new(text)
         .into_offset_iter()
         .filter_map(|(event, range)| {
             let Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) = event else {
@@ -74,12 +77,19 @@ pub(super) fn without_syntax_hints(text: &str) -> Cow<'_, str> {
                 .take_while(|byte| **byte == fence)
                 .count();
             Some(range.start + fence_start + fence_len..range.start + opening.len())
-        })
-        .collect();
+        });
 
-    let mut rendered = Cow::Borrowed(text);
-    for hint in hints.into_iter().rev() {
-        rendered.to_mut().replace_range(hint, "");
+    let Some(first) = hints.next() else {
+        return Cow::Borrowed(text);
+    };
+    // Parser offsets are in source order. Copy each retained span once instead
+    // of shifting the remaining document for every removed language hint.
+    let mut rendered = String::with_capacity(text.len());
+    let mut end = 0;
+    for hint in std::iter::once(first).chain(hints) {
+        rendered.push_str(&text[end..hint.start]);
+        end = hint.end;
     }
-    rendered
+    rendered.push_str(&text[end..]);
+    Cow::Owned(rendered)
 }
