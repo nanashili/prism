@@ -75,14 +75,26 @@ fn import_documents(
         let mut archive = Archive::open(&path)?;
         let mut temporary = tempfile::tempfile()?;
         archive.extract("chats.json", &mut temporary, 1024 * 1024 * 1024)?;
-        temporary.rewind()?;
-        // Unknown tool payloads are skipped while parsing, rather than held in memory.
-        let threads: Vec<Thread> = serde_json::from_reader(BufReader::new(temporary))?;
-        for thread in threads {
-            insert(root, store, thread, report, projects)?;
-        }
+        import_archived_threads(&mut temporary, root, store, report, projects)?;
     }
     Ok(())
+}
+
+fn import_archived_threads(
+    temporary: &mut File,
+    root: &Path,
+    store: &Store,
+    report: &mut Report,
+    projects: &mut ProjectLookup,
+) -> Result<()> {
+    // Validate the entire private, verified snapshot before any writes, just as
+    // Vec<Thread> deserialization did. Each pass retains only one thread.
+    temporary.rewind()?;
+    crate::protocol::json_array::parse_reader(BufReader::new(&mut *temporary), |_: Thread| Ok(()))?;
+    temporary.rewind()?;
+    crate::protocol::json_array::parse_reader(BufReader::new(temporary), |thread| {
+        insert(root, store, thread, report, projects)
+    })
 }
 
 fn insert(

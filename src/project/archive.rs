@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{BufReader, Read, Seek, SeekFrom, Take, Write};
 use std::path::Path;
 
 pub(crate) const MAGIC: &[u8; 8] = b"PRISM\0\0\x01";
@@ -62,13 +62,14 @@ impl Archive {
         })
     }
 
-    pub fn extract(&mut self, name: &str, output: &mut impl Write, limit: u64) -> Result<()> {
+    fn source(&mut self, name: &str, limit: u64) -> Result<(Box<dyn Read + '_>, Entry)> {
         let entry = self
             .manifest
             .entries
             .iter()
             .find(|entry| entry.name == name)
-            .ok_or_else(|| failure(format!("The document has no {name} entry")))?;
+            .ok_or_else(|| failure(format!("The document has no {name} entry")))?
+            .clone();
         if entry.raw > limit {
             return Err(failure(format!(
                 "The {name} entry exceeds the configured read limit"
@@ -89,13 +90,30 @@ impl Archive {
                 ));
             }
         };
-        copy_verified(reader, output, entry)
+        Ok((reader, entry))
+    }
+
+    pub fn extract(&mut self, name: &str, output: &mut impl Write, limit: u64) -> Result<()> {
+        let (reader, entry) = self.source(name, limit)?;
+        let mut reader = VerifiedReader::new(reader, entry)?;
+        let mut buffer = [0u8; 64 * 1024];
+        loop {
+            let count = reader.read(&mut buffer)?;
+            if count == 0 {
+                return Ok(());
+            }
+            output.write_all(&buffer[..count])?;
+        }
     }
 
     pub fn json(&mut self, name: &str) -> Result<serde_json::Value> {
-        let mut bytes = Vec::new();
-        self.extract(name, &mut bytes, 32 * 1024 * 1024)?;
-        Ok(serde_json::from_slice(&bytes)?)
+        let (reader, entry) = self.source(name, 32 * 1024 * 1024)?;
+        let mut reader = BufReader::with_capacity(64 * 1024, VerifiedReader::new(reader, entry)?);
+        let value = serde_json::from_reader(&mut reader);
+        // Even malformed JSON must pass the original size/digest checks first.
+        // Drain the bounded entry so parse failures cannot hide corrupt trailing bytes.
+        std::io::copy(&mut reader, &mut std::io::sink())?;
+        Ok(value?)
     }
 }
 
@@ -117,32 +135,49 @@ fn validate(manifest: &Manifest, base: u64, size: u64) -> Result<()> {
     Ok(())
 }
 
-fn copy_verified(reader: impl Read, output: &mut impl Write, entry: &Entry) -> Result<()> {
-    let mut source = reader.take(entry.raw.checked_add(1).ok_or("Invalid decoded size")?);
-    let mut digest = Sha256::new();
-    let mut total = 0;
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let count = source.read(&mut buffer)?;
-        if count == 0 {
-            break;
+struct VerifiedReader<R> {
+    source: Take<R>,
+    entry: Entry,
+    digest: Sha256,
+    total: u64,
+}
+
+impl<R: Read> VerifiedReader<R> {
+    fn new(source: R, entry: Entry) -> Result<Self> {
+        let limit = entry.raw.checked_add(1).ok_or("Invalid decoded size")?;
+        Ok(Self {
+            source: source.take(limit),
+            entry,
+            digest: Sha256::new(),
+            total: 0,
+        })
+    }
+}
+
+impl<R: Read> Read for VerifiedReader<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        if buffer.is_empty() {
+            return Ok(0);
         }
-        total += count as u64;
-        if total > entry.raw {
-            return Err(failure(
+        let count = self.source.read(buffer)?;
+        self.total += count as u64;
+        if self.total > self.entry.raw {
+            return Err(std::io::Error::other(
                 "The document entry expanded beyond its recorded size",
             ));
         }
-        digest.update(&buffer[..count]);
-        output.write_all(&buffer[..count])?;
+        self.digest.update(&buffer[..count]);
+        if count == 0
+            && (self.total != self.entry.raw
+                || format!("{:x}", self.digest.clone().finalize()) != self.entry.sha256)
+        {
+            return Err(std::io::Error::other(format!(
+                "The document entry {} failed its integrity check",
+                self.entry.name
+            )));
+        }
+        Ok(count)
     }
-    if total != entry.raw || format!("{:x}", digest.finalize()) != entry.sha256 {
-        return Err(failure(format!(
-            "The document entry {} failed its integrity check",
-            entry.name
-        )));
-    }
-    Ok(())
 }
 
 pub(crate) fn decode(bytes: &[u8], limit: u64) -> Result<Vec<u8>> {
@@ -187,3 +222,6 @@ pub(crate) fn pack_part(
         sha256: format!("{:x}", digest.finalize()),
     })
 }
+
+#[cfg(test)]
+mod tests;

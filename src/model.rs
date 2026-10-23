@@ -132,7 +132,9 @@ pub(crate) struct Project {
     #[serde(default)]
     pub patches: BTreeMap<u64, Vec<u8>>,
     #[serde(default)]
-    pub imported: std::sync::Arc<BTreeMap<String, serde_json::Value>>,
+    // Editing one metadata entry must not copy every imported document into
+    // each undo snapshot. The map and its independently shared values use COW.
+    pub imported: std::sync::Arc<BTreeMap<String, std::sync::Arc<serde_json::Value>>>,
 }
 
 #[derive(Clone, Debug)]

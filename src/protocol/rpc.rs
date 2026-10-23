@@ -3,15 +3,15 @@ use crate::error::{Result, failure};
 use serde_json::{Value, json};
 use std::io::BufReader;
 use std::process::{Child, ChildStdin, Command};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, mpsc};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 pub(crate) struct Rpc {
     child: Child,
     input: ChildStdin,
-    incoming: Option<mpsc::Receiver<Result<Value>>>,
+    incoming: Option<super::incoming::Receiver>,
     readers: Vec<JoinHandle<()>>,
     framing: Framing,
     next: u64,
@@ -32,7 +32,7 @@ impl Rpc {
         let input = child.stdin.take().ok_or("Missing server input")?;
         let output = child.stdout.take().ok_or("Missing server output")?;
         let diagnostics = child.stderr.take().ok_or("Missing server diagnostics")?;
-        let (sender, incoming) = mpsc::sync_channel(16);
+        let (sender, incoming) = super::incoming::channel();
         let reader = std::thread::spawn(move || {
             let mut output = BufReader::new(output);
             loop {
@@ -158,13 +158,7 @@ impl Rpc {
 
     pub fn poll(&self, timeout: Duration) -> Result<Option<Value>> {
         let incoming = self.incoming.as_ref().ok_or("The server is closed")?;
-        match incoming.recv_timeout(timeout) {
-            Ok(message) => Ok(Some(message?)),
-            Err(mpsc::RecvTimeoutError::Timeout) => Ok(None),
-            Err(mpsc::RecvTimeoutError::Disconnected) => {
-                Err(failure("The server process closed its output"))
-            }
-        }
+        incoming.poll(timeout)
     }
 
     pub fn is_cancelled(&self) -> bool {
@@ -185,3 +179,6 @@ impl Drop for Rpc {
         }
     }
 }
+
+#[cfg(all(test, unix))]
+mod tests;

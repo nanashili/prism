@@ -14,7 +14,7 @@ pub(crate) enum Framing {
 }
 
 impl Framing {
-    pub fn read(self, input: &mut impl BufRead) -> Result<Option<Value>> {
+    pub(super) fn read(self, input: &mut impl BufRead) -> Result<Option<Frame>> {
         let limit = match self {
             Self::Zero => 32 * 1024 * 1024,
             #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
@@ -44,13 +44,10 @@ impl Framing {
                 line
             }
         };
-        if matches!(self, Self::Zero) {
-            let bytes = bytes.strip_suffix(&[0]).unwrap_or(&bytes);
-            return Ok(Some(serde_json::from_slice(bytes).unwrap_or_else(|_| {
-                Value::String(String::from_utf8_lossy(bytes).into_owned())
-            })));
-        }
-        Ok(Some(serde_json::from_slice(&bytes)?))
+        Ok(Some(Frame {
+            bytes,
+            framing: self,
+        }))
     }
 
     fn read_dap(self, input: &mut impl BufRead) -> Result<Option<Vec<u8>>> {
@@ -109,3 +106,32 @@ impl Framing {
         Ok(())
     }
 }
+
+pub(super) struct Frame {
+    bytes: Vec<u8>,
+    framing: Framing,
+}
+
+impl Frame {
+    pub(super) fn capacity(&self) -> usize {
+        self.bytes.capacity()
+    }
+
+    pub(super) fn decode(mut self) -> Result<Value> {
+        if matches!(self.framing, Framing::Zero) {
+            if self.bytes.last() == Some(&0) {
+                self.bytes.pop();
+            }
+            return Ok(serde_json::from_slice(&self.bytes).unwrap_or_else(|_| {
+                Value::String(match String::from_utf8(self.bytes) {
+                    Ok(text) => text,
+                    Err(error) => String::from_utf8_lossy(error.as_bytes()).into_owned(),
+                })
+            }));
+        }
+        Ok(serde_json::from_slice(&self.bytes)?)
+    }
+}
+
+#[cfg(test)]
+mod tests;

@@ -26,7 +26,8 @@ impl Prism {
                 self.workspace.lines.len(),
                 |ui, range| {
                     for index in range {
-                        let source = &self.workspace.text[self.workspace.lines[index].clone()];
+                        let source = &self.workspace.text
+                            [self.workspace.lines.range(index, self.workspace.text.len())];
                         let text = display_line(source, self.workspace.view, &self.settings);
                         line(
                             ui,

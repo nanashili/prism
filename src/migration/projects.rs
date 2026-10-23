@@ -81,8 +81,8 @@ fn convert(
             .collect();
     }
     let imported = std::sync::Arc::make_mut(&mut project.imported);
-    imported.insert("project.json".into(), state);
-    imported.insert("upstream-snapshot".into(), json!(root));
+    imported.insert("project.json".into(), std::sync::Arc::new(state));
+    imported.insert("upstream-snapshot".into(), std::sync::Arc::new(json!(root)));
     Ok(project)
 }
 

@@ -1,0 +1,961 @@
+{
+  "environment": {
+    "utc": "2026-10-23T17:23:17.742999+00:00",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "logical_cpus": 5,
+    "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)\nbinary: rustc\ncommit-hash: 01f6ddf7588f42ae2d7eb0a2f21d44e8e96674cf\ncommit-date: 2026-02-11\nhost: x86_64-unknown-linux-gnu\nrelease: 1.93.1\nLLVM version: 21.1.8",
+    "baseline": "cc2c4f6638c3c691de70ad5ab3a973859c247f3d",
+    "candidate_head": "cc2c4f6638c3c691de70ad5ab3a973859c247f3d",
+    "candidate_src_sha256": "85f79e989bb365ed3e310355a1337d896f8ff5d7f0a89851343f306af1f52878",
+    "binary_sha256": "1af6f6235fcdd6a720e0119a4c895a1ff8061bdd2cd2bc6a852a5631e79b0323",
+    "method": "fresh process per sample via small C launcher; Linux wait4 ru_maxrss; serial alternating order; release defaults",
+    "launcher_src_sha256": "8e171a599af1b48da188eea532b9cd4e0dc1c46f9ca5e527184cb0b644f823ce",
+    "cc": "cc (Debian 14.2.0-19) 14.2.0\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+  },
+  "fixtures": {
+    "android.json": {
+      "bytes": 12567034,
+      "sha256": "071e904ed6b0dfb8869bb0cca187b856d32483a4f794f1e69ce706070dc0dd24"
+    },
+    "archive.json": {
+      "bytes": 25167372,
+      "sha256": "ea1ff772cb1aceb450ce4807440bdbbbc6877af1aaf9e7a78fec56cdff882f3d"
+    },
+    "chats.json": {
+      "bytes": 67124261,
+      "sha256": "9cdc81f6ff302105ea5c5408b1ce27c81c7504dea0556fbe94330b8c77d8f570"
+    },
+    "frames.jsonl": {
+      "bytes": 33554496,
+      "sha256": "2a9eaec1be8d42802d27523bc1993fbc79305a6bae89603fda3bb7fc86498e59"
+    },
+    "nested-view.json": {
+      "bytes": 2000065,
+      "sha256": "66cbbffaafd1970c024b31d0565f3948cd435ec2d443120caae5cfea47fcf0f6"
+    },
+    "project.json": {
+      "bytes": 8864534,
+      "sha256": "aec8b070be1e4371a0a363f0861e7240b097965845857d578b5248830398985b"
+    },
+    "short.c": {
+      "bytes": 1048576,
+      "sha256": "06dd1a4a771f4e3dbb1f255c4195c285fd51dfd6aa3c4862c545a64a9230c472"
+    },
+    "typical.c": {
+      "bytes": 1048560,
+      "sha256": "e2d3b299395c13ccc4310c3d434f8a310cbc37b02acce723ac05278f16f9951e"
+    },
+    "undo.json": {
+      "bytes": 12582958,
+      "sha256": "7ba906ec01de68f517110ba2bf78610b32c7aefbd11353da2af573a9d065fc71"
+    },
+    "view.json": {
+      "bytes": 6360023,
+      "sha256": "7ae4b0ee987c34fff895bb1668ec82fa225e576162c7bd7bd1a2c99537604d93"
+    }
+  },
+  "cases": {
+    "project_undo": {
+      "test": "ui::agent_dock::inspector::notes::tests::memory_project_undo",
+      "fixture": "undo.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 261216,
+            "operation_ms": 88.636,
+            "process_ms": 1254.3381489999774,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=baseline edits=20 retained_document_versions=21 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=88.636\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.25s\n\n"
+          },
+          {
+            "peak_rss_kib": 261196,
+            "operation_ms": 81.948,
+            "process_ms": 1247.7840639999158,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=baseline edits=20 retained_document_versions=21 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=81.948\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.24s\n\n"
+          },
+          {
+            "peak_rss_kib": 261368,
+            "operation_ms": 77.96,
+            "process_ms": 1238.0991750001158,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=baseline edits=20 retained_document_versions=21 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=77.960\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.23s\n\n"
+          },
+          {
+            "peak_rss_kib": 261304,
+            "operation_ms": 75.849,
+            "process_ms": 1228.8884089998646,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=baseline edits=20 retained_document_versions=21 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=75.849\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.22s\n\n"
+          },
+          {
+            "peak_rss_kib": 261296,
+            "operation_ms": 90.781,
+            "process_ms": 1254.8189459998866,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=baseline edits=20 retained_document_versions=21 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=90.781\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.25s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 27508,
+            "operation_ms": 0.047,
+            "process_ms": 1157.3513399998774,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=candidate edits=20 retained_document_versions=1 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=0.047\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 27528,
+            "operation_ms": 0.043,
+            "process_ms": 1146.9029120003142,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=candidate edits=20 retained_document_versions=1 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=0.043\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 27492,
+            "operation_ms": 0.046,
+            "process_ms": 1177.6130960001865,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=candidate edits=20 retained_document_versions=1 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=0.046\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.17s\n\n"
+          },
+          {
+            "peak_rss_kib": 27512,
+            "operation_ms": 0.055,
+            "process_ms": 1180.7794680003099,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=candidate edits=20 retained_document_versions=1 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=0.055\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.18s\n\n"
+          },
+          {
+            "peak_rss_kib": 27532,
+            "operation_ms": 0.048,
+            "process_ms": 1147.8181630000108,
+            "output": "\nrunning 1 test\ntest ui::agent_dock::inspector::notes::tests::memory_project_undo ... memory_project_undo impl=candidate edits=20 retained_document_versions=1 checksum=780746d0208950ae6ba6a365db484a6b82056afb38b0c7a698137707060fb5f5 elapsed_ms=0.048\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.14s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 261296,
+          "operation_ms": 81.948,
+          "process_ms": 1247.7840639999158
+        },
+        "candidate": {
+          "peak_rss_kib": 27512,
+          "operation_ms": 0.047,
+          "process_ms": 1157.3513399998774
+        }
+      }
+    },
+    "project_save": {
+      "test": "project::document_save::tests::memory_project_save",
+      "fixture": "project.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 218744,
+            "operation_ms": 210.913,
+            "process_ms": 433.7586990000091,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=baseline raw_bytes=12978580 archive_bytes=342445 elapsed_ms=210.913\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.43s\n\n"
+          },
+          {
+            "peak_rss_kib": 218784,
+            "operation_ms": 211.634,
+            "process_ms": 429.33018699977765,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=baseline raw_bytes=12978580 archive_bytes=342440 elapsed_ms=211.634\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.43s\n\n"
+          },
+          {
+            "peak_rss_kib": 218488,
+            "operation_ms": 202.516,
+            "process_ms": 431.40602300036335,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=baseline raw_bytes=12978580 archive_bytes=342444 elapsed_ms=202.516\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.43s\n\n"
+          },
+          {
+            "peak_rss_kib": 218596,
+            "operation_ms": 239.776,
+            "process_ms": 476.93820299991785,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=baseline raw_bytes=12978580 archive_bytes=342445 elapsed_ms=239.776\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.47s\n\n"
+          },
+          {
+            "peak_rss_kib": 218608,
+            "operation_ms": 198.583,
+            "process_ms": 415.87565399959203,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=baseline raw_bytes=12978580 archive_bytes=342443 elapsed_ms=198.583\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.41s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 112356,
+            "operation_ms": 76.722,
+            "process_ms": 290.4686449996916,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=candidate raw_bytes=12978580 archive_bytes=344142 elapsed_ms=76.722\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 112280,
+            "operation_ms": 77.157,
+            "process_ms": 295.6872910003767,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=candidate raw_bytes=12978580 archive_bytes=344143 elapsed_ms=77.157\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 112280,
+            "operation_ms": 77.944,
+            "process_ms": 309.41188099996,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=candidate raw_bytes=12978580 archive_bytes=344144 elapsed_ms=77.944\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.31s\n\n"
+          },
+          {
+            "peak_rss_kib": 112060,
+            "operation_ms": 78.932,
+            "process_ms": 297.564814999987,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=candidate raw_bytes=12978580 archive_bytes=344141 elapsed_ms=78.932\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 112040,
+            "operation_ms": 77.043,
+            "process_ms": 301.9025660000807,
+            "output": "\nrunning 1 test\ntest project::document_save::tests::memory_project_save ... project_save mode=candidate raw_bytes=12978580 archive_bytes=344141 elapsed_ms=77.043\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 218608,
+          "operation_ms": 210.913,
+          "process_ms": 431.40602300036335
+        },
+        "candidate": {
+          "peak_rss_kib": 112280,
+          "operation_ms": 77.157,
+          "process_ms": 297.564814999987
+        }
+      }
+    },
+    "archive_json": {
+      "test": "project::archive::tests::memory_archive_json",
+      "fixture": "archive.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 53076,
+            "operation_ms": 101.571,
+            "process_ms": 291.3272290002169,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=baseline raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=101.571\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 53088,
+            "operation_ms": 103.044,
+            "process_ms": 297.55417000023954,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=baseline raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=103.044\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 53220,
+            "operation_ms": 103.586,
+            "process_ms": 300.3397570000743,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=baseline raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=103.586\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          },
+          {
+            "peak_rss_kib": 53052,
+            "operation_ms": 101.744,
+            "process_ms": 291.30680800017217,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=baseline raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=101.744\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 53220,
+            "operation_ms": 99.088,
+            "process_ms": 287.0242720000533,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=baseline raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=99.088\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.28s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 31056,
+            "operation_ms": 338.205,
+            "process_ms": 531.2458039998091,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=candidate raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=338.205\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.53s\n\n"
+          },
+          {
+            "peak_rss_kib": 30800,
+            "operation_ms": 342.391,
+            "process_ms": 534.813609000139,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=candidate raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=342.391\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.53s\n\n"
+          },
+          {
+            "peak_rss_kib": 30932,
+            "operation_ms": 338.988,
+            "process_ms": 537.5542010001482,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=candidate raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=338.988\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.53s\n\n"
+          },
+          {
+            "peak_rss_kib": 31076,
+            "operation_ms": 333.176,
+            "process_ms": 523.4372529998836,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=candidate raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=333.176\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.52s\n\n"
+          },
+          {
+            "peak_rss_kib": 31096,
+            "operation_ms": 334.186,
+            "process_ms": 523.6777840000286,
+            "output": "\nrunning 1 test\ntest project::archive::tests::memory_archive_json ... archive_json mode=candidate raw_bytes=25167372 semantic_sha256=17238019c342eade2714a787b4c41e43e15f6771d7f1dad2cc79bb1a049ff52b elapsed_ms=334.186\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.52s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 53088,
+          "operation_ms": 101.744,
+          "process_ms": 291.3272290002169
+        },
+        "candidate": {
+          "peak_rss_kib": 31056,
+          "operation_ms": 338.205,
+          "process_ms": 531.2458039998091
+        }
+      }
+    },
+    "archive_chats": {
+      "test": "migration::chats::tests::memory_archive_chat_import",
+      "fixture": "chats.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 72660,
+            "operation_ms": 580.474,
+            "process_ms": 835.0239579999652,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=baseline raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=580.474\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.83s\n\n"
+          },
+          {
+            "peak_rss_kib": 72524,
+            "operation_ms": 589.034,
+            "process_ms": 842.5295779998123,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=baseline raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=589.034\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.84s\n\n"
+          },
+          {
+            "peak_rss_kib": 72484,
+            "operation_ms": 580.298,
+            "process_ms": 834.0461639995738,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=baseline raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=580.298\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.83s\n\n"
+          },
+          {
+            "peak_rss_kib": 72552,
+            "operation_ms": 583.843,
+            "process_ms": 837.8088629997364,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=baseline raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=583.843\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.83s\n\n"
+          },
+          {
+            "peak_rss_kib": 72372,
+            "operation_ms": 589.807,
+            "process_ms": 845.4940320002606,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=baseline raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=589.807\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.84s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 8852,
+            "operation_ms": 859.58,
+            "process_ms": 1116.0068190001766,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=candidate raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=859.580\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.11s\n\n"
+          },
+          {
+            "peak_rss_kib": 8860,
+            "operation_ms": 855.58,
+            "process_ms": 1111.8839290002143,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=candidate raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=855.580\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.11s\n\n"
+          },
+          {
+            "peak_rss_kib": 8876,
+            "operation_ms": 858.2,
+            "process_ms": 1114.7797610001362,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=candidate raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=858.200\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.11s\n\n"
+          },
+          {
+            "peak_rss_kib": 8712,
+            "operation_ms": 857.091,
+            "process_ms": 1112.5987529999293,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=candidate raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=857.091\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.11s\n\n"
+          },
+          {
+            "peak_rss_kib": 8940,
+            "operation_ms": 862.35,
+            "process_ms": 1121.0231430000022,
+            "output": "\nrunning 1 test\ntest migration::chats::tests::memory_archive_chat_import ... archive_chat_import mode=candidate raw_bytes=67124261 chats=128 messages=128 digest=ede2177374cee19e6f43e05e099f92a741989f335e04999fb24e3a88494477a8 elapsed_ms=862.350\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.12s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 72524,
+          "operation_ms": 583.843,
+          "process_ms": 837.8088629997364
+        },
+        "candidate": {
+          "peak_rss_kib": 8860,
+          "operation_ms": 858.2,
+          "process_ms": 1114.7797610001362
+        }
+      }
+    },
+    "android_inventory": {
+      "test": "analysis::android::tests::memory_android_inventory",
+      "fixture": "android.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 93084,
+            "operation_ms": 98.531,
+            "process_ms": 160.36105300008785,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=baseline elapsed_ms=98.531 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.16s\n\n"
+          },
+          {
+            "peak_rss_kib": 93056,
+            "operation_ms": 100.496,
+            "process_ms": 157.3124930000631,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=baseline elapsed_ms=100.496 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 93060,
+            "operation_ms": 97.342,
+            "process_ms": 157.98323400031222,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=baseline elapsed_ms=97.342 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 93052,
+            "operation_ms": 97.364,
+            "process_ms": 153.40248500024245,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=baseline elapsed_ms=97.364 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 93080,
+            "operation_ms": 104.465,
+            "process_ms": 164.491624999755,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=baseline elapsed_ms=104.465 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.16s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 5936,
+            "operation_ms": 134.047,
+            "process_ms": 150.42025799994008,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=candidate elapsed_ms=134.047 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 6148,
+            "operation_ms": 136.425,
+            "process_ms": 152.36745299989707,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=candidate elapsed_ms=136.425 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 5792,
+            "operation_ms": 134.55,
+            "process_ms": 151.06109199996354,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=candidate elapsed_ms=134.550 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 5808,
+            "operation_ms": 134.987,
+            "process_ms": 150.79641500005891,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=candidate elapsed_ms=134.987 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          },
+          {
+            "peak_rss_kib": 5920,
+            "operation_ms": 137.764,
+            "process_ms": 153.87383899997076,
+            "output": "\nrunning 1 test\ntest analysis::android::tests::memory_android_inventory ... memory_android_inventory implementation=candidate elapsed_ms=137.764 functions=1000 checksum=3a22095413d2abbeb69f83ac792e04d94ea0707c6f445adf7ee602d0740e3667\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.15s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 93060,
+          "operation_ms": 98.531,
+          "process_ms": 157.98323400031222
+        },
+        "candidate": {
+          "peak_rss_kib": 5920,
+          "operation_ms": 134.987,
+          "process_ms": 151.06109199996354
+        }
+      }
+    },
+    "android_source": {
+      "test": "analysis::android::source::tests::memory_android_source",
+      "fixture": "android.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 91508,
+            "operation_ms": 119.332,
+            "process_ms": 143.00896100030513,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=baseline elapsed_ms=119.332 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 91512,
+            "operation_ms": 114.407,
+            "process_ms": 139.7499960003188,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=baseline elapsed_ms=114.407 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 91512,
+            "operation_ms": 117.266,
+            "process_ms": 139.9414490001618,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=baseline elapsed_ms=117.266 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 91516,
+            "operation_ms": 118.111,
+            "process_ms": 144.27024299993718,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=baseline elapsed_ms=118.111 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 91512,
+            "operation_ms": 117.623,
+            "process_ms": 141.34306999994806,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=baseline elapsed_ms=117.623 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 3324,
+            "operation_ms": 141.677,
+            "process_ms": 145.4371469999387,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=candidate elapsed_ms=141.677 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 3444,
+            "operation_ms": 143.098,
+            "process_ms": 146.54296200023964,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=candidate elapsed_ms=143.098 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 3616,
+            "operation_ms": 141.814,
+            "process_ms": 145.37595799993142,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=candidate elapsed_ms=141.814 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 3320,
+            "operation_ms": 143.824,
+            "process_ms": 148.27192300026582,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=candidate elapsed_ms=143.824 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          },
+          {
+            "peak_rss_kib": 3440,
+            "operation_ms": 144.643,
+            "process_ms": 148.0054429998745,
+            "output": "\nrunning 1 test\ntest analysis::android::source::tests::memory_android_source ... memory_android_source implementation=candidate elapsed_ms=144.643 bytes=8188 checksum=3acb7af28086020970464c1a9a19100171a92915ab321c9422afeefac7ac9770\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.14s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 91512,
+          "operation_ms": 117.623,
+          "process_ms": 141.34306999994806
+        },
+        "candidate": {
+          "peak_rss_kib": 3440,
+          "operation_ms": 143.098,
+          "process_ms": 146.54296200023964
+        }
+      }
+    },
+    "rpc_queue": {
+      "test": "protocol::incoming::tests::memory_rpc_queue",
+      "fixture": "frames.jsonl",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 284732,
+            "operation_ms": 931.44,
+            "process_ms": 937.4086019997776,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=baseline frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=931.440\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.93s\n\n"
+          },
+          {
+            "peak_rss_kib": 284912,
+            "operation_ms": 773.35,
+            "process_ms": 779.3995950000863,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=baseline frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=773.350\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.77s\n\n"
+          },
+          {
+            "peak_rss_kib": 284888,
+            "operation_ms": 818.219,
+            "process_ms": 824.6235070000694,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=baseline frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=818.219\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.82s\n\n"
+          },
+          {
+            "peak_rss_kib": 284728,
+            "operation_ms": 912.898,
+            "process_ms": 918.4073390001686,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=baseline frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=912.898\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.91s\n\n"
+          },
+          {
+            "peak_rss_kib": 284712,
+            "operation_ms": 791.004,
+            "process_ms": 797.3824229998172,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=baseline frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=791.004\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.79s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 26004,
+            "operation_ms": 753.147,
+            "process_ms": 759.9736880001728,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=candidate frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=753.147\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.75s\n\n"
+          },
+          {
+            "peak_rss_kib": 26028,
+            "operation_ms": 712.124,
+            "process_ms": 718.4645769998497,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=candidate frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=712.124\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.71s\n\n"
+          },
+          {
+            "peak_rss_kib": 26032,
+            "operation_ms": 712.181,
+            "process_ms": 718.4478240001226,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=candidate frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=712.181\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.71s\n\n"
+          },
+          {
+            "peak_rss_kib": 26116,
+            "operation_ms": 712.862,
+            "process_ms": 718.8258249998398,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=candidate frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=712.862\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.71s\n\n"
+          },
+          {
+            "peak_rss_kib": 26012,
+            "operation_ms": 726.37,
+            "process_ms": 732.4349720001919,
+            "output": "\nrunning 1 test\ntest protocol::incoming::tests::memory_rpc_queue ... memory_rpc_queue impl=candidate frames=32 elements=16777216 frame_capacity=2097152 queue_slots=4 elapsed_ms=726.370\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.73s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 284732,
+          "operation_ms": 818.219,
+          "process_ms": 824.6235070000694
+        },
+        "candidate": {
+          "peak_rss_kib": 26028,
+          "operation_ms": 712.862,
+          "process_ms": 718.8258249998398
+        }
+      }
+    },
+    "lines_typical": {
+      "test": "ui::view_tab::lines::tests::memory_line_index",
+      "fixture": "typical.c",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 4080,
+            "operation_ms": 0.388,
+            "process_ms": 4.25163199997769,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048560 lines=13107 index_bytes=262144 elapsed_ms=0.388\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 4112,
+            "operation_ms": 0.431,
+            "process_ms": 4.155391000040254,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048560 lines=13107 index_bytes=262144 elapsed_ms=0.431\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 4084,
+            "operation_ms": 0.435,
+            "process_ms": 3.721356000369269,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048560 lines=13107 index_bytes=262144 elapsed_ms=0.435\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 4252,
+            "operation_ms": 0.331,
+            "process_ms": 3.78203999980542,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048560 lines=13107 index_bytes=262144 elapsed_ms=0.331\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 4068,
+            "operation_ms": 0.363,
+            "process_ms": 3.8321940000969335,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048560 lines=13107 index_bytes=262144 elapsed_ms=0.363\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 4052,
+            "operation_ms": 0.337,
+            "process_ms": 4.348624000158452,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048560 lines=13107 index_bytes=65536 elapsed_ms=0.337\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 3956,
+            "operation_ms": 0.299,
+            "process_ms": 3.696439000123064,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048560 lines=13107 index_bytes=65536 elapsed_ms=0.299\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 3852,
+            "operation_ms": 0.306,
+            "process_ms": 3.7705679997088737,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048560 lines=13107 index_bytes=65536 elapsed_ms=0.306\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 3880,
+            "operation_ms": 0.282,
+            "process_ms": 3.6475669999163074,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048560 lines=13107 index_bytes=65536 elapsed_ms=0.282\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          },
+          {
+            "peak_rss_kib": 3960,
+            "operation_ms": 0.282,
+            "process_ms": 3.9127549998738687,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048560 lines=13107 index_bytes=65536 elapsed_ms=0.282\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.00s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 4084,
+          "operation_ms": 0.388,
+          "process_ms": 3.8321940000969335
+        },
+        "candidate": {
+          "peak_rss_kib": 3956,
+          "operation_ms": 0.299,
+          "process_ms": 3.7705679997088737
+        }
+      }
+    },
+    "lines_short": {
+      "test": "ui::view_tab::lines::tests::memory_line_index",
+      "fixture": "short.c",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 12328,
+            "operation_ms": 7.716,
+            "process_ms": 11.154430000260618,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048576 lines=524288 index_bytes=8388608 elapsed_ms=7.716\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 12144,
+            "operation_ms": 7.554,
+            "process_ms": 11.214723000193771,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048576 lines=524288 index_bytes=8388608 elapsed_ms=7.554\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 12328,
+            "operation_ms": 7.305,
+            "process_ms": 11.056544999973994,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048576 lines=524288 index_bytes=8388608 elapsed_ms=7.305\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 12168,
+            "operation_ms": 7.555,
+            "process_ms": 11.456997000095726,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048576 lines=524288 index_bytes=8388608 elapsed_ms=7.555\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 12152,
+            "operation_ms": 7.6,
+            "process_ms": 11.443832999702863,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=baseline source_bytes=1048576 lines=524288 index_bytes=8388608 elapsed_ms=7.600\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 6184,
+            "operation_ms": 6.427,
+            "process_ms": 9.881659999791736,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048576 lines=524288 index_bytes=2097152 elapsed_ms=6.427\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 6116,
+            "operation_ms": 6.187,
+            "process_ms": 10.05413300026703,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048576 lines=524288 index_bytes=2097152 elapsed_ms=6.187\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 6300,
+            "operation_ms": 6.404,
+            "process_ms": 10.280649000378617,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048576 lines=524288 index_bytes=2097152 elapsed_ms=6.404\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 6152,
+            "operation_ms": 6.545,
+            "process_ms": 10.308821999842621,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048576 lines=524288 index_bytes=2097152 elapsed_ms=6.545\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          },
+          {
+            "peak_rss_kib": 6156,
+            "operation_ms": 6.128,
+            "process_ms": 9.547041999667272,
+            "output": "\nrunning 1 test\ntest ui::view_tab::lines::tests::memory_line_index ... memory_line_index impl=candidate source_bytes=1048576 lines=524288 index_bytes=2097152 elapsed_ms=6.128\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.01s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 12168,
+          "operation_ms": 7.555,
+          "process_ms": 11.214723000193771
+        },
+        "candidate": {
+          "peak_rss_kib": 6156,
+          "operation_ms": 6.404,
+          "process_ms": 10.05413300026703
+        }
+      }
+    },
+    "analysis_view": {
+      "test": "worker::analysis::view::tests::memory_bounded_analysis_view",
+      "fixture": "view.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 117364,
+            "operation_ms": 95.799,
+            "process_ms": 305.06519199980175,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=95.799 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          },
+          {
+            "peak_rss_kib": 117544,
+            "operation_ms": 95.854,
+            "process_ms": 302.7880469999218,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=95.854 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          },
+          {
+            "peak_rss_kib": 117516,
+            "operation_ms": 99.421,
+            "process_ms": 302.86376799995196,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=99.421 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          },
+          {
+            "peak_rss_kib": 117516,
+            "operation_ms": 92.586,
+            "process_ms": 294.2322260000765,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=92.586 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 117496,
+            "operation_ms": 92.326,
+            "process_ms": 300.95299200002046,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=92.326 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 101236,
+            "operation_ms": 25.67,
+            "process_ms": 233.50883600005545,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=25.670 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.23s\n\n"
+          },
+          {
+            "peak_rss_kib": 101140,
+            "operation_ms": 25.786,
+            "process_ms": 243.33396900010484,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=25.786 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.24s\n\n"
+          },
+          {
+            "peak_rss_kib": 101112,
+            "operation_ms": 25.076,
+            "process_ms": 228.45282399975986,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=25.076 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.23s\n\n"
+          },
+          {
+            "peak_rss_kib": 100960,
+            "operation_ms": 24.939,
+            "process_ms": 227.32504700024947,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=24.939 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.22s\n\n"
+          },
+          {
+            "peak_rss_kib": 101240,
+            "operation_ms": 25.117,
+            "process_ms": 230.9864399999242,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=25.117 bytes=1048603 checksum=9668abc032e1fc6bb0465f4bfa0405131d6f1454aa63f60b15c59cbc53faffd0\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.23s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 117516,
+          "operation_ms": 95.799,
+          "process_ms": 302.7880469999218
+        },
+        "candidate": {
+          "peak_rss_kib": 101140,
+          "operation_ms": 25.117,
+          "process_ms": 230.9864399999242
+        }
+      }
+    },
+    "analysis_view_nested": {
+      "test": "worker::analysis::view::tests::memory_bounded_analysis_view",
+      "fixture": "nested-view.json",
+      "samples": {
+        "baseline": [
+          {
+            "peak_rss_kib": 101768,
+            "operation_ms": 206.516,
+            "process_ms": 292.59080500014534,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=206.516 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          },
+          {
+            "peak_rss_kib": 101644,
+            "operation_ms": 216.668,
+            "process_ms": 304.1343240001879,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=216.668 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          },
+          {
+            "peak_rss_kib": 101800,
+            "operation_ms": 220.208,
+            "process_ms": 309.99850299986065,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=220.208 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.31s\n\n"
+          },
+          {
+            "peak_rss_kib": 101880,
+            "operation_ms": 219.162,
+            "process_ms": 305.13326899972526,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=219.162 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.30s\n\n"
+          },
+          {
+            "peak_rss_kib": 101620,
+            "operation_ms": 213.271,
+            "process_ms": 298.0614940001942,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=baseline elapsed_ms=213.271 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.29s\n\n"
+          }
+        ],
+        "candidate": [
+          {
+            "peak_rss_kib": 35500,
+            "operation_ms": 8.96,
+            "process_ms": 91.82586599990827,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=8.960 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.09s\n\n"
+          },
+          {
+            "peak_rss_kib": 35468,
+            "operation_ms": 9.289,
+            "process_ms": 94.38463000014963,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=9.289 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.09s\n\n"
+          },
+          {
+            "peak_rss_kib": 35448,
+            "operation_ms": 8.783,
+            "process_ms": 90.87802699968961,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=8.783 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.09s\n\n"
+          },
+          {
+            "peak_rss_kib": 35576,
+            "operation_ms": 9.608,
+            "process_ms": 92.46671900018555,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=9.608 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.09s\n\n"
+          },
+          {
+            "peak_rss_kib": 35324,
+            "operation_ms": 9.906,
+            "process_ms": 93.24935899985576,
+            "output": "\nrunning 1 test\ntest worker::analysis::view::tests::memory_bounded_analysis_view ... memory_bounded_analysis_view implementation=candidate elapsed_ms=9.906 bytes=1048603 checksum=ac861f33234627de8bf15003cf91355d881f4ac88526478a6aa9de97c9d94396\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 0.09s\n\n"
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 101768,
+          "operation_ms": 216.668,
+          "process_ms": 304.1343240001879
+        },
+        "candidate": {
+          "peak_rss_kib": 35468,
+          "operation_ms": 9.289,
+          "process_ms": 92.46671900018555
+        }
+      }
+    }
+  }
+}

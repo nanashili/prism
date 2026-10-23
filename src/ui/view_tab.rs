@@ -1,6 +1,9 @@
 use crate::error::Result;
 use crate::model::View;
 
+mod lines;
+use lines::Lines;
+
 #[derive(Default)]
 pub(super) struct ViewTab {
     pub identity: u64,
@@ -12,7 +15,7 @@ pub(super) struct ViewTab {
     pub selected: String,
     pub view: View,
     pub text: String,
-    pub lines: Vec<std::ops::Range<usize>>,
+    pub lines: Lines,
     pub hex_offset: u64,
     pub rename: String,
     pub patch: String,
@@ -42,7 +45,7 @@ impl ViewTab {
         }
         self.request = 0;
         self.text = String::new();
-        self.lines = Vec::new();
+        self.lines = Lines::default();
         self.graph = None;
         self.references = None;
     }
@@ -67,15 +70,7 @@ impl ViewTab {
     }
 
     pub fn set_text(&mut self, text: String) {
-        let mut start = 0;
-        self.lines = text
-            .split_inclusive('\n')
-            .map(|line| {
-                let range = start..start + line.len();
-                start += line.len();
-                range
-            })
-            .collect();
+        self.lines = Lines::new(&text);
         self.text = text;
     }
 }

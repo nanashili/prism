@@ -8,6 +8,11 @@ remove measured unnecessary work without changing the release optimization profi
 or adding dependencies. The remaining findings below are part of the audit, not
 claims that every performance problem has been fixed.
 
+The follow-up [memory audit](MEMORY_AUDIT.md) adds allocation/retention fixes,
+fresh-process peak-RSS benchmarks and an idle-desktop control. The figures below
+remain the original seven-operation benchmark series; memory measurements use
+that series' PR commit as their baseline.
+
 The older performance documents contain explicitly historical measurements, often
 from macOS and an earlier native worker. Their timings and memory figures do not
 validate this checkout. In particular, the current default Cargo features select
@@ -153,17 +158,18 @@ engine-dependent effects still need measurement.
 | High | [Whole-pseudocode export](../src/worker/exports.rs) repeatedly calls [function pages](../src/storage/database.rs) with increasing OFFSET; the empty-filter query still evaluates text predicates. | Add an internal keyset iterator for export. Verify every function is emitted once and preserve the external offset-based API. |
 | High | [Snapshot export](../src/reconstruction/snapshot.rs) holds its write transaction through decompression and durable per-file writes. | Measure blocked writers on large snapshots. Shortening the transaction requires preserving revision consistency and failure receipts. |
 | Medium | [Strings misses](../src/worker/analysis.rs) scan the input but do not populate the cache they consult; Imports always reparses file inventory. | Exercise repeated view navigation on large files, then populate the existing cache under explicit identity/invalidation rules. |
-| Medium | [Android method reads](../src/analysis/android.rs) parse the class JSON again for each requested method; a class file can be up to 16 MiB. | Measure same-class navigation and cache bounded parsed/source results with an explicit jadx-output lifetime. |
+| Medium | [Android method reads](../src/analysis/android/source.rs) now stream selected source, but still validate the class JSON again for each requested method; a class file can be up to 16 MiB. | Measure repeated same-class navigation and consider a bounded source cache with an explicit jadx-output lifetime. The memory audit measures one method read, not cache reuse. |
 | Medium | [Sidebar queries](../src/storage/navigation/query.rs) rebuild renamed rows per page and repeat full-inventory match/group/sort work. [Resource root pages](../src/storage/resources.rs) invalidate and recursively rebuild their index. | Separate data revisions from paging/refresh; benchmark filter changes and warm root navigation with realistic inventories. |
 | Medium | Expanding “Read full message” beyond 64 KiB bypasses [Markdown caching](../src/ui/message/body_cache.rs). Default previews remain bounded to 16,000 bytes. | Profile expanded large messages and consider bounded block-level caching/virtualization rather than removing memory limits. |
 | Medium | [Function](../src/ui/bench_sidebar/rows.rs) and [resource](../src/ui/bench_sidebar/resource_rows.rs) tree flattening rebuild row descriptors/parent strings per repaint, including offscreen expanded rows. | Profile deeply expanded trees; cache by tree revision or traverse only the visible range while preserving selection and expansion state. |
 | Medium | [Tool validation](../src/mcp/validation.rs) reconstructs the schema catalog per request, and validation happens in both helper and bridge. | Benchmark a bounded immutable catalog per mode; preserve all validation checks and public tool discovery output. |
-| Medium | [Tool previews](../src/agent/tool_updates.rs) join up to sixteen complete content strings before clipping to 16 KiB. | Append only the retained UTF-8-safe prefix; test separators and clipping around multibyte characters on large replies. |
 | Lower / profile first | [Remembered permissions](../src/agent/remembered.rs) reread and parse a bounded file under a shared mutex for every check. UI chat/mention handlers also perform synchronous bounded SQLite reads. | Measure contention and UI stalls before caching or moving work; permission revocation and update visibility must remain correct. |
 | External-engine dependent | [Rizin](../src/analysis/rizin.rs) repeats plugin discovery for uncached pseudocode and can duplicate assembly work for graph requests. | Benchmark with an installed Rizin/decompiler session and preserve process/session invalidation. |
 
-Worker polling and decoded JSON queue memory also deserve profiling, but source
-inspection alone does not establish an idle-CPU regression or a leak. Increasing
+The memory follow-up replaces decoded JSON queues with byte-bounded raw frames
+and removes full tool-preview concatenation; see its workloads and bounds.
+Worker polling still deserves profiling, but source inspection alone does not
+establish an idle-CPU regression or a leak. Increasing
 worker concurrency, removing bounds, switching renderers, and globally changing
 release optimization levels are not supported by these measurements. The vendored
 Rust decompiler is not a dependency of this checkout's Cargo application and was
@@ -202,11 +208,12 @@ cargo check --locked --no-default-features --bin prism-mcp
 cargo build --release --locked --bins
 ```
 
-Formatting, all-target tests, strict all-target/all-feature Clippy, and the
+At the initial performance commit, formatting, all-target tests, strict all-target/all-feature Clippy, and the
 standalone MCP check, and release binary build passed. Normal tests: **31 passed**, with seven performance
 tests and the existing optional network-download test ignored. The explicit
 release benchmark run passed all **seven** performance tests. Baseline UI golden
 tests also passed before timing. GUI interaction and live external-engine
-sessions were not run in this headless environment.
+sessions were not run for that initial series. The memory follow-up records its
+additional tests and virtual-display desktop control separately.
 The built MCP helper passed `initialize` and `tools/list` smoke checks in combined,
 window, and analysis modes without requiring a running desktop.

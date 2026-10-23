@@ -1,0 +1,3844 @@
+{
+  "method": "Fresh profiles, provider=rizin (no engine invoked), X11 software rendering, 30 MCP polls at 100ms after expected state; desktop PID only; settled RSS median of final 10 samples",
+  "binaries": {
+    "baseline": "a59fb4f666172fa030ba00e9a4823d0126f263dce659d6d7b9b82bebc039aee2",
+    "candidate": "cabf80fc37528b0ec1db230214ddf461f5d924182c622f1be0150b742e66a608"
+  },
+  "helper_sha256": "33287b68f2d2d832817d84817b5d093204b6d8bd0b223421c136393962d63462",
+  "cases": {
+    "home": {
+      "samples": {
+        "baseline": [
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 94012,
+                "VmRSS": 92932
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 92932
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93296
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93704
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93704
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93756
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93756
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93756
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93756
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93768
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93768
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93796
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93796
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93800
+              },
+              {
+                "VmHWM": 94012,
+                "VmRSS": 93800
+              },
+              {
+                "VmHWM": 94164,
+                "VmRSS": 94164
+              },
+              {
+                "VmHWM": 94164,
+                "VmRSS": 94164
+              },
+              {
+                "VmHWM": 94164,
+                "VmRSS": 94164
+              },
+              {
+                "VmHWM": 94164,
+                "VmRSS": 94164
+              },
+              {
+                "VmHWM": 94164,
+                "VmRSS": 94164
+              },
+              {
+                "VmHWM": 94172,
+                "VmRSS": 94172
+              },
+              {
+                "VmHWM": 94172,
+                "VmRSS": 94172
+              },
+              {
+                "VmHWM": 94172,
+                "VmRSS": 94172
+              },
+              {
+                "VmHWM": 94180,
+                "VmRSS": 94180
+              },
+              {
+                "VmHWM": 94180,
+                "VmRSS": 94180
+              },
+              {
+                "VmHWM": 94196,
+                "VmRSS": 94196
+              },
+              {
+                "VmHWM": 94196,
+                "VmRSS": 94196
+              },
+              {
+                "VmHWM": 94196,
+                "VmRSS": 94196
+              },
+              {
+                "VmHWM": 94196,
+                "VmRSS": 94196
+              },
+              {
+                "VmHWM": 94388,
+                "VmRSS": 94388
+              }
+            ],
+            "peak_rss_kib": 94388,
+            "settled_rss_kib": 94188.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93552,
+                "VmRSS": 92600
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 92600
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93012
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93064
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93444
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93472
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93480
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93480
+              },
+              {
+                "VmHWM": 93844,
+                "VmRSS": 93844
+              },
+              {
+                "VmHWM": 93872,
+                "VmRSS": 93872
+              },
+              {
+                "VmHWM": 93872,
+                "VmRSS": 93872
+              },
+              {
+                "VmHWM": 93884,
+                "VmRSS": 93884
+              },
+              {
+                "VmHWM": 94080,
+                "VmRSS": 94080
+              },
+              {
+                "VmHWM": 94080,
+                "VmRSS": 94080
+              },
+              {
+                "VmHWM": 94224,
+                "VmRSS": 94224
+              },
+              {
+                "VmHWM": 94508,
+                "VmRSS": 94508
+              },
+              {
+                "VmHWM": 94508,
+                "VmRSS": 94508
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              },
+              {
+                "VmHWM": 94500,
+                "VmRSS": 94500
+              }
+            ],
+            "peak_rss_kib": 94508,
+            "settled_rss_kib": 94500.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93612,
+                "VmRSS": 92656
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 92656
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93064
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93120
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93132
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93160
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93524
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93524
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93524
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93536
+              },
+              {
+                "VmHWM": 93612,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93752,
+                "VmRSS": 93752
+              },
+              {
+                "VmHWM": 93752,
+                "VmRSS": 93752
+              },
+              {
+                "VmHWM": 93752,
+                "VmRSS": 93752
+              },
+              {
+                "VmHWM": 93896,
+                "VmRSS": 93896
+              },
+              {
+                "VmHWM": 93896,
+                "VmRSS": 93896
+              },
+              {
+                "VmHWM": 94304,
+                "VmRSS": 94304
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              },
+              {
+                "VmHWM": 94296,
+                "VmRSS": 94296
+              }
+            ],
+            "peak_rss_kib": 94304,
+            "settled_rss_kib": 94296.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93748,
+                "VmRSS": 92768
+              },
+              {
+                "VmHWM": 93748,
+                "VmRSS": 92768
+              },
+              {
+                "VmHWM": 93748,
+                "VmRSS": 93132
+              },
+              {
+                "VmHWM": 93748,
+                "VmRSS": 93656
+              },
+              {
+                "VmHWM": 94024,
+                "VmRSS": 94024
+              },
+              {
+                "VmHWM": 94060,
+                "VmRSS": 94060
+              },
+              {
+                "VmHWM": 94064,
+                "VmRSS": 94064
+              },
+              {
+                "VmHWM": 94064,
+                "VmRSS": 94064
+              },
+              {
+                "VmHWM": 94064,
+                "VmRSS": 94064
+              },
+              {
+                "VmHWM": 94064,
+                "VmRSS": 94064
+              },
+              {
+                "VmHWM": 94088,
+                "VmRSS": 94088
+              },
+              {
+                "VmHWM": 94292,
+                "VmRSS": 94292
+              },
+              {
+                "VmHWM": 94304,
+                "VmRSS": 94304
+              },
+              {
+                "VmHWM": 94304,
+                "VmRSS": 94304
+              },
+              {
+                "VmHWM": 94452,
+                "VmRSS": 94452
+              },
+              {
+                "VmHWM": 94452,
+                "VmRSS": 94452
+              },
+              {
+                "VmHWM": 94860,
+                "VmRSS": 94860
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              },
+              {
+                "VmHWM": 94852,
+                "VmRSS": 94852
+              }
+            ],
+            "peak_rss_kib": 94860,
+            "settled_rss_kib": 94852.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93660,
+                "VmRSS": 92796
+              },
+              {
+                "VmHWM": 93660,
+                "VmRSS": 92796
+              },
+              {
+                "VmHWM": 93660,
+                "VmRSS": 93204
+              },
+              {
+                "VmHWM": 93660,
+                "VmRSS": 93256
+              },
+              {
+                "VmHWM": 93660,
+                "VmRSS": 93624
+              },
+              {
+                "VmHWM": 93664,
+                "VmRSS": 93664
+              },
+              {
+                "VmHWM": 93664,
+                "VmRSS": 93664
+              },
+              {
+                "VmHWM": 93664,
+                "VmRSS": 93664
+              },
+              {
+                "VmHWM": 93664,
+                "VmRSS": 93664
+              },
+              {
+                "VmHWM": 93664,
+                "VmRSS": 93664
+              },
+              {
+                "VmHWM": 93676,
+                "VmRSS": 93676
+              },
+              {
+                "VmHWM": 93692,
+                "VmRSS": 93692
+              },
+              {
+                "VmHWM": 93904,
+                "VmRSS": 93904
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94412,
+                "VmRSS": 94412
+              },
+              {
+                "VmHWM": 94412,
+                "VmRSS": 94412
+              },
+              {
+                "VmHWM": 94412,
+                "VmRSS": 94412
+              },
+              {
+                "VmHWM": 94816,
+                "VmRSS": 94816
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              },
+              {
+                "VmHWM": 94808,
+                "VmRSS": 94808
+              }
+            ],
+            "peak_rss_kib": 94816,
+            "settled_rss_kib": 94808.0
+          }
+        ],
+        "candidate": [
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92196
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92196
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92700
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92752
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92764
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92796
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92796
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92796
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92796
+              },
+              {
+                "VmHWM": 92884,
+                "VmRSS": 92808
+              },
+              {
+                "VmHWM": 93392,
+                "VmRSS": 93392
+              },
+              {
+                "VmHWM": 93404,
+                "VmRSS": 93404
+              },
+              {
+                "VmHWM": 93404,
+                "VmRSS": 93404
+              },
+              {
+                "VmHWM": 93404,
+                "VmRSS": 93404
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93552,
+                "VmRSS": 93552
+              },
+              {
+                "VmHWM": 93956,
+                "VmRSS": 93956
+              },
+              {
+                "VmHWM": 93956,
+                "VmRSS": 93956
+              },
+              {
+                "VmHWM": 93956,
+                "VmRSS": 93956
+              },
+              {
+                "VmHWM": 93956,
+                "VmRSS": 93956
+              },
+              {
+                "VmHWM": 93948,
+                "VmRSS": 93948
+              },
+              {
+                "VmHWM": 93948,
+                "VmRSS": 93948
+              },
+              {
+                "VmHWM": 93948,
+                "VmRSS": 93948
+              },
+              {
+                "VmHWM": 93948,
+                "VmRSS": 93948
+              }
+            ],
+            "peak_rss_kib": 93956,
+            "settled_rss_kib": 93948.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92012
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92012
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92532
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92584
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92596
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92624
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92992
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92992
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 92992
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 93004
+              },
+              {
+                "VmHWM": 93004,
+                "VmRSS": 93004
+              },
+              {
+                "VmHWM": 93020,
+                "VmRSS": 93020
+              },
+              {
+                "VmHWM": 93020,
+                "VmRSS": 93020
+              },
+              {
+                "VmHWM": 93240,
+                "VmRSS": 93240
+              },
+              {
+                "VmHWM": 93240,
+                "VmRSS": 93240
+              },
+              {
+                "VmHWM": 93240,
+                "VmRSS": 93240
+              },
+              {
+                "VmHWM": 93388,
+                "VmRSS": 93388
+              },
+              {
+                "VmHWM": 94036,
+                "VmRSS": 94036
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              },
+              {
+                "VmHWM": 94148,
+                "VmRSS": 94148
+              }
+            ],
+            "peak_rss_kib": 94148,
+            "settled_rss_kib": 94148.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92288
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92288
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92288
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92696
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92748
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92792
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92792
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92792
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92804
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 92820
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 93368
+              },
+              {
+                "VmHWM": 93432,
+                "VmRSS": 93380
+              },
+              {
+                "VmHWM": 93744,
+                "VmRSS": 93744
+              },
+              {
+                "VmHWM": 93880,
+                "VmRSS": 93880
+              },
+              {
+                "VmHWM": 93880,
+                "VmRSS": 93880
+              },
+              {
+                "VmHWM": 94276,
+                "VmRSS": 94276
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              },
+              {
+                "VmHWM": 94268,
+                "VmRSS": 94268
+              }
+            ],
+            "peak_rss_kib": 94276,
+            "settled_rss_kib": 94268.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93436,
+                "VmRSS": 92240
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 92240
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 92240
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 92240
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 92744
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 93160
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 93168
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 93200
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 93200
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 93200
+              },
+              {
+                "VmHWM": 93436,
+                "VmRSS": 93200
+              },
+              {
+                "VmHWM": 93564,
+                "VmRSS": 93564
+              },
+              {
+                "VmHWM": 93780,
+                "VmRSS": 93780
+              },
+              {
+                "VmHWM": 93780,
+                "VmRSS": 93780
+              },
+              {
+                "VmHWM": 93788,
+                "VmRSS": 93788
+              },
+              {
+                "VmHWM": 93924,
+                "VmRSS": 93924
+              },
+              {
+                "VmHWM": 93932,
+                "VmRSS": 93932
+              },
+              {
+                "VmHWM": 93932,
+                "VmRSS": 93932
+              },
+              {
+                "VmHWM": 94336,
+                "VmRSS": 94336
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              },
+              {
+                "VmHWM": 94328,
+                "VmRSS": 94328
+              }
+            ],
+            "peak_rss_kib": 94336,
+            "settled_rss_kib": 94328.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 93192,
+                "VmRSS": 92120
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 92120
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 92624
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 92676
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 92684
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 93080
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 93080
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 93080
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 93088
+              },
+              {
+                "VmHWM": 93192,
+                "VmRSS": 93100
+              },
+              {
+                "VmHWM": 93480,
+                "VmRSS": 93480
+              },
+              {
+                "VmHWM": 93692,
+                "VmRSS": 93692
+              },
+              {
+                "VmHWM": 93692,
+                "VmRSS": 93692
+              },
+              {
+                "VmHWM": 93840,
+                "VmRSS": 93840
+              },
+              {
+                "VmHWM": 93840,
+                "VmRSS": 93840
+              },
+              {
+                "VmHWM": 93840,
+                "VmRSS": 93840
+              },
+              {
+                "VmHWM": 94252,
+                "VmRSS": 94252
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              },
+              {
+                "VmHWM": 94244,
+                "VmRSS": 94244
+              }
+            ],
+            "peak_rss_kib": 94252,
+            "settled_rss_kib": 94244.0
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 94508,
+          "settled_rss_kib": 94500.0
+        },
+        "candidate": {
+          "peak_rss_kib": 94252,
+          "settled_rss_kib": 94244.0
+        }
+      }
+    },
+    "source_typical": {
+      "samples": {
+        "baseline": [
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 100644,
+                "VmRSS": 100644
+              },
+              {
+                "VmHWM": 101044,
+                "VmRSS": 101044
+              },
+              {
+                "VmHWM": 101508,
+                "VmRSS": 101508
+              },
+              {
+                "VmHWM": 101508,
+                "VmRSS": 101508
+              },
+              {
+                "VmHWM": 101512,
+                "VmRSS": 101512
+              },
+              {
+                "VmHWM": 101544,
+                "VmRSS": 101544
+              },
+              {
+                "VmHWM": 101544,
+                "VmRSS": 101544
+              },
+              {
+                "VmHWM": 102460,
+                "VmRSS": 102460
+              },
+              {
+                "VmHWM": 102484,
+                "VmRSS": 102484
+              },
+              {
+                "VmHWM": 102892,
+                "VmRSS": 102892
+              },
+              {
+                "VmHWM": 103000,
+                "VmRSS": 103000
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99596
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99596
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99600
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99600
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99884
+              },
+              {
+                "VmHWM": 102776,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102776,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102776,
+                "VmRSS": 100976
+              },
+              {
+                "VmHWM": 102832,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102832,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102832,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102832,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102832,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 103348,
+                "VmRSS": 103348
+              },
+              {
+                "VmHWM": 102896,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102896,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102896,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102896,
+                "VmRSS": 99876
+              },
+              {
+                "VmHWM": 102896,
+                "VmRSS": 99876
+              }
+            ],
+            "peak_rss_kib": 103348,
+            "settled_rss_kib": 99876.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 100668,
+                "VmRSS": 100668
+              },
+              {
+                "VmHWM": 100668,
+                "VmRSS": 100668
+              },
+              {
+                "VmHWM": 101076,
+                "VmRSS": 101076
+              },
+              {
+                "VmHWM": 101128,
+                "VmRSS": 101128
+              },
+              {
+                "VmHWM": 101528,
+                "VmRSS": 101528
+              },
+              {
+                "VmHWM": 101892,
+                "VmRSS": 101892
+              },
+              {
+                "VmHWM": 101928,
+                "VmRSS": 101928
+              },
+              {
+                "VmHWM": 102256,
+                "VmRSS": 102256
+              },
+              {
+                "VmHWM": 102264,
+                "VmRSS": 102264
+              },
+              {
+                "VmHWM": 102292,
+                "VmRSS": 102292
+              },
+              {
+                "VmHWM": 102296,
+                "VmRSS": 102296
+              },
+              {
+                "VmHWM": 102304,
+                "VmRSS": 102304
+              },
+              {
+                "VmHWM": 101984,
+                "VmRSS": 98968
+              },
+              {
+                "VmHWM": 101984,
+                "VmRSS": 98968
+              },
+              {
+                "VmHWM": 102008,
+                "VmRSS": 99368
+              },
+              {
+                "VmHWM": 103124,
+                "VmRSS": 103124
+              },
+              {
+                "VmHWM": 102412,
+                "VmRSS": 99648
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              },
+              {
+                "VmHWM": 102940,
+                "VmRSS": 102940
+              }
+            ],
+            "peak_rss_kib": 103124,
+            "settled_rss_kib": 102940.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 101324,
+                "VmRSS": 101324
+              },
+              {
+                "VmHWM": 101324,
+                "VmRSS": 101324
+              },
+              {
+                "VmHWM": 101800,
+                "VmRSS": 101800
+              },
+              {
+                "VmHWM": 101848,
+                "VmRSS": 101848
+              },
+              {
+                "VmHWM": 101860,
+                "VmRSS": 101860
+              },
+              {
+                "VmHWM": 101888,
+                "VmRSS": 101888
+              },
+              {
+                "VmHWM": 102188,
+                "VmRSS": 102188
+              },
+              {
+                "VmHWM": 102468,
+                "VmRSS": 102468
+              },
+              {
+                "VmHWM": 102580,
+                "VmRSS": 102580
+              },
+              {
+                "VmHWM": 102596,
+                "VmRSS": 102596
+              },
+              {
+                "VmHWM": 102608,
+                "VmRSS": 102608
+              },
+              {
+                "VmHWM": 102608,
+                "VmRSS": 102608
+              },
+              {
+                "VmHWM": 103120,
+                "VmRSS": 103120
+              },
+              {
+                "VmHWM": 103120,
+                "VmRSS": 103120
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99696
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99984
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99988
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 102736,
+                "VmRSS": 99980
+              }
+            ],
+            "peak_rss_kib": 103120,
+            "settled_rss_kib": 99980.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 100324,
+                "VmRSS": 100324
+              },
+              {
+                "VmHWM": 100324,
+                "VmRSS": 100324
+              },
+              {
+                "VmHWM": 100732,
+                "VmRSS": 100732
+              },
+              {
+                "VmHWM": 101184,
+                "VmRSS": 101184
+              },
+              {
+                "VmHWM": 101228,
+                "VmRSS": 101228
+              },
+              {
+                "VmHWM": 101228,
+                "VmRSS": 101228
+              },
+              {
+                "VmHWM": 102196,
+                "VmRSS": 102196
+              },
+              {
+                "VmHWM": 102196,
+                "VmRSS": 102196
+              },
+              {
+                "VmHWM": 102208,
+                "VmRSS": 102208
+              },
+              {
+                "VmHWM": 102348,
+                "VmRSS": 102348
+              },
+              {
+                "VmHWM": 102352,
+                "VmRSS": 102352
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99004
+              },
+              {
+                "VmHWM": 102384,
+                "VmRSS": 102384
+              },
+              {
+                "VmHWM": 102384,
+                "VmRSS": 102384
+              },
+              {
+                "VmHWM": 102384,
+                "VmRSS": 102384
+              },
+              {
+                "VmHWM": 102396,
+                "VmRSS": 102396
+              },
+              {
+                "VmHWM": 102396,
+                "VmRSS": 102396
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99004
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99292
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99284
+              }
+            ],
+            "peak_rss_kib": 102396,
+            "settled_rss_kib": 99284.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 99988,
+                "VmRSS": 99988
+              },
+              {
+                "VmHWM": 100844,
+                "VmRSS": 100844
+              },
+              {
+                "VmHWM": 101252,
+                "VmRSS": 101252
+              },
+              {
+                "VmHWM": 101304,
+                "VmRSS": 101304
+              },
+              {
+                "VmHWM": 101312,
+                "VmRSS": 101312
+              },
+              {
+                "VmHWM": 101344,
+                "VmRSS": 101344
+              },
+              {
+                "VmHWM": 101744,
+                "VmRSS": 101744
+              },
+              {
+                "VmHWM": 101744,
+                "VmRSS": 101744
+              },
+              {
+                "VmHWM": 101752,
+                "VmRSS": 101752
+              },
+              {
+                "VmHWM": 101172,
+                "VmRSS": 98072
+              },
+              {
+                "VmHWM": 101172,
+                "VmRSS": 98084
+              },
+              {
+                "VmHWM": 101172,
+                "VmRSS": 98084
+              },
+              {
+                "VmHWM": 101172,
+                "VmRSS": 98256
+              },
+              {
+                "VmHWM": 101276,
+                "VmRSS": 98540
+              },
+              {
+                "VmHWM": 101276,
+                "VmRSS": 99092
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              },
+              {
+                "VmHWM": 101408,
+                "VmRSS": 98676
+              }
+            ],
+            "peak_rss_kib": 101752,
+            "settled_rss_kib": 98676.0
+          }
+        ],
+        "candidate": [
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 99412,
+                "VmRSS": 99412
+              },
+              {
+                "VmHWM": 99972,
+                "VmRSS": 99972
+              },
+              {
+                "VmHWM": 99972,
+                "VmRSS": 99972
+              },
+              {
+                "VmHWM": 100988,
+                "VmRSS": 100988
+              },
+              {
+                "VmHWM": 101196,
+                "VmRSS": 101196
+              },
+              {
+                "VmHWM": 101204,
+                "VmRSS": 101204
+              },
+              {
+                "VmHWM": 101232,
+                "VmRSS": 101232
+              },
+              {
+                "VmHWM": 101232,
+                "VmRSS": 101232
+              },
+              {
+                "VmHWM": 101264,
+                "VmRSS": 101264
+              },
+              {
+                "VmHWM": 101440,
+                "VmRSS": 101440
+              },
+              {
+                "VmHWM": 101460,
+                "VmRSS": 101460
+              },
+              {
+                "VmHWM": 101464,
+                "VmRSS": 101464
+              },
+              {
+                "VmHWM": 101588,
+                "VmRSS": 101588
+              },
+              {
+                "VmHWM": 101588,
+                "VmRSS": 101588
+              },
+              {
+                "VmHWM": 102492,
+                "VmRSS": 102492
+              },
+              {
+                "VmHWM": 102492,
+                "VmRSS": 102492
+              },
+              {
+                "VmHWM": 102780,
+                "VmRSS": 102780
+              },
+              {
+                "VmHWM": 102944,
+                "VmRSS": 102944
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              },
+              {
+                "VmHWM": 102980,
+                "VmRSS": 102980
+              }
+            ],
+            "peak_rss_kib": 102980,
+            "settled_rss_kib": 102980.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 100012,
+                "VmRSS": 100012
+              },
+              {
+                "VmHWM": 100012,
+                "VmRSS": 100012
+              },
+              {
+                "VmHWM": 100516,
+                "VmRSS": 100516
+              },
+              {
+                "VmHWM": 100996,
+                "VmRSS": 100996
+              },
+              {
+                "VmHWM": 101012,
+                "VmRSS": 101012
+              },
+              {
+                "VmHWM": 101288,
+                "VmRSS": 101288
+              },
+              {
+                "VmHWM": 101720,
+                "VmRSS": 101720
+              },
+              {
+                "VmHWM": 101912,
+                "VmRSS": 101912
+              },
+              {
+                "VmHWM": 101924,
+                "VmRSS": 101924
+              },
+              {
+                "VmHWM": 101936,
+                "VmRSS": 101936
+              },
+              {
+                "VmHWM": 102052,
+                "VmRSS": 102052
+              },
+              {
+                "VmHWM": 102060,
+                "VmRSS": 102060
+              },
+              {
+                "VmHWM": 102436,
+                "VmRSS": 102436
+              },
+              {
+                "VmHWM": 102592,
+                "VmRSS": 102592
+              },
+              {
+                "VmHWM": 102668,
+                "VmRSS": 102668
+              },
+              {
+                "VmHWM": 102956,
+                "VmRSS": 102956
+              },
+              {
+                "VmHWM": 102988,
+                "VmRSS": 102988
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              },
+              {
+                "VmHWM": 102400,
+                "VmRSS": 99128
+              }
+            ],
+            "peak_rss_kib": 102988,
+            "settled_rss_kib": 99128.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 101224,
+                "VmRSS": 101224
+              },
+              {
+                "VmHWM": 101224,
+                "VmRSS": 101224
+              },
+              {
+                "VmHWM": 101696,
+                "VmRSS": 101696
+              },
+              {
+                "VmHWM": 101748,
+                "VmRSS": 101748
+              },
+              {
+                "VmHWM": 102188,
+                "VmRSS": 102188
+              },
+              {
+                "VmHWM": 102188,
+                "VmRSS": 102188
+              },
+              {
+                "VmHWM": 102188,
+                "VmRSS": 102188
+              },
+              {
+                "VmHWM": 102192,
+                "VmRSS": 102192
+              },
+              {
+                "VmHWM": 101488,
+                "VmRSS": 98356
+              },
+              {
+                "VmHWM": 101488,
+                "VmRSS": 98368
+              },
+              {
+                "VmHWM": 101488,
+                "VmRSS": 98368
+              },
+              {
+                "VmHWM": 101488,
+                "VmRSS": 98768
+              },
+              {
+                "VmHWM": 101488,
+                "VmRSS": 98784
+              },
+              {
+                "VmHWM": 101776,
+                "VmRSS": 99068
+              },
+              {
+                "VmHWM": 101904,
+                "VmRSS": 99088
+              },
+              {
+                "VmHWM": 101956,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              },
+              {
+                "VmHWM": 102040,
+                "VmRSS": 99100
+              }
+            ],
+            "peak_rss_kib": 102192,
+            "settled_rss_kib": 99100.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 99812,
+                "VmRSS": 99812
+              },
+              {
+                "VmHWM": 99812,
+                "VmRSS": 99812
+              },
+              {
+                "VmHWM": 100316,
+                "VmRSS": 100316
+              },
+              {
+                "VmHWM": 100768,
+                "VmRSS": 100768
+              },
+              {
+                "VmHWM": 100812,
+                "VmRSS": 100812
+              },
+              {
+                "VmHWM": 100816,
+                "VmRSS": 100816
+              },
+              {
+                "VmHWM": 101488,
+                "VmRSS": 101488
+              },
+              {
+                "VmHWM": 101704,
+                "VmRSS": 101704
+              },
+              {
+                "VmHWM": 101732,
+                "VmRSS": 101732
+              },
+              {
+                "VmHWM": 101848,
+                "VmRSS": 101848
+              },
+              {
+                "VmHWM": 101856,
+                "VmRSS": 101856
+              },
+              {
+                "VmHWM": 102224,
+                "VmRSS": 102224
+              },
+              {
+                "VmHWM": 102540,
+                "VmRSS": 102540
+              },
+              {
+                "VmHWM": 102540,
+                "VmRSS": 102540
+              },
+              {
+                "VmHWM": 102824,
+                "VmRSS": 102824
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99008
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 100520
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              },
+              {
+                "VmHWM": 102388,
+                "VmRSS": 99000
+              }
+            ],
+            "peak_rss_kib": 102824,
+            "settled_rss_kib": 99000.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 100044,
+                "VmRSS": 100044
+              },
+              {
+                "VmHWM": 100044,
+                "VmRSS": 100044
+              },
+              {
+                "VmHWM": 100452,
+                "VmRSS": 100452
+              },
+              {
+                "VmHWM": 100452,
+                "VmRSS": 100452
+              },
+              {
+                "VmHWM": 100504,
+                "VmRSS": 100504
+              },
+              {
+                "VmHWM": 100512,
+                "VmRSS": 100512
+              },
+              {
+                "VmHWM": 100944,
+                "VmRSS": 100944
+              },
+              {
+                "VmHWM": 100948,
+                "VmRSS": 100948
+              },
+              {
+                "VmHWM": 101132,
+                "VmRSS": 101132
+              },
+              {
+                "VmHWM": 101132,
+                "VmRSS": 101132
+              },
+              {
+                "VmHWM": 101532,
+                "VmRSS": 101532
+              },
+              {
+                "VmHWM": 101536,
+                "VmRSS": 101536
+              },
+              {
+                "VmHWM": 101612,
+                "VmRSS": 101612
+              },
+              {
+                "VmHWM": 102084,
+                "VmRSS": 102084
+              },
+              {
+                "VmHWM": 102084,
+                "VmRSS": 102084
+              },
+              {
+                "VmHWM": 102488,
+                "VmRSS": 102488
+              },
+              {
+                "VmHWM": 103092,
+                "VmRSS": 103092
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              },
+              {
+                "VmHWM": 103088,
+                "VmRSS": 103088
+              }
+            ],
+            "peak_rss_kib": 103092,
+            "settled_rss_kib": 103088.0
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 103120,
+          "settled_rss_kib": 99876.0
+        },
+        "candidate": {
+          "peak_rss_kib": 102980,
+          "settled_rss_kib": 99128.0
+        }
+      }
+    },
+    "source_short": {
+      "samples": {
+        "baseline": [
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 105836,
+                "VmRSS": 105836
+              },
+              {
+                "VmHWM": 105072,
+                "VmRSS": 104852
+              },
+              {
+                "VmHWM": 106244,
+                "VmRSS": 106244
+              },
+              {
+                "VmHWM": 106712,
+                "VmRSS": 106712
+              },
+              {
+                "VmHWM": 106512,
+                "VmRSS": 106512
+              },
+              {
+                "VmHWM": 106044,
+                "VmRSS": 106044
+              },
+              {
+                "VmHWM": 107236,
+                "VmRSS": 107236
+              },
+              {
+                "VmHWM": 107272,
+                "VmRSS": 107272
+              },
+              {
+                "VmHWM": 106492,
+                "VmRSS": 104488
+              },
+              {
+                "VmHWM": 107420,
+                "VmRSS": 107420
+              },
+              {
+                "VmHWM": 106772,
+                "VmRSS": 106772
+              },
+              {
+                "VmHWM": 107416,
+                "VmRSS": 107416
+              },
+              {
+                "VmHWM": 107484,
+                "VmRSS": 107484
+              },
+              {
+                "VmHWM": 107548,
+                "VmRSS": 107548
+              },
+              {
+                "VmHWM": 107832,
+                "VmRSS": 107832
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107420,
+                "VmRSS": 107420
+              },
+              {
+                "VmHWM": 107052,
+                "VmRSS": 107052
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107888,
+                "VmRSS": 107888
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107468,
+                "VmRSS": 107468
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107860,
+                "VmRSS": 107860
+              },
+              {
+                "VmHWM": 107028,
+                "VmRSS": 105580
+              },
+              {
+                "VmHWM": 107028,
+                "VmRSS": 105560
+              },
+              {
+                "VmHWM": 107028,
+                "VmRSS": 106260
+              },
+              {
+                "VmHWM": 107028,
+                "VmRSS": 105940
+              }
+            ],
+            "peak_rss_kib": 107888,
+            "settled_rss_kib": 107664.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 106096,
+                "VmRSS": 106096
+              },
+              {
+                "VmHWM": 106096,
+                "VmRSS": 106096
+              },
+              {
+                "VmHWM": 106368,
+                "VmRSS": 105968
+              },
+              {
+                "VmHWM": 106968,
+                "VmRSS": 106968
+              },
+              {
+                "VmHWM": 106368,
+                "VmRSS": 105944
+              },
+              {
+                "VmHWM": 107012,
+                "VmRSS": 107012
+              },
+              {
+                "VmHWM": 107100,
+                "VmRSS": 107100
+              },
+              {
+                "VmHWM": 107164,
+                "VmRSS": 107164
+              },
+              {
+                "VmHWM": 107204,
+                "VmRSS": 107204
+              },
+              {
+                "VmHWM": 107196,
+                "VmRSS": 107196
+              },
+              {
+                "VmHWM": 107276,
+                "VmRSS": 107276
+              },
+              {
+                "VmHWM": 107292,
+                "VmRSS": 107292
+              },
+              {
+                "VmHWM": 107356,
+                "VmRSS": 107356
+              },
+              {
+                "VmHWM": 107388,
+                "VmRSS": 107388
+              },
+              {
+                "VmHWM": 107636,
+                "VmRSS": 107636
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107020,
+                "VmRSS": 105420
+              },
+              {
+                "VmHWM": 107020,
+                "VmRSS": 105668
+              },
+              {
+                "VmHWM": 107020,
+                "VmRSS": 106488
+              },
+              {
+                "VmHWM": 107020,
+                "VmRSS": 105788
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107696,
+                "VmRSS": 107696
+              },
+              {
+                "VmHWM": 107632,
+                "VmRSS": 107632
+              },
+              {
+                "VmHWM": 107032,
+                "VmRSS": 106652
+              },
+              {
+                "VmHWM": 107448,
+                "VmRSS": 107448
+              },
+              {
+                "VmHWM": 107032,
+                "VmRSS": 106708
+              }
+            ],
+            "peak_rss_kib": 107696,
+            "settled_rss_kib": 106680.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 105216,
+                "VmRSS": 105216
+              },
+              {
+                "VmHWM": 105680,
+                "VmRSS": 105680
+              },
+              {
+                "VmHWM": 106152,
+                "VmRSS": 106152
+              },
+              {
+                "VmHWM": 106204,
+                "VmRSS": 106204
+              },
+              {
+                "VmHWM": 106212,
+                "VmRSS": 106212
+              },
+              {
+                "VmHWM": 106248,
+                "VmRSS": 106248
+              },
+              {
+                "VmHWM": 106248,
+                "VmRSS": 106248
+              },
+              {
+                "VmHWM": 106688,
+                "VmRSS": 106688
+              },
+              {
+                "VmHWM": 106776,
+                "VmRSS": 106776
+              },
+              {
+                "VmHWM": 106132,
+                "VmRSS": 106132
+              },
+              {
+                "VmHWM": 106848,
+                "VmRSS": 106848
+              },
+              {
+                "VmHWM": 106128,
+                "VmRSS": 105260
+              },
+              {
+                "VmHWM": 106200,
+                "VmRSS": 104976
+              },
+              {
+                "VmHWM": 106940,
+                "VmRSS": 106940
+              },
+              {
+                "VmHWM": 107280,
+                "VmRSS": 107280
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 106624,
+                "VmRSS": 105380
+              },
+              {
+                "VmHWM": 106624,
+                "VmRSS": 105864
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 106672,
+                "VmRSS": 106672
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              }
+            ],
+            "peak_rss_kib": 107280,
+            "settled_rss_kib": 107264.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 105812,
+                "VmRSS": 105812
+              },
+              {
+                "VmHWM": 105812,
+                "VmRSS": 105812
+              },
+              {
+                "VmHWM": 106220,
+                "VmRSS": 106220
+              },
+              {
+                "VmHWM": 105396,
+                "VmRSS": 103708
+              },
+              {
+                "VmHWM": 105780,
+                "VmRSS": 105780
+              },
+              {
+                "VmHWM": 105572,
+                "VmRSS": 105276
+              },
+              {
+                "VmHWM": 106408,
+                "VmRSS": 106408
+              },
+              {
+                "VmHWM": 106884,
+                "VmRSS": 106884
+              },
+              {
+                "VmHWM": 106932,
+                "VmRSS": 106932
+              },
+              {
+                "VmHWM": 106036,
+                "VmRSS": 106036
+              },
+              {
+                "VmHWM": 107000,
+                "VmRSS": 107000
+              },
+              {
+                "VmHWM": 107028,
+                "VmRSS": 107028
+              },
+              {
+                "VmHWM": 107088,
+                "VmRSS": 107088
+              },
+              {
+                "VmHWM": 107436,
+                "VmRSS": 107436
+              },
+              {
+                "VmHWM": 107264,
+                "VmRSS": 107264
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 106572,
+                "VmRSS": 105568
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 106868,
+                "VmRSS": 106868
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107348,
+                "VmRSS": 107348
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107016,
+                "VmRSS": 107016
+              },
+              {
+                "VmHWM": 107012,
+                "VmRSS": 107012
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              },
+              {
+                "VmHWM": 107428,
+                "VmRSS": 107428
+              }
+            ],
+            "peak_rss_kib": 107436,
+            "settled_rss_kib": 107428.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 105636,
+                "VmRSS": 105636
+              },
+              {
+                "VmHWM": 105636,
+                "VmRSS": 105636
+              },
+              {
+                "VmHWM": 106108,
+                "VmRSS": 106108
+              },
+              {
+                "VmHWM": 106160,
+                "VmRSS": 106160
+              },
+              {
+                "VmHWM": 106120,
+                "VmRSS": 106120
+              },
+              {
+                "VmHWM": 105580,
+                "VmRSS": 104268
+              },
+              {
+                "VmHWM": 105580,
+                "VmRSS": 103996
+              },
+              {
+                "VmHWM": 105580,
+                "VmRSS": 104524
+              },
+              {
+                "VmHWM": 105580,
+                "VmRSS": 104308
+              },
+              {
+                "VmHWM": 106420,
+                "VmRSS": 106420
+              },
+              {
+                "VmHWM": 106840,
+                "VmRSS": 106840
+              },
+              {
+                "VmHWM": 106964,
+                "VmRSS": 106964
+              },
+              {
+                "VmHWM": 106116,
+                "VmRSS": 105000
+              },
+              {
+                "VmHWM": 106968,
+                "VmRSS": 106968
+              },
+              {
+                "VmHWM": 107212,
+                "VmRSS": 107212
+              },
+              {
+                "VmHWM": 106632,
+                "VmRSS": 106312
+              },
+              {
+                "VmHWM": 107060,
+                "VmRSS": 107060
+              },
+              {
+                "VmHWM": 106840,
+                "VmRSS": 106840
+              },
+              {
+                "VmHWM": 106984,
+                "VmRSS": 106984
+              },
+              {
+                "VmHWM": 106724,
+                "VmRSS": 106724
+              },
+              {
+                "VmHWM": 107212,
+                "VmRSS": 107212
+              },
+              {
+                "VmHWM": 106828,
+                "VmRSS": 106828
+              },
+              {
+                "VmHWM": 107244,
+                "VmRSS": 107244
+              },
+              {
+                "VmHWM": 107108,
+                "VmRSS": 107108
+              },
+              {
+                "VmHWM": 107244,
+                "VmRSS": 107244
+              },
+              {
+                "VmHWM": 107244,
+                "VmRSS": 107244
+              },
+              {
+                "VmHWM": 106632,
+                "VmRSS": 104984
+              },
+              {
+                "VmHWM": 106632,
+                "VmRSS": 105000
+              },
+              {
+                "VmHWM": 106632,
+                "VmRSS": 106144
+              },
+              {
+                "VmHWM": 106632,
+                "VmRSS": 106064
+              }
+            ],
+            "peak_rss_kib": 107244,
+            "settled_rss_kib": 106968.0
+          }
+        ],
+        "candidate": [
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 98356,
+                "VmRSS": 98052
+              },
+              {
+                "VmHWM": 98516,
+                "VmRSS": 97656
+              },
+              {
+                "VmHWM": 99052,
+                "VmRSS": 98572
+              },
+              {
+                "VmHWM": 100340,
+                "VmRSS": 100340
+              },
+              {
+                "VmHWM": 99636,
+                "VmRSS": 99636
+              },
+              {
+                "VmHWM": 100320,
+                "VmRSS": 100320
+              },
+              {
+                "VmHWM": 100380,
+                "VmRSS": 100380
+              },
+              {
+                "VmHWM": 100380,
+                "VmRSS": 100380
+              },
+              {
+                "VmHWM": 100452,
+                "VmRSS": 100452
+              },
+              {
+                "VmHWM": 99740,
+                "VmRSS": 98304
+              },
+              {
+                "VmHWM": 100588,
+                "VmRSS": 100588
+              },
+              {
+                "VmHWM": 100636,
+                "VmRSS": 100636
+              },
+              {
+                "VmHWM": 100660,
+                "VmRSS": 100660
+              },
+              {
+                "VmHWM": 100732,
+                "VmRSS": 100732
+              },
+              {
+                "VmHWM": 100644,
+                "VmRSS": 100644
+              },
+              {
+                "VmHWM": 101028,
+                "VmRSS": 101028
+              },
+              {
+                "VmHWM": 101100,
+                "VmRSS": 101100
+              },
+              {
+                "VmHWM": 101120,
+                "VmRSS": 101120
+              },
+              {
+                "VmHWM": 101120,
+                "VmRSS": 101120
+              },
+              {
+                "VmHWM": 100392,
+                "VmRSS": 98404
+              },
+              {
+                "VmHWM": 100392,
+                "VmRSS": 98864
+              },
+              {
+                "VmHWM": 100392,
+                "VmRSS": 98924
+              },
+              {
+                "VmHWM": 100656,
+                "VmRSS": 100656
+              },
+              {
+                "VmHWM": 100392,
+                "VmRSS": 100380
+              },
+              {
+                "VmHWM": 100852,
+                "VmRSS": 100852
+              },
+              {
+                "VmHWM": 100396,
+                "VmRSS": 100396
+              },
+              {
+                "VmHWM": 101104,
+                "VmRSS": 101104
+              },
+              {
+                "VmHWM": 101144,
+                "VmRSS": 101144
+              },
+              {
+                "VmHWM": 100392,
+                "VmRSS": 99200
+              },
+              {
+                "VmHWM": 101144,
+                "VmRSS": 101144
+              }
+            ],
+            "peak_rss_kib": 101144,
+            "settled_rss_kib": 100526.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 99856,
+                "VmRSS": 98964
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 98964
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 99468
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 96780
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 98964
+              },
+              {
+                "VmHWM": 99976,
+                "VmRSS": 99976
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 97408
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 99252
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 97604
+              },
+              {
+                "VmHWM": 100404,
+                "VmRSS": 100404
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 99536
+              },
+              {
+                "VmHWM": 100548,
+                "VmRSS": 100548
+              },
+              {
+                "VmHWM": 100592,
+                "VmRSS": 100592
+              },
+              {
+                "VmHWM": 100024,
+                "VmRSS": 98520
+              },
+              {
+                "VmHWM": 101080,
+                "VmRSS": 101080
+              },
+              {
+                "VmHWM": 101060,
+                "VmRSS": 101060
+              },
+              {
+                "VmHWM": 101048,
+                "VmRSS": 101048
+              },
+              {
+                "VmHWM": 101080,
+                "VmRSS": 101080
+              },
+              {
+                "VmHWM": 100400,
+                "VmRSS": 98904
+              },
+              {
+                "VmHWM": 101080,
+                "VmRSS": 101080
+              },
+              {
+                "VmHWM": 100736,
+                "VmRSS": 100736
+              },
+              {
+                "VmHWM": 101016,
+                "VmRSS": 101016
+              },
+              {
+                "VmHWM": 100832,
+                "VmRSS": 100832
+              },
+              {
+                "VmHWM": 101080,
+                "VmRSS": 101080
+              },
+              {
+                "VmHWM": 101080,
+                "VmRSS": 101080
+              },
+              {
+                "VmHWM": 100400,
+                "VmRSS": 100128
+              },
+              {
+                "VmHWM": 100400,
+                "VmRSS": 100064
+              },
+              {
+                "VmHWM": 100972,
+                "VmRSS": 100972
+              },
+              {
+                "VmHWM": 101080,
+                "VmRSS": 101080
+              },
+              {
+                "VmHWM": 100436,
+                "VmRSS": 100080
+              }
+            ],
+            "peak_rss_kib": 101080,
+            "settled_rss_kib": 100902.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 98140,
+                "VmRSS": 97852
+              },
+              {
+                "VmHWM": 98460,
+                "VmRSS": 97980
+              },
+              {
+                "VmHWM": 99372,
+                "VmRSS": 99372
+              },
+              {
+                "VmHWM": 98588,
+                "VmRSS": 97464
+              },
+              {
+                "VmHWM": 99416,
+                "VmRSS": 99416
+              },
+              {
+                "VmHWM": 99500,
+                "VmRSS": 99500
+              },
+              {
+                "VmHWM": 99008,
+                "VmRSS": 99008
+              },
+              {
+                "VmHWM": 98736,
+                "VmRSS": 97156
+              },
+              {
+                "VmHWM": 98980,
+                "VmRSS": 98980
+              },
+              {
+                "VmHWM": 99684,
+                "VmRSS": 99684
+              },
+              {
+                "VmHWM": 99204,
+                "VmRSS": 99204
+              },
+              {
+                "VmHWM": 99708,
+                "VmRSS": 99708
+              },
+              {
+                "VmHWM": 99836,
+                "VmRSS": 99836
+              },
+              {
+                "VmHWM": 100140,
+                "VmRSS": 100140
+              },
+              {
+                "VmHWM": 99476,
+                "VmRSS": 97672
+              },
+              {
+                "VmHWM": 99532,
+                "VmRSS": 99012
+              },
+              {
+                "VmHWM": 99556,
+                "VmRSS": 98504
+              },
+              {
+                "VmHWM": 99556,
+                "VmRSS": 98844
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 99556,
+                "VmRSS": 98132
+              },
+              {
+                "VmHWM": 99556,
+                "VmRSS": 98304
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 99556,
+                "VmRSS": 97508
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 100340,
+                "VmRSS": 100340
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              },
+              {
+                "VmHWM": 100344,
+                "VmRSS": 100344
+              }
+            ],
+            "peak_rss_kib": 100344,
+            "settled_rss_kib": 100344.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 98776,
+                "VmRSS": 98776
+              },
+              {
+                "VmHWM": 98776,
+                "VmRSS": 98776
+              },
+              {
+                "VmHWM": 99184,
+                "VmRSS": 99184
+              },
+              {
+                "VmHWM": 98256,
+                "VmRSS": 97112
+              },
+              {
+                "VmHWM": 99244,
+                "VmRSS": 99244
+              },
+              {
+                "VmHWM": 99276,
+                "VmRSS": 99276
+              },
+              {
+                "VmHWM": 99276,
+                "VmRSS": 99276
+              },
+              {
+                "VmHWM": 99280,
+                "VmRSS": 99280
+              },
+              {
+                "VmHWM": 98384,
+                "VmRSS": 96788
+              },
+              {
+                "VmHWM": 99844,
+                "VmRSS": 99844
+              },
+              {
+                "VmHWM": 99880,
+                "VmRSS": 99880
+              },
+              {
+                "VmHWM": 99984,
+                "VmRSS": 99984
+              },
+              {
+                "VmHWM": 99300,
+                "VmRSS": 99300
+              },
+              {
+                "VmHWM": 100184,
+                "VmRSS": 100184
+              },
+              {
+                "VmHWM": 100380,
+                "VmRSS": 100380
+              },
+              {
+                "VmHWM": 100472,
+                "VmRSS": 100472
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 99756,
+                "VmRSS": 99756
+              },
+              {
+                "VmHWM": 99856,
+                "VmRSS": 99856
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 99920,
+                "VmRSS": 99920
+              },
+              {
+                "VmHWM": 100324,
+                "VmRSS": 100324
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100416,
+                "VmRSS": 100416
+              },
+              {
+                "VmHWM": 100376,
+                "VmRSS": 100376
+              }
+            ],
+            "peak_rss_kib": 100472,
+            "settled_rss_kib": 100416.0
+          },
+          {
+            "samples_kib": [
+              {
+                "VmHWM": 98384,
+                "VmRSS": 98384
+              },
+              {
+                "VmHWM": 98384,
+                "VmRSS": 98384
+              },
+              {
+                "VmHWM": 98856,
+                "VmRSS": 98856
+              },
+              {
+                "VmHWM": 98940,
+                "VmRSS": 98940
+              },
+              {
+                "VmHWM": 99332,
+                "VmRSS": 99332
+              },
+              {
+                "VmHWM": 99368,
+                "VmRSS": 99368
+              },
+              {
+                "VmHWM": 99784,
+                "VmRSS": 99784
+              },
+              {
+                "VmHWM": 99980,
+                "VmRSS": 99980
+              },
+              {
+                "VmHWM": 99988,
+                "VmRSS": 99988
+              },
+              {
+                "VmHWM": 99176,
+                "VmRSS": 97972
+              },
+              {
+                "VmHWM": 100236,
+                "VmRSS": 100236
+              },
+              {
+                "VmHWM": 99484,
+                "VmRSS": 98892
+              },
+              {
+                "VmHWM": 100288,
+                "VmRSS": 100288
+              },
+              {
+                "VmHWM": 100288,
+                "VmRSS": 100288
+              },
+              {
+                "VmHWM": 100144,
+                "VmRSS": 100144
+              },
+              {
+                "VmHWM": 99628,
+                "VmRSS": 97796
+              },
+              {
+                "VmHWM": 99900,
+                "VmRSS": 99900
+              },
+              {
+                "VmHWM": 99804,
+                "VmRSS": 98456
+              },
+              {
+                "VmHWM": 99832,
+                "VmRSS": 98812
+              },
+              {
+                "VmHWM": 99832,
+                "VmRSS": 98448
+              },
+              {
+                "VmHWM": 100320,
+                "VmRSS": 100320
+              },
+              {
+                "VmHWM": 100604,
+                "VmRSS": 100604
+              },
+              {
+                "VmHWM": 100604,
+                "VmRSS": 100604
+              },
+              {
+                "VmHWM": 100604,
+                "VmRSS": 100604
+              },
+              {
+                "VmHWM": 100276,
+                "VmRSS": 100276
+              },
+              {
+                "VmHWM": 100692,
+                "VmRSS": 100692
+              },
+              {
+                "VmHWM": 100692,
+                "VmRSS": 100692
+              },
+              {
+                "VmHWM": 100632,
+                "VmRSS": 100632
+              },
+              {
+                "VmHWM": 100632,
+                "VmRSS": 100632
+              },
+              {
+                "VmHWM": 100632,
+                "VmRSS": 100632
+              }
+            ],
+            "peak_rss_kib": 100692,
+            "settled_rss_kib": 100618.0
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "peak_rss_kib": 107436,
+          "settled_rss_kib": 107264.0
+        },
+        "candidate": {
+          "peak_rss_kib": 100692,
+          "settled_rss_kib": 100526.0
+        }
+      }
+    }
+  }
+}
