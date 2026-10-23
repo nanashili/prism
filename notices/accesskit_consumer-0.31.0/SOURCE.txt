@@ -1,0 +1,3 @@
+Upstream license for accesskit_consumer 0.31.0
+Source: https://raw.githubusercontent.com/AccessKit/accesskit/5801c4a49ff9b2c9ec3f77b3c31272d0da4c5cd3/LICENSE-MIT
+Cargo source commit: 5801c4a49ff9b2c9ec3f77b3c31272d0da4c5cd3

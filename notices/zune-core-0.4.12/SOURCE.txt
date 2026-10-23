@@ -1,0 +1,3 @@
+Upstream license for zune-core 0.4.12
+Source: https://raw.githubusercontent.com/etemesi254/zune-image/f8fbb123d5ed04441e8324a555bfcda0cb1bd28f/LICENSE.md
+Cargo source commit: f8fbb123d5ed04441e8324a555bfcda0cb1bd28f

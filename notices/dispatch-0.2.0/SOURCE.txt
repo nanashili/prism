@@ -1,0 +1,2 @@
+Package declares MIT in Cargo.toml at https://github.com/SSheldon/rust-dispatch/blob/82d6c7a5b75dc0c71c3f46f87bb6c16a476f7748/Cargo.toml
+No standalone license file exists in that source revision. Included MIT license body from AccessKit, with package authors preserved in Cargo.toml.orig.

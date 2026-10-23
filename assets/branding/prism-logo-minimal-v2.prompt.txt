@@ -1,0 +1,8 @@
+Mode: built-in image generation
+Asset: Minimal Prism app logo
+
+Initial generation prompt:
+Design a minimal square app icon for an application named Prism. Pure black background. A centered upright triangle with a crisp thin white outline. A short white line approaches from the left; a small vivid multicolor spectrum emerges from the right. Original geometric vector-style design with balanced proportions, generous empty space, and strong legibility at small sizes. Flat shapes only. No lettering, texture, glow, glass effects, or mockup.
+
+Final edit prompt:
+Edit this minimal Prism logo. Keep its pure black background, white triangular outline, and flat six-color spectrum. Change only the composition: shorten the white incoming beam and rainbow output so both end well inside the canvas, with at least 15 percent empty margin at every outer edge. Keep the complete symbol optically centered and compact, suitable for a square app icon. Extend the white beam through the triangle interior to meet the spectrum at the right edge of the triangle. Crisp clean geometry, no text, no glow, no extra decoration.

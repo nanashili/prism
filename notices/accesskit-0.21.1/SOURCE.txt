@@ -1,0 +1,3 @@
+Upstream license for accesskit 0.21.1
+Source: https://raw.githubusercontent.com/AccessKit/accesskit/0b6901a8c8e6fb1cb5a2dc7c19dc7bee1cc5ad09/LICENSE-MIT
+Cargo source commit: 0b6901a8c8e6fb1cb5a2dc7c19dc7bee1cc5ad09

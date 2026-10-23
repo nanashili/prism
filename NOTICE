@@ -1,0 +1,25 @@
+Prism
+Copyright (c) 2026 Nanashi Li and Prism contributors
+
+Prism is an independently maintained native Rust workbench. It was developed
+from Eleven (https://github.com/Zfinix/eleven), distributed under Apache-2.0.
+The surrounding source checkout at extraction was commit
+85a9be336ecf442cd8a8aa27a8a98060cee0646a, with local development changes.
+
+Inherited material includes interface designs, icon and integration artwork,
+playbooks, and adapted application behavior. The standalone distribution
+changes the implementation, product identity, resource paths, project format,
+storage names, configuration names, documentation, and packaging.
+
+The MIT license at the repository root covers Prism's original contributions
+and modifications. It does not replace the original terms applicable to
+inherited or third-party material. The original Apache-2.0 license is retained
+in resources/upstream/LICENSE-APACHE. Preserve this notice and the applicable
+licenses when redistributing the corresponding material.
+
+JetBrains Mono remains under its SIL Open Font License in
+resources/upstream/fonts/JetBrainsMono-OFL.txt.
+
+Bundled integration logos identify their respective products. Their names and
+marks belong to their respective owners; inclusion does not imply endorsement.
+See THIRD_PARTY.md and the vendor and notices directories for other notices.

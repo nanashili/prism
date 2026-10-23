@@ -1,0 +1,6 @@
+Generated with the built-in image generation tool.
+
+Use case: logo-brand.
+Create one extremely minimal logo concept for an app named Prism. Think of the visual restraint of Vercel: bold geometry, severe simplicity, exceptionally clear small-size silhouette. Create an original prism mark with that level of simplicity.
+A pure black square canvas. Center one compact, flat, white triangular prism symbol. Reduce it to two clean solid geometric facets separated by a very narrow, intentional black seam. The overall silhouette is an upright triangle with just enough asymmetric depth at its lower right edge to suggest a prism rather than a plain triangle. Broad shapes only. Crisp vector-like edges. White only on black. Generous empty space: the mark occupies roughly half the canvas width.
+No wordmark or letters. No gradients, rainbow, colors, glass, glow, highlights, reflections, shadows, bevels, textures, rounded-square app tile, decorative outlines, particles, presentation mockup, or multiple concepts. This must look like a minimal identity drawn from a handful of straight lines, not a rendered object.

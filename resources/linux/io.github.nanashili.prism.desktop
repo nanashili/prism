@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Prism
+GenericName=Reverse Engineering Workbench
+Comment=Explore binaries, code and analysis with AI agents
+Exec=prism %f
+Icon=io.github.nanashili.prism
+Terminal=false
+Categories=Development;Utility;
+StartupWMClass=io.github.nanashili.prism

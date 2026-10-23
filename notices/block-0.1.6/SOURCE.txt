@@ -1,0 +1,4 @@
+block 0.1.6 declares MIT in its published Cargo.toml.
+Source: https://github.com/SSheldon/rust-block
+Neither the published crate nor the upstream repository includes a standalone license file.
+The standard MIT license body is included; the package author Steven Sheldon is preserved in Cargo.toml.orig.

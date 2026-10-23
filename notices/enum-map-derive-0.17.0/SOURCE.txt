@@ -1,0 +1,2 @@
+https://codeberg.org/xfix/enum-map/raw/commit/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt
+https://codeberg.org/xfix/enum-map/raw/commit/2026968c30ad14d268f3d70c618a704e22a3b980/.reuse/dep5

@@ -1,0 +1,7 @@
+Tool: built-in image_gen image editing
+Source: resources/branding/prism-logo.png (previous transparent glass prism)
+Transparent background: false
+
+Use case: precise-object-edit. Asset type: Prism desktop application icon master. Edit the provided existing glass prism logo. Keep this exact single triangular optical-glass prism, its three beveled edges, clear interior, orientation, and subtle blue/gold spectral highlights. Change only the background and framing: put the entire prism on a perfectly uniform solid pure black (#000000) background, including the clear center of the prism. Use a square 1024 by 1024 pixel canvas. Center the complete prism optically, with its width about 72 percent of the canvas so it has generous clear safety padding on every side for desktop icon masks. Crisp, minimal, carefully antialiased glass edges. The black square fills the image to all four edges, fully opaque. No rounded corners baked into the master. No light beams or rays, no rainbow beam, no text, no letters, no additional objects, no shadow outside the icon, no border around the square, no redesign.
+
+Export: Native sips resized the generated square to 768 pixels, padded it centrally to 1024 pixels with #000000, and tagged it as sRGB. The complete prism occupies about 72 percent of the final canvas width. scripts/app-icons.py derives each platform size from that master.

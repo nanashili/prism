@@ -1,0 +1,3 @@
+Upstream license for eframe 0.33.3
+Source: https://raw.githubusercontent.com/emilk/egui/44cdd653e2317d300fb8a6c9c36b03f23991e803/LICENSE-MIT
+Cargo source commit: 44cdd653e2317d300fb8a6c9c36b03f23991e803

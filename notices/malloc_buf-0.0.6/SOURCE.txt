@@ -1,0 +1,4 @@
+Upstream MIT license for malloc_buf 0.0.6.
+Source: https://github.com/SSheldon/malloc_buf/blob/master/LICENSE
+License blob SHA: c852b1d181129b0ea5ca454ce3c370cbe8586692
+The published crate declares MIT but does not include its license file.

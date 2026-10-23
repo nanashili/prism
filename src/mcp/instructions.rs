@@ -1,0 +1,51 @@
+/// Required agent workflow shared by MCP initialization and desktop chat context.
+pub const BATCH_INSTRUCTIONS: &str = concat!(
+    "Always use MCP batch commands for decompilation and reconstruction. ",
+    "Choose the workflow from the user's current request, not from saved generation state. ",
+    "For decompilation, including plain 'decompile' or the decompile skill, use ",
+    "decompile_batch action=start with bounded addresses selections; ",
+    "a focused selection is a one-item durable batch. This also applies when a reconstruction ",
+    "generation already exists. Select only functions already in the saved analysis using ",
+    "list_functions. Do not run analyze, discover_functions or scan for new functions during ",
+    "decompilation. Report missing functions without expanding the inventory; additional ",
+    "analysis or discovery requires an explicit user request. For large modules or whole projects, use decompile_batch ",
+    "action=start with an optional addresses selection or filter. For a large selection, start ",
+    "one durable job and retain its job ID; do not recreate it or issue one-function calls while ",
+    "it is running. Inspect status and page results, following next_offset until null. Use list ",
+    "and resume after restarting. Poll after a meaningful processing interval or state change, ",
+    "not in an immediate loop on unchanged status. retry_failed then resume retries failures ",
+    "while retaining successful output; use it only after a diagnosed provider, configuration ",
+    "or input cause has changed. Never emulate durable jobs with shell loops. A ",
+    "decompilation request returns pseudocode or an export; do not claim ",
+    "reconstruction work, submit generated source or run builds for a decompilation request. ",
+    "Only when the user explicitly requests reconstruction, a source port or continuation ",
+    "of reconstruction, complete the project scaffold, declare module dependencies with ",
+    "reconstruction_dependencies, and freeze explicit interface/ABI contracts with ",
+    "reconstruction_contracts before claiming module work. Use reconstruction_claim, ",
+    "page reconstruction_evidence, then submit ",
+    "all leased source and results atomically with reconstruction_submit. ",
+    "With Ghidra (Java through REA), first fill missing pseudocode through a durable decompile_batch job; ",
+    "reconstruction_evidence reuses verified batch results and never starts individual decompilation. ",
+    "A saved generation or an earlier reconstruction request does not override a current ",
+    "request to decompile, inspect or explain code. ",
+    "Reuse cached evidence and source, respect worker limits and handle per-function errors. ",
+    "Never use direct procedure_pseudo_code calls, UI navigation, get_state or shell loops ",
+    "as a decompilation export path. If required batch tools are unavailable or fail, ",
+    "report the blocker rather than falling back to individual pseudocode requests or writes. ",
+    "For managed bytecode, use only advertised bulk export or paginated type/method operations; ",
+    "never route bytecode through a native decompiler."
+);
+
+/// Reply formatting shared by MCP clients and desktop chat sessions.
+pub const RESPONSE_INSTRUCTIONS: &str = concat!(
+    "Unless the user requests another output format, write user-facing replies in valid ",
+    "CommonMark Markdown with GitHub-flavored tables. Use real newlines and blank lines ",
+    "between paragraphs and around headings, lists, fenced code blocks and tables. ",
+    "Use inline code for identifiers and paths, language-tagged fences for source code, ",
+    "and Markdown links. Keep prose outside code fences. ",
+    "Use tables only for concise comparisons: include a header and separator row, ",
+    "put each row on its own line and escape literal pipes in cells. ",
+    "Present long function inventories or explanations as sections and lists instead of ",
+    "wide tables. Do not simulate tables with spaces or HTML, or dump raw tool JSON ",
+    "when a readable Markdown explanation is appropriate."
+);
