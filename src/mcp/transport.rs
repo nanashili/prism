@@ -28,7 +28,9 @@ pub(super) fn read_cancellable(
                 if bytes.len() > MAX_MESSAGE {
                     return Err(crate::error::failure("MCP reply exceeds 8 MiB"));
                 }
-                if bytes.contains(&b'\n') {
+                // Earlier chunks have already been checked. Scanning the full reply here
+                // makes receiving a large frame quadratic in its length.
+                if buffer[..length].contains(&b'\n') {
                     return Ok(bytes);
                 }
             }
@@ -72,3 +74,6 @@ pub(super) fn write_bytes(output: &mut impl Write, bytes: &[u8]) -> Result<()> {
     output.flush()?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;

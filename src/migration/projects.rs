@@ -5,6 +5,7 @@ use crate::project::{archive::Archive, files};
 use crate::storage::Store;
 use serde_json::{Value, json};
 use std::fs::File;
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
@@ -18,9 +19,9 @@ pub(super) fn validate_id(id: &str) -> Result<()> {
 }
 
 pub(super) fn index(root: &Path) -> Result<Vec<OriginalProject>> {
-    Ok(serde_json::from_reader(File::open(
+    Ok(serde_json::from_reader(BufReader::new(File::open(
         root.join("support/projects/index.json"),
-    )?)?)
+    )?))?)
 }
 
 pub(super) fn import(root: &Path, store: &Store, report: &mut Report) -> Result<()> {
@@ -80,15 +81,17 @@ fn convert(
             .collect();
     }
     let imported = std::sync::Arc::make_mut(&mut project.imported);
-    imported.insert("project.json".into(), state);
-    imported.insert("upstream-snapshot".into(), json!(root));
+    imported.insert("project.json".into(), std::sync::Arc::new(state));
+    imported.insert("upstream-snapshot".into(), std::sync::Arc::new(json!(root)));
     Ok(project)
 }
 
 fn project_state(root: &Path, id: &str) -> Result<Value> {
     let current = root.join("support/projects").join(format!("{id}.json"));
     if current.is_file() {
-        return Ok(serde_json::from_reader(File::open(current)?)?);
+        return Ok(serde_json::from_reader(BufReader::new(File::open(
+            current,
+        )?))?);
     }
     let document = root.join("documents").join(format!("{id}.prism"));
     if document.is_file() {
@@ -163,3 +166,6 @@ fn copy_executable(original: &OriginalProject, destination: &Path) -> Result<()>
         "Recovering the original architecture requires its saved Prism document",
     ))
 }
+
+#[cfg(test)]
+mod tests;

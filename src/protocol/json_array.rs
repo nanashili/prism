@@ -10,12 +10,26 @@ pub(crate) fn parse<T: DeserializeOwned>(
     text: &str,
     consume: impl FnMut(T) -> Result<()>,
 ) -> Result<()> {
+    decode(serde_json::Deserializer::from_str(text), consume)
+}
+
+/// Decode an array without first retaining the complete encoded input.
+pub(crate) fn parse_reader<T: DeserializeOwned>(
+    reader: impl std::io::Read,
+    consume: impl FnMut(T) -> Result<()>,
+) -> Result<()> {
+    decode(serde_json::Deserializer::from_reader(reader), consume)
+}
+
+fn decode<'de, T: DeserializeOwned, R: serde_json::de::Read<'de>>(
+    mut decoder: serde_json::Deserializer<R>,
+    consume: impl FnMut(T) -> Result<()>,
+) -> Result<()> {
     let mut visitor = Elements {
         consume,
         failure: None,
         item: PhantomData,
     };
-    let mut decoder = serde_json::Deserializer::from_str(text);
     let decoded = decoder.deserialize_seq(&mut visitor);
     if let Some(error) = visitor.failure {
         return Err(error);

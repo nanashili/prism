@@ -102,7 +102,7 @@ impl Prism {
             }
         }
         if document && let Some(value) = project.imported.get("rust-chat.json") {
-            match serde_json::from_value(value.clone()) {
+            match serde::Deserialize::deserialize(value.as_ref()) {
                 Ok(messages) => {
                     self.chat = super::app::Chat {
                         messages,

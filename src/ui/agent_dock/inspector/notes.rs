@@ -5,6 +5,10 @@ use crate::{
 use eframe::egui::{self, Color32, Rect, Sense};
 use std::time::{Duration, Instant};
 
+#[cfg(test)]
+#[path = "notes_tests.rs"]
+mod tests;
+
 const TAGS: [(&str, &str); 7] = [
     ("None", ""),
     ("Red", "#e06c75"),
@@ -87,16 +91,7 @@ impl Prism {
         if let Some(colour) = picked {
             let address = self.workspace.selected.clone();
             self.edit_project(|project| {
-                let tags = std::sync::Arc::make_mut(&mut project.imported)
-                    .entry("prism-color-tags".into())
-                    .or_insert_with(|| serde_json::json!({}));
-                if let Some(tags) = tags.as_object_mut() {
-                    if colour.is_empty() {
-                        tags.remove(&address);
-                    } else {
-                        tags.insert(address, colour.into());
-                    }
-                }
+                set_colour_tag(project, &address, colour);
             });
         }
     }
@@ -131,5 +126,18 @@ impl Prism {
         }
         self.chat_tabs.inspection.save_at = None;
         Ok(())
+    }
+}
+
+fn set_colour_tag(project: &mut crate::model::Project, address: &str, colour: &str) {
+    let tags = std::sync::Arc::make_mut(&mut project.imported)
+        .entry("prism-color-tags".into())
+        .or_insert_with(|| std::sync::Arc::new(serde_json::json!({})));
+    if let Some(tags) = std::sync::Arc::make_mut(tags).as_object_mut() {
+        if colour.is_empty() {
+            tags.remove(address);
+        } else {
+            tags.insert(address.into(), colour.into());
+        }
     }
 }

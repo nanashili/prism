@@ -114,7 +114,7 @@ fn copy_documents(source: &Path, root: &Path) -> Result<()> {
         return Ok(());
     }
     let documents: std::collections::BTreeMap<String, PathBuf> =
-        serde_json::from_reader(File::open(registry)?)?;
+        serde_json::from_reader(std::io::BufReader::new(File::open(registry)?))?;
     std::fs::create_dir(root.join("documents"))?;
     for (id, path) in documents {
         super::projects::validate_id(&id)?;

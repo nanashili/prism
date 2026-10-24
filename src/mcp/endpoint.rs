@@ -62,7 +62,7 @@ impl Endpoint {
                 ));
             }
         }
-        let endpoint: Value = serde_json::from_reader(file)?;
+        let endpoint: Value = serde_json::from_reader(std::io::BufReader::new(file))?;
         Self::new(
             endpoint["address"]
                 .as_str()

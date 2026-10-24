@@ -39,8 +39,10 @@ fn load_metadata(archive: &mut Archive, project: &mut Project) -> Result<()> {
             if json_bytes > 32 * 1024 * 1024 {
                 return Err(failure("The document metadata exceeds 32 MiB"));
             }
-            std::sync::Arc::make_mut(&mut project.imported)
-                .insert(entry.name.clone(), archive.json(&entry.name)?);
+            std::sync::Arc::make_mut(&mut project.imported).insert(
+                entry.name.clone(),
+                std::sync::Arc::new(archive.json(&entry.name)?),
+            );
         } else if entry.name != "binary" {
             return Err(failure(format!(
                 "Cannot preserve the document entry {} yet",
@@ -49,7 +51,7 @@ fn load_metadata(archive: &mut Archive, project: &mut Project) -> Result<()> {
         }
     }
     if let Some(state) = project.imported.get("rust-project.json") {
-        let restored: Project = Project::deserialize(state)?;
+        let restored: Project = Project::deserialize(state.as_ref())?;
         project.target.original_path = restored.target.original_path.or(Some(restored.target.path));
         project.renamed = restored.renamed;
         project.notes = restored.notes;

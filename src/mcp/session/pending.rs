@@ -39,7 +39,7 @@ impl<W: Write + Send + 'static> Pending<W> {
 
     pub(super) fn accept(
         &mut self,
-        request: &Value,
+        request: &mut Value,
         bytes: usize,
         mode: Mode,
         endpoint: Option<&Endpoint>,
@@ -81,7 +81,9 @@ impl<W: Write + Send + 'static> Pending<W> {
             ))?;
             return Ok(true);
         }
-        self.start(id.clone(), params.clone(), endpoint.cloned(), class, bytes)?;
+        let id = request["id"].take();
+        let params = request["params"].take();
+        self.start(id, params, endpoint.cloned(), class, bytes)?;
         Ok(true)
     }
 
@@ -205,3 +207,6 @@ fn joined(failures: Vec<String>) -> Result<()> {
         Err(failure(failures.join("\n")))
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -221,6 +221,7 @@ Keep provider-dependent verification separate from deterministic tests. Report t
 - [Generational source reconstruction](docs/RECONSTRUCTION.md)
 - [Rust Ghidra provider](docs/REA_RUST_PROVIDER.md)
 - [Performance roadmap](docs/PERFORMANCE_ROADMAP.md)
+- [Current performance audit and reproducible benchmarks](docs/PERFORMANCE_AUDIT.md)
 - [Resource-efficiency research](docs/RESOURCE_EFFICIENCY_RESEARCH.md)
 - [Rust review and measured limitations](docs/RUST_REVIEW.md)
 - [Accumulated implementation notes](docs/IMPLEMENTATION_NOTES.md)
