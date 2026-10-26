@@ -1,5 +1,13 @@
 /// Required agent workflow shared by MCP initialization and desktop chat context.
 pub const BATCH_INSTRUCTIONS: &str = concat!(
+    "For type and structure recovery, compare memory accesses, pointer flows and call sites ",
+    "across the saved functions using batch pseudocode and advertised assembly tools. ",
+    "Use recover_types propose with instruction references and explicit same-origin aliases; ",
+    "never alias an interior pointer without accounting for its displacement. Reuse accepted ",
+    "type_recovery context for every consuming function. Check the proposal and resolve every ",
+    "conflict before accepting its exact ID. Acceptance means consistency of supplied agent ",
+    "observations, not proof of layout or behavior. Do not claim that provider pseudocode ",
+    "was retyped. Unknown array bounds, union overlays and uncertain pointer flows remain unresolved. ",
     "Always use MCP batch commands for decompilation and reconstruction. ",
     "Choose the workflow from the user's current request, not from saved generation state. ",
     "For decompilation, including plain 'decompile' or the decompile skill, use ",

@@ -218,6 +218,7 @@ Keep provider-dependent verification separate from deterministic tests. Report t
 ## Documentation
 
 - [Decompilation jobs](docs/DECOMPILATION.md)
+- [Shared type and structure recovery](docs/TYPE_RECOVERY.md)
 - [Generational source reconstruction](docs/RECONSTRUCTION.md)
 - [Rust Ghidra provider](docs/REA_RUST_PROVIDER.md)
 - [Performance roadmap](docs/PERFORMANCE_ROADMAP.md)

@@ -9,6 +9,7 @@ pub(crate) mod resources;
 mod rizin;
 mod rizin_inventory;
 mod rizin_tools;
+pub(crate) mod type_recovery;
 pub(crate) use engine::Engine;
 pub(crate) mod local;
 mod rea;

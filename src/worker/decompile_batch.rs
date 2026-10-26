@@ -102,8 +102,22 @@ impl State {
             items.push(item);
             next += 1;
         }
-        Ok(json!({"items":items,"offset":offset,"page_size":4,
+        let context = self.decompilation_context()?;
+        let analyzer = super::analysis_cache_identity::namespace(&context);
+        let addresses: Vec<&str> = items
+            .iter()
+            .filter_map(|item| item["address"].as_str())
+            .collect();
+        let types = if addresses.is_empty() {
+            None
+        } else {
+            self.store
+                .recovered_type_context(&context.project, &analyzer, &addresses)?
+        };
+        Ok(
+            json!({"items":items,"offset":offset,"page_size":4,"type_recovery":types,
             "next_offset":(next < procedures.len()).then_some(next),
-            "total":procedures.len(),"behavior_verified":false}))
+            "total":procedures.len(),"behavior_verified":false}),
+        )
     }
 }

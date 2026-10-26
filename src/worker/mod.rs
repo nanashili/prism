@@ -1,6 +1,6 @@
 mod analysis;
 mod analysis_cache;
-mod analysis_cache_identity;
+pub(crate) mod analysis_cache_identity;
 mod decompilation_run;
 mod decompile_batch;
 mod durable_decompilation;

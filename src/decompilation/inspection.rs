@@ -33,8 +33,20 @@ impl ExportRunner {
         let include_data = args["include_data"].as_bool().unwrap_or(false);
         let (rows, more) = store.decompilation_results_page(id, offset, limit, include_data)?;
         let next = offset + rows.len();
+        let saved_context = Context {
+            project: job.project,
+            provider: job.provider,
+            configuration: job.options,
+        };
+        let analyzer = crate::worker::analysis_cache_identity::namespace(&saved_context);
+        let addresses: Vec<&str> = rows.iter().map(|row| row.address.as_str()).collect();
+        let types = if addresses.is_empty() {
+            None
+        } else {
+            store.recovered_type_context(&context.project, &analyzer, &addresses)?
+        };
         Ok(json!({"job": id, "offset": offset, "results": rows,
-            "next_offset": more.then_some(next)}))
+            "next_offset": more.then_some(next), "type_recovery": types}))
     }
 
     pub(crate) fn list(store: &Store, context: &Context, args: &Value) -> Result<Value> {

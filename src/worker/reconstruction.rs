@@ -94,8 +94,19 @@ impl State {
         }
         let next = offset + u64::try_from(page.items.len())?;
         let more = !database.evidence_units(generation, lease, next)?.is_empty();
+        let addresses: Vec<&str> = page
+            .items
+            .iter()
+            .filter_map(|item| item["address"].as_str())
+            .collect();
+        let types = if addresses.is_empty() {
+            None
+        } else {
+            self.store
+                .recovered_type_context(project, analyzer, &addresses)?
+        };
         Ok(
-            json!({"items":page.items,"offset":offset,"page_size":4,"next_offset":more.then_some(next)}),
+            json!({"items":page.items,"offset":offset,"page_size":4,"next_offset":more.then_some(next),"type_recovery":types}),
         )
     }
 }

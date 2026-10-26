@@ -5,6 +5,7 @@ mod analysis;
 mod decompilation;
 mod reconstruction;
 mod reconstruction_modules;
+mod type_recovery;
 mod window;
 
 pub fn definitions(mode: Mode) -> Value {

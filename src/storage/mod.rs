@@ -17,6 +17,7 @@ pub(crate) use message_page::{MessagePage, MessageWindow};
 pub(crate) mod navigation;
 mod reconstruction;
 pub(crate) mod resources;
+mod type_recovery;
 mod upstream;
 pub(crate) mod usage;
 
