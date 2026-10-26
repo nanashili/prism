@@ -32,8 +32,10 @@ impl ExportRunner {
         let limit = page_limit(args)?;
         let include_data = args["include_data"].as_bool().unwrap_or(false);
         let (rows, more) = store.decompilation_results_page(id, offset, limit, include_data)?;
-        let next = offset + rows.len();
-        Ok(json!({"job": id, "offset": offset, "results": rows,
+        let results = warning_results(&rows)?;
+        let more = more || results.len() < rows.len();
+        let next = offset + results.len();
+        Ok(json!({"job": id, "offset": offset, "results": results,
             "next_offset": more.then_some(next)}))
     }
 
@@ -64,6 +66,34 @@ impl ExportRunner {
     ) -> Result<Value> {
         control(store, &self.job.id, context, action)
     }
+}
+
+fn warning_results(
+    rows: &[crate::storage::decompilation::DecompilationResult],
+) -> Result<Vec<Value>> {
+    let mut results = Vec::with_capacity(rows.len());
+    let mut bytes = 0usize;
+    for row in rows {
+        let mut result = serde_json::to_value(row)?;
+        if let Some(pseudocode) = result["pseudocode"].as_str() {
+            let signals = crate::analysis_repair::pseudocode_signals(pseudocode);
+            if !signals.is_empty() {
+                result["analysis_warnings"] = serde_json::to_value(signals)?;
+            }
+        }
+        let size = serde_json::to_vec(&result)?.len();
+        if bytes.saturating_add(size) > 1008 * 1024 {
+            if results.is_empty() {
+                return Err(failure(
+                    "The annotated result exceeds the response budget; read its summary and use analysis_repair evidence",
+                ));
+            }
+            break;
+        }
+        bytes += size;
+        results.push(result);
+    }
+    Ok(results)
 }
 
 fn control(store: &Store, id: &str, context: &Context, action: &str) -> Result<Value> {

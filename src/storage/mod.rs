@@ -7,6 +7,7 @@ pub(crate) use chat_list::StoredChat;
 pub(crate) use decompilation::{DecompilationJob, DecompilationJobSpec};
 mod chat_models;
 pub(crate) use chat_models::ChatModels;
+mod analysis_repair;
 mod database;
 mod database_migrations;
 mod functions;

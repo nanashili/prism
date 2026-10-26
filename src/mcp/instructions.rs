@@ -33,7 +33,15 @@ pub const BATCH_INSTRUCTIONS: &str = concat!(
     "as a decompilation export path. If required batch tools are unavailable or fail, ",
     "report the blocker rather than falling back to individual pseudocode requests or writes. ",
     "For managed bytecode, use only advertised bulk export or paginated type/method operations; ",
-    "never route bytecode through a native decompiler."
+    "never route bytecode through a native decompiler. ",
+    "When pseudocode contains suspicious diagnostics, unresolved jump tables, inconsistent ",
+    "function boundaries, calling conventions or types, use analysis_repair action=scan. ",
+    "Delegate the returned task to a specialist agent using your own delegation capability. ",
+    "If delegation is unavailable, report a blocker. Record its diagnosis and bounded ",
+    "adjustment with action=propose, rerun only supported experiments, then compare evidence. ",
+    "Never invent a specialist reference or claim that fewer warnings prove correctness. ",
+    "Keep all AI interpretations in the overlay; native overrides without a reversible ",
+    "provider capability remain blocked. Discard rejected overlays while retaining audit evidence."
 );
 
 /// Reply formatting shared by MCP clients and desktop chat sessions.

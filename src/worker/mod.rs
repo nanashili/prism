@@ -1,6 +1,7 @@
 mod analysis;
 mod analysis_cache;
 mod analysis_cache_identity;
+mod analysis_repair;
 mod decompilation_run;
 mod decompile_batch;
 mod durable_decompilation;
