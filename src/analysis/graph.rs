@@ -1,9 +1,13 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::BinaryHeap;
+
+#[cfg(test)]
+mod tests;
 
 mod evidence;
 #[cfg(test)]
-mod tests;
+mod evidence_tests;
 pub(crate) use evidence::TraceEvidence;
 
 #[derive(Default, Deserialize, Serialize)]
@@ -43,7 +47,7 @@ impl Graph {
                 Some((address_value(address)?, instruction.trim()))
             })
             .collect();
-        let ordered = instructions.windows(2).all(|pair| pair[0].0 <= pair[1].0);
+        let mut instructions = Instructions::new(instructions, blocks.len());
         let blocks = blocks
             .iter()
             .map(|value| {
@@ -53,7 +57,7 @@ impl Graph {
                 let end = value["end"].as_str().ok_or("A block has no end address")?;
                 let lower = address_value(start).ok_or("Invalid block start address")?;
                 let upper = address_value(end).ok_or("Invalid block end address")?;
-                let lines = block_lines(&instructions, ordered, lower, upper);
+                let lines = instructions.block_lines(lower, upper);
                 let successors = value["successors"]
                     .as_array()
                     .into_iter()
@@ -93,18 +97,95 @@ pub(crate) fn address_value(text: &str) -> Option<u64> {
     u64::from_str_radix(text.trim().strip_prefix("0x").unwrap_or(text.trim()), 16).ok()
 }
 
-fn block_lines(instructions: &[(u64, &str)], ordered: bool, lower: u64, upper: u64) -> Vec<String> {
-    if ordered {
-        let start = instructions.partition_point(|(address, _)| *address < lower);
-        instructions[start..]
-            .iter()
-            .take_while(|(address, _)| *address < upper)
-            .take(12)
-            .map(|(_, line)| (*line).to_owned())
+struct Instructions<'a> {
+    rows: Vec<(u64, &'a str)>,
+    ordered: bool,
+    indexable: bool,
+    by_address: Option<Vec<usize>>,
+}
+
+impl<'a> Instructions<'a> {
+    fn new(rows: Vec<(u64, &'a str)>, blocks: usize) -> Self {
+        let ordered = rows.windows(2).all(|pair| pair[0].0 <= pair[1].0);
+        Self {
+            rows,
+            ordered,
+            // A single block never benefits from sorting the whole assembly first.
+            indexable: blocks > 1,
+            by_address: None,
+        }
+    }
+
+    fn block_lines(&mut self, lower: u64, upper: u64) -> Vec<String> {
+        if lower >= upper {
+            return Vec::new();
+        }
+        if self.ordered {
+            let start = self.rows.partition_point(|(address, _)| *address < lower);
+            return self.rows[start..]
+                .iter()
+                .take_while(|(address, _)| *address < upper)
+                .take(12)
+                .map(|(_, line)| (*line).to_owned())
+                .collect();
+        }
+        if self.by_address.is_none() && self.indexable {
+            // Broad blocks often fill their preview in a short provider-order
+            // prefix. Avoid building an index unless a block needs a longer scan.
+            let mut first = [0; 12];
+            let mut count = 0;
+            for (index, (address, _)) in self.rows.iter().take(64).enumerate() {
+                if *address >= lower && *address < upper {
+                    first[count] = index;
+                    count += 1;
+                    if count == 12 {
+                        break;
+                    }
+                }
+            }
+            if count == 12 || self.rows.len() <= 64 {
+                return first[..count]
+                    .iter()
+                    .map(|index| self.rows[*index].1.to_owned())
+                    .collect();
+            }
+            let mut indexes: Vec<_> = (0..self.rows.len()).collect();
+            indexes.sort_unstable_by_key(|index| self.rows[*index].0);
+            self.by_address = Some(indexes);
+        }
+        let Some(indexes) = &self.by_address else {
+            return self.scan_lines(lower, upper);
+        };
+
+        // Only visit this block's address range, then select its first twelve
+        // rows in the provider's original order. Keep the selection bounded
+        // even for overlapping blocks or many duplicate instruction addresses.
+        let start = indexes.partition_point(|index| self.rows[*index].0 < lower);
+        let count = indexes[start..].partition_point(|index| self.rows[*index].0 < upper);
+        if count > 64 {
+            // Broad/overlapping ranges can reach twelve rows quickly in the
+            // original order. Do not scan all of their indexed candidates.
+            return self.scan_lines(lower, upper);
+        }
+        let mut first = BinaryHeap::with_capacity(12);
+        for &index in &indexes[start..start + count] {
+            if first.len() < 12 {
+                first.push(index);
+            } else if let Some(mut last) = first.peek_mut()
+                && index < *last
+            {
+                *last = index;
+            }
+        }
+        first
+            .into_sorted_vec()
+            .into_iter()
+            .map(|index| self.rows[index].1.to_owned())
             .collect()
-    } else {
-        // External providers may return unsorted assembly; retain its original order.
-        instructions
+    }
+
+    fn scan_lines(&self, lower: u64, upper: u64) -> Vec<String> {
+        self.rows
             .iter()
             .filter(|(address, _)| *address >= lower && *address < upper)
             .take(12)

@@ -230,7 +230,7 @@ fn transfer_is_atomic_on_conflict_and_saves_provenance() -> crate::error::Result
     let mut archive = crate::project::archive::Archive::open(&document)?;
     assert_eq!(
         archive.json("version-transfers.json")?,
-        updated.imported["version-transfers.json"]
+        *updated.imported["version-transfers.json"]
     );
     assert_eq!(
         archive.json("rust-project.json")?["renamed"]["500"],

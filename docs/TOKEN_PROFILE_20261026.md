@@ -28,7 +28,9 @@ paid-agent billing.
 ## Catalog behavior
 
 The default summary keeps all 199 allowed tool names, full descriptions, and
-required argument names. The full catalog remains exact. Named catalog
+required argument names from `features.json`'s `provider_fingerprint.tools`.
+These provider tools are distinct from the 29 Prism tools in `catalog.tools`.
+The full provider catalog remains exact. Named catalog
 requests return the exact schema and full detail for up to 32 requested names;
 unknown names and disallowed provider or batch-only names remain rejected. No
 tool or evidence capability was removed. The default response omits nested
@@ -101,14 +103,15 @@ The candidate macOS smoke artifacts are retained at
 `build/profile/round3-token/native-final/output.json`. They were produced with
 the earlier `round3-token-final` candidate binary. They are useful acceptance
 evidence for the recorded desktop/native workloads, but this report does not
-claim they used the confirmed round-three binary hash. Rust changes after that
-candidate run were test/lint-only.
+claim they used the confirmed round-three binary hash. Rust changes between
+that candidate and the confirmed build were test/lint-only.
 
 The desktop smoke visited 13 views and 15 settings pages and retained a
 500-message chat across reopening. Native smoke decompiled seven functions
 across The Unarchiver, Chrome, and CodexBar using REA
-`6.7.0+189f3474bfc5`. Runtime binary hashes are recorded in the final
-verification artifact. Those checks do not establish every interactive state.
+`6.7.0+189f3474bfc5`. The [native runtime identity](../build/profile/round3-token/native-final/runtime-identity.json)
+extracts the immutable binary paths and hashes from all three persisted job
+configurations. Those checks do not establish every interactive state.
 
 The confirmed Rust matrix is 24/24 checks passed, with 509 Rust files and 876
 project files, at
@@ -116,6 +119,21 @@ project files, at
 automated coverage, not proof of manual review of all 509 Rust files. Manual
 review was scoped to the changed prompt/catalog/session paths and their
 immediate dependencies.
+
+Further edits landed in the shared checkout after the confirmed build and
+source fixture were captured. The measurements above remain tied to the
+recorded binaries and source fixture. A separate checkout matrix initially
+passed 19 checks and failed five while its source inventory changed during the
+run; its individual logs are in `build/rust-review/round3-token-checkout/`.
+The syntax-call mismatches and removed protocol module were subsequently
+corrected in the shared checkout. The remaining reproduced archive read-limit
+overflow was fixed by using a saturating increment, retaining the existing
+zero, exact, and maximum-limit regression coverage. The follow-up checkout
+matrix passed 24/24 checks with 531 Rust files and 911 project files at
+`build/rust-review/round3-token-checkout-final/coverage.json`. Its maintained
+source inventory was stable throughout the run. This separate verification
+does not extend the profiling measurements to the later edits or establish
+manual review of every source file.
 
 ## Provenance
 
@@ -128,12 +146,19 @@ immediate dependencies.
 | `build/profile/bin/round3-token-confirmed/binaries.json` | Confirmed binary manifest |
 | `build/profile/round3-token/prompt-source-metrics.json` | Source-derived prompt split and fixed-fixture counts |
 | `build/rust-review/round3-token-confirmed/coverage.json` | 24-check Rust verification and automated inventory |
-| `build/profile/round3-token/final-verification.json` | Final artifact hashes, runtime identity, and source-inventory freshness |
+| `build/rust-review/round3-token-checkout-final/coverage.json` | Separate 24-check verification after later shared checkout edits and the archive-bound fix |
+| `build/profile/round3-token/final-verification.json` | Artifact hashes, runtime identity, profiled source snapshot, and later checkout verification |
+| `build/profile/round3-token/harness-verification.json` | Reporting failure probes and revalidated payload classifications |
+| `build/profile/round3-token/checkout-final-stability.json` | Matching source inventories at the start and end of the separate checkout matrix |
 
 The baseline metrics source is
 `build/profile/round2/features-atomic-final/features.json`; the confirmed
 metrics source is `build/profile/round3-token/features-confirmed/features.json`.
 Their recorded source hashes are retained in the two metrics files.
+After the live runs, the harness was tightened to reject inconsistent saved
+error classifications and record startup failure as RED. The retained payloads
+were retokenized and revalidated; their counts were unchanged. Failure probes
+also confirmed literal tokenizer control-token spellings remain ordinary data.
 
 The confirmed measurement and verification commands are:
 
@@ -158,6 +183,8 @@ RUSTC_WRAPPER= python3 scripts/check-rust.py \
 | P2 | Resource efficiency: `src/worker/analysis_tools.rs::project_provider_tools`, `src/mcp/catalog/analysis.rs::definitions` | Nested schemas made ordinary catalog discovery dominate context size. | Return all names, guidance, and required argument names by default; retain exact named/full schemas on demand. |
 | P2 | Explicit context lifetime: `src/ui/chat_session.rs::prompt_context`, `src/agent/prompt_content.rs::render_text`, `src/agent/codex.rs::custom_instructions` | Static guidance was repeated in every Codex prompt. | Retain it at session creation and send current dynamic state per prompt; preserve the other agent and attachment paths. |
 | P2 | Configuration correctness: `src/agent/session.rs::SessionIdentity`, `src/agent/codex.rs::configure_launch` | A changed tool timeout could silently retain the previous launched MCP configuration. | Include timeout and static guidance in session identity; a behavioral regression test verifies reconnect selection. |
+| P3 | Evidence validation and failure reporting: `scripts/profile-tokens.py::validated_calls`, `run_live_acceptance` | Inconsistent saved classifications could be repeated in a report, and startup failure could escape without a RED result. | Validate classifications against actual calls, derive counts, and acquire the client inside the guarded failure path. |
+| P2 | Boundary arithmetic: `src/project/archive.rs::decode` | A maximum read limit overflowed in debug builds and wrapped to zero in release builds after a later checkout edit. | Saturate the extra-byte read limit; retain the existing zero, exact, and maximum-limit regression test. This fix postdates the profiled binaries. |
 
 These findings describe the measured corrections and do not claim universal
 application correctness.

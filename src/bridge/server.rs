@@ -162,7 +162,7 @@ fn remove_endpoint(address: SocketAddr) -> Result<()> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(error.into()),
     };
-    let endpoint: Value = serde_json::from_reader(file)?;
+    let endpoint: Value = serde_json::from_reader(std::io::BufReader::new(file))?;
     if endpoint["address"].as_str() == Some(&address.to_string()) {
         std::fs::remove_file(path)?;
     }

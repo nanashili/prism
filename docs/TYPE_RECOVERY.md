@@ -37,7 +37,7 @@ that a cited instruction actually performs the described access.
    A failed write preserves both the previous accepted model and the proposal.
 
 Accepted types are namespaced by binary identity and the full analysis
-configuration. They persist in the local Prism database. They accompany legacy
+configuration. They persist in the local Prism database. They accompany reference
 and durable decompilation result pages and reconstruction evidence, including
 cached results. Each page receives one shared model, rather than separately
 copied type definitions per function. Historical durable jobs use their saved

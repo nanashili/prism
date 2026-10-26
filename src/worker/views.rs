@@ -23,14 +23,7 @@ impl State {
                 Ok("Comparison complete".into())
             }
             ViewJob::Debug(action) => {
-                let launches_target = matches!(action, crate::debug::Action::Launch { .. });
-                let text = self.execute_verified_debug(action)?;
-                if launches_target
-                    && let Some(project) = &self.debug_project
-                    && let Some(debugger) = &mut self.debugger
-                {
-                    debugger.bind_project(project);
-                }
+                let text = self.execute_evidence_debug(action)?;
                 self.send_view(request, View::Debug, text)?;
                 Ok(String::new())
             }

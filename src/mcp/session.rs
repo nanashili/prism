@@ -45,12 +45,14 @@ impl Session {
     ) -> Result<()> {
         while let Some(bytes) = transport::read(input)? {
             pending.reap()?;
-            let request = if let Ok(request) = serde_json::from_slice::<Value>(&bytes) {
+            let mut request = if let Ok(request) = serde_json::from_slice::<Value>(&bytes) {
                 request
             } else {
                 pending.write(&error(Value::Null, -32700, "Invalid JSON"))?;
                 continue;
             };
+            let request_bytes = bytes.len();
+            drop(bytes);
             if let Err(response) = message::validate(&request) {
                 pending.write(&response)?;
                 continue;
@@ -64,7 +66,12 @@ impl Session {
                 continue;
             }
             if self.initialized
-                && pending.accept(&request, bytes.len(), self.mode, self.endpoint.as_ref())?
+                && pending.accept(
+                    &mut request,
+                    request_bytes,
+                    self.mode,
+                    self.endpoint.as_ref(),
+                )?
             {
                 continue;
             }

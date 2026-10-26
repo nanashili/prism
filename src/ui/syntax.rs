@@ -1,6 +1,9 @@
 use crate::ui::presentation::PaletteTheme;
 use eframe::egui::{self, Color32, FontId, TextFormat};
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn highlight(
     text: &str,
     font: FontId,
@@ -10,7 +13,10 @@ pub(super) fn highlight(
     let dark = dark == PaletteTheme::Dark;
 
     let [base, keyword, number, string, comment] = colors(dark, scheme);
-    let mut job = egui::text::LayoutJob::default();
+    let mut job = egui::text::LayoutJob {
+        text: text.into(),
+        ..Default::default()
+    };
     let mut offset = 0;
     while offset < text.len() {
         let tail = &text[offset..];
@@ -48,15 +54,23 @@ pub(super) fn highlight(
                 (first.len_utf8(), base)
             }
         };
-        job.append(
-            &text[offset..offset + length],
-            0.0,
-            TextFormat {
-                font_id: font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
+        // Adjacent tokens with the same color share a run. In particular, ordinary
+        // identifiers, punctuation and whitespace do not need separate sections.
+        if let Some(previous) = job.sections.last_mut()
+            && previous.format.color == color
+        {
+            previous.byte_range.end = offset + length;
+        } else {
+            job.sections.push(egui::text::LayoutSection {
+                leading_space: 0.0,
+                byte_range: offset..offset + length,
+                format: TextFormat {
+                    font_id: font.clone(),
+                    color,
+                    ..Default::default()
+                },
+            });
+        }
         offset += length;
     }
     job

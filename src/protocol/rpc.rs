@@ -3,14 +3,14 @@ use crate::error::{Result, failure};
 use serde_json::{Value, json};
 use std::io::BufReader;
 use std::process::{ChildStdin, Command};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, mpsc};
 use std::time::{Duration, Instant};
 
 pub(crate) struct Rpc {
     process: process::Managed,
     input: ChildStdin,
-    incoming: Option<mpsc::Receiver<Result<Value>>>,
+    incoming: Option<super::incoming::Receiver>,
     framing: Framing,
     next: u64,
     memory_limit: Option<u64>,
@@ -30,7 +30,7 @@ impl Rpc {
         let input = child.stdin.take().ok_or("Missing server input")?;
         let output = child.stdout.take().ok_or("Missing server output")?;
         let diagnostics = child.stderr.take().ok_or("Missing server diagnostics")?;
-        let (sender, incoming) = mpsc::sync_channel(16);
+        let (sender, incoming) = super::incoming::channel();
         let reader = std::thread::Builder::new()
             .name("prism-rpc-output".into())
             .spawn(move || {
@@ -172,13 +172,7 @@ impl Rpc {
     #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn poll(&self, timeout: Duration) -> Result<Option<Value>> {
         let incoming = self.incoming.as_ref().ok_or("The server is closed")?;
-        match incoming.recv_timeout(timeout) {
-            Ok(message) => Ok(Some(message?)),
-            Err(mpsc::RecvTimeoutError::Timeout) => Ok(None),
-            Err(mpsc::RecvTimeoutError::Disconnected) => {
-                Err(failure("The server process closed its output"))
-            }
-        }
+        incoming.poll(timeout)
     }
 
     pub fn is_cancelled(&self) -> bool {
@@ -193,3 +187,6 @@ impl Drop for Rpc {
         self.incoming.take();
     }
 }
+
+#[cfg(all(test, unix))]
+mod tests;

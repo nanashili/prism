@@ -1,0 +1,14 @@
+   Compiling prism v0.1.0 (/tmp/prism-performance-_qv2gpqo/baseline)
+   Compiling egui_commonmark_extended v0.28.3 (/tmp/prism-performance-_qv2gpqo/baseline/vendor/egui_commonmark_extended)
+    Finished `release` profile [optimized] target(s) in 25.43s
+     Running unittests src/main.rs (/workspace/prism/target/release/deps/prism-4a5a75ddbf1b67af)
+
+running 2 tests
+test ui::message::markdown::tests::benchmark_without_syntax_hints ... without_syntax_hints: blocks=8 source_bytes=1728 iterations=2000 samples=7 median_ns=4665 min_ns=4644 max_ns=4880
+without_syntax_hints: blocks=4096 source_bytes=895914 iterations=10 samples=7 median_ns=34778512 min_ns=34412986 max_ns=36290891
+ok
+test ui::syntax::tests::benchmark_syntax_highlighting ... syntax_highlighting: workload=viewport rows=64 source_bytes=3544 iterations=10000 samples=7 median_ns=95859 min_ns=93321 max_ns=106777 sections=1552 section_capacity_bytes=212992
+syntax_highlighting: workload=long_expression rows=1 source_bytes=63488 iterations=100 samples=7 median_ns=1356155 min_ns=1338839 max_ns=1361360 sections=24576 section_capacity_bytes=3407872
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 10.29s

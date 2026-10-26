@@ -184,18 +184,18 @@ mod tests {
         assert!(summary["tools"][0].get("inputSchema").is_none());
         assert!(summary["tools"][0].get("outputSchema").is_none());
 
-        let legacy_request = DiscoveryRequest::parse(&json!({"detail":"full"}))
+        let unfiltered_request = DiscoveryRequest::parse(&json!({"detail":"full"}))
             .expect("Full discovery is a valid request");
-        let legacy_full = project_provider_tools(&provider, &legacy_request)
+        let unfiltered_catalog = project_provider_tools(&provider, &unfiltered_request)
             .expect("The fixture has a provider catalog");
         assert_eq!(
-            legacy_full["tools"]
+            unfiltered_catalog["tools"]
                 .as_array()
                 .expect("Full tools are an array")
                 .len(),
             1
         );
-        assert_eq!(legacy_full["metadata"], provider["metadata"]);
+        assert_eq!(unfiltered_catalog["metadata"], provider["metadata"]);
 
         let full_request = DiscoveryRequest::parse(&json!({"detail":"full","names":["allowed"]}))
             .expect("Named full discovery is a valid request");

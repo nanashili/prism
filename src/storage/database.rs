@@ -33,6 +33,7 @@ impl Store {
              CREATE TABLE IF NOT EXISTS functions(
                  project TEXT, address TEXT, name TEXT, kind TEXT,
                  PRIMARY KEY(project,address));
+             CREATE INDEX IF NOT EXISTS function_name ON functions(project,name,address);
              CREATE TABLE IF NOT EXISTS function_sources(
                  project TEXT, address TEXT, path TEXT, owner TEXT, signature TEXT,
                  PRIMARY KEY(project,address));

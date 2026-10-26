@@ -88,7 +88,12 @@ impl FunctionImport<'_> {
 impl Store {
     pub fn find_function(&self, project: &str, reference: &str) -> Result<Vec<String>> {
         let mut query = self.db.prepare_cached(
-            "SELECT address FROM functions WHERE project=?1 AND (address=?2 OR name=?2) LIMIT 2",
+            // Separate seeks let SQLite use both the address key and name index.
+            // Excluding the exact address in the name arm avoids duplicates;
+            // UNION ALL lets LIMIT stop even when many functions share a name.
+            "SELECT address FROM functions WHERE project=?1 AND address=?2
+             UNION ALL SELECT address FROM functions
+             WHERE project=?1 AND name=?2 AND address IS NOT ?2 LIMIT 2",
         )?;
         let rows = query.query_map(params![project, reference], |row| row.get(0))?;
         Ok(rows.collect::<std::result::Result<_, _>>()?)
@@ -106,3 +111,6 @@ impl Store {
         )?)
     }
 }
+
+#[cfg(test)]
+mod tests;

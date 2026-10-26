@@ -243,3 +243,46 @@ the default interface size and at 150 percent in a separate profile, which reduc
 the available layout width. Both screenshots show square letter keys and complete,
 aligned rows. Evidence is in `build/keyboard-proportions-20261026/`; native clicking
 was not exercised in this rendering pass.
+
+## Main integration follow-up: 26 October 2026
+
+The main-branch integration preserves the native REA setup and settings changes
+alongside the incoming profiling and memory improvements. Manual review covered
+conflict resolutions and their immediate dependencies, including protocol queue
+ownership and shutdown, streamed archive integrity, imported metadata ownership,
+Android extraction, graph indexing, bounded previews, and the shared debug capture
+path. Test changes were reviewed for observable output and failure behavior.
+This scope does not claim a new line-by-line manual review of every project file.
+
+Resolved findings, ordered by severity:
+
+| Severity | Rule and source | Consequence | Applied fix |
+| --- | --- | --- | --- |
+| P1 | Preserve ownership and observable behavior: `src/protocol/rpc.rs`, `src/worker/execution.rs`, `src/analysis/graph.rs` | Combining overlapping implementations introduced duplicate dispatch paths, declarations, and incompatible reader types. | Keep one dispatch and evidence implementation; connect RPC to the bounded lazy-decoding receiver while retaining explicit process cleanup. |
+| P2 | Boundary arithmetic: `src/project/archive.rs::decode` | Adding an extra byte to the maximum read limit overflowed in debug builds and wrapped in release builds. | Use a saturating increment; the existing zero, exact, and maximum-limit regression test passes. |
+| P2 | Resource safety: `src/protocol/incoming.rs::Budget`, `Permit::drop` | Cleanup could continue with poisoned queue accounting. | Wake independent waiters during cleanup and let fallible acquisition report the unavailable queue. |
+| P2 | Maintain coherent APIs: `src/ui/syntax/tests.rs`, `src/protocol/mod.rs` | Incoming tests used the replaced Boolean theme API, and an unused protocol module retained removed callers. | Exercise the typed palette API and remove the unreachable module. |
+
+`RUSTC_WRAPPER= python3 scripts/check-rust.py` passed all 24 checks with matching
+hashes for 531 maintained Rust files in `build/rust-review/coverage.json`. The
+application configuration passes 139 desktop tests and seven shared-library
+tests; opt-in benchmarks and network integration cases remain ignored. The stable
+Markdown configuration passes 97 unit tests and 16 documentation examples.
+Repeated feature combinations are not counted as independent tests. The report
+records automated coverage; platform and FFI limits described above still apply.
+
+The arm64 macOS bundle passed `codesign --verify --deep --strict`. Native REA
+6.7.0, source `189f3474bfc5dfd6f3ed2689dfa765c7a4e9f770`, successfully decompiled
+five selected functions across The Unarchiver, CodexBar, and the Chrome launcher
+through `scripts/smoke-rea.py`, using a separate profile. All three processes
+closed without reported cleanup errors. Runtime identity and results are in
+`build/main-release-20261026/rea-runtime.json` and `native-smoke.json`.
+
+The same bundle also passed the visible-window command workflow on those three
+apps: seven pseudocode views, Assembly/Graph/Hex rendering, split panes, and an
+annotated project save/reopen round trip. Skills, Workspace, and Keyboard were
+rendered and captured. This exercised Prism's built-in UI commands; native mouse
+clicking was not exercised. An initial screenshot request under Downloads timed
+out while the main thread waited in `open`; repeating the workflow with the test
+profile and screenshots outside Downloads succeeded. Evidence is retained in
+`build/main-release-20261026/ui-acceptance/`.

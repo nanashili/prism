@@ -89,33 +89,37 @@ pub(super) fn invalidate_consumers(
     generation: i64,
     modules: &[String],
 ) -> Result<()> {
-    for module in modules {
-        tx.execute(
-            "UPDATE units SET state='pending',lease=NULL WHERE generation=?1 AND module IN
-             (WITH RECURSIVE affected(module) AS (
-                SELECT ?2 UNION SELECT d.module FROM module_dependencies d
-                JOIN affected a ON d.depends_on=a.module WHERE d.generation=?1
-             ) SELECT module FROM affected) AND state IN ('generated','reused','blocked')",
-            params![generation, module],
-        )?;
-        tx.execute(
-            "UPDATE modules SET state='pending' WHERE generation=?1 AND module IN
-             (WITH RECURSIVE affected(module) AS (
-                SELECT ?2 UNION SELECT d.module FROM module_dependencies d
-                JOIN affected a ON d.depends_on=a.module WHERE d.generation=?1
-             ) SELECT module FROM affected)",
-            params![generation, module],
-        )?;
-        tx.execute(
-            "DELETE FROM actions WHERE generation=?1 AND stage IN ('contract','emit','validate')
-             AND address IN (SELECT address FROM units WHERE generation=?1 AND module IN
-               (WITH RECURSIVE affected(module) AS (
-                  SELECT ?2 UNION SELECT d.module FROM module_dependencies d
-                  JOIN affected a ON d.depends_on=a.module WHERE d.generation=?1
-               ) SELECT module FROM affected))",
-            params![generation, module],
-        )?;
+    if modules.is_empty() {
+        return Ok(());
     }
+    // Traverse the union of affected modules once per statement. Starting a
+    // traversal for every changed root repeats work for shared consumers.
+    let roots = serde_json::to_string(modules)?;
+    tx.execute(
+        "UPDATE units SET state='pending',lease=NULL WHERE generation=?1 AND module IN
+         (WITH RECURSIVE affected(module) AS (
+            SELECT value FROM json_each(?2) UNION SELECT d.module FROM module_dependencies d
+            JOIN affected a ON d.depends_on=a.module WHERE d.generation=?1
+         ) SELECT module FROM affected) AND state IN ('generated','reused','blocked')",
+        params![generation, roots],
+    )?;
+    tx.execute(
+        "UPDATE modules SET state='pending' WHERE generation=?1 AND module IN
+         (WITH RECURSIVE affected(module) AS (
+            SELECT value FROM json_each(?2) UNION SELECT d.module FROM module_dependencies d
+            JOIN affected a ON d.depends_on=a.module WHERE d.generation=?1
+         ) SELECT module FROM affected)",
+        params![generation, roots],
+    )?;
+    tx.execute(
+        "DELETE FROM actions WHERE generation=?1 AND stage IN ('contract','emit','validate')
+         AND address IN (SELECT address FROM units WHERE generation=?1 AND module IN
+           (WITH RECURSIVE affected(module) AS (
+              SELECT value FROM json_each(?2) UNION SELECT d.module FROM module_dependencies d
+              JOIN affected a ON d.depends_on=a.module WHERE d.generation=?1
+           ) SELECT module FROM affected))",
+        params![generation, roots],
+    )?;
     Ok(())
 }
 
@@ -212,3 +216,6 @@ fn apply_cycle_groups(
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;

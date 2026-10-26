@@ -5,6 +5,21 @@ use crate::model::View;
 use serde_json::{Value, json};
 
 impl State {
+    pub(super) fn execute_evidence_debug(
+        &mut self,
+        action: crate::debug::Action,
+    ) -> Result<String> {
+        let launches_target = matches!(action, crate::debug::Action::Launch { .. });
+        let text = self.execute_verified_debug(action)?;
+        if launches_target
+            && let Some(project) = &self.debug_project
+            && let Some(debugger) = &mut self.debugger
+        {
+            debugger.bind_project(project);
+        }
+        Ok(text)
+    }
+
     #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn execution_evidence(&mut self, args: &Value) -> Result<Value> {
         let project = self.project.as_ref().ok_or("Open a native file first")?;

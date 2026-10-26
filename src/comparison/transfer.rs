@@ -86,8 +86,8 @@ fn record_transfer(report: &Report, updated: &mut Project, selections: &[Selecti
     let imported = std::sync::Arc::make_mut(&mut updated.imported);
     let history = imported
         .entry("version-transfers.json".into())
-        .or_insert_with(|| serde_json::json!([]));
-    let history = history
+        .or_insert_with(|| serde_json::json!([]).into());
+    let history = std::sync::Arc::make_mut(history)
         .as_array_mut()
         .ok_or("Invalid version transfer history")?;
     if history.len() >= 100 {

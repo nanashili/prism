@@ -9,6 +9,12 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+mod inventory;
+mod source;
+
+#[cfg(test)]
+mod tests;
+
 #[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn index(
     target: &Target,
@@ -19,7 +25,7 @@ pub(crate) fn index(
 ) -> Result<usize> {
     sink.analysis("Decompiling Android package", 0, None)?;
     let root = decompile(target, settings, cancelled)?;
-    let mapping = read_json(&root.join("sources/mapping.json"))?;
+    let mapping = inventory::read(&root.join("sources/mapping.json"))?;
     let classes = mapping["classes"]
         .as_array()
         .ok_or("jadx did not return a class mapping")?;
@@ -37,7 +43,7 @@ pub(crate) fn index(
             .as_str()
             .ok_or("A jadx class has no source file")?;
         let path = confined(&root.join("sources"), file)?;
-        let node = read_json(&path)?;
+        let node = inventory::read(&path)?;
         collect(&node, file, "classes.dex", &mut inventory, 0)?;
         if updated.elapsed() >= Duration::from_millis(100) {
             sink.analysis(
@@ -115,41 +121,7 @@ fn collect(
 pub(crate) fn code(target: &Target, store: &Store, address: &str) -> Result<String> {
     let (file, owner, signature) = store.function_source(&target.sha256, address)?;
     let root = cache(target).join("sources");
-    let node = read_json(&confined(&root, &file)?)?;
-    let class = find_class(&node, &owner, 0).ok_or("The indexed Android class is missing")?;
-    let method = class["methods"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .find(|method| method["signature"] == signature)
-        .ok_or("The indexed Android method is missing")?;
-    let mut text = format!(
-        "{} {{\n",
-        method["declaration"].as_str().unwrap_or(&signature)
-    );
-    for line in method["lines"].as_array().into_iter().flatten() {
-        text.push_str("    ");
-        text.push_str(line["code"].as_str().unwrap_or_default());
-        text.push('\n');
-        if text.len() > crate::project::files::TEXT_LIMIT {
-            return Err(failure("This method exceeds the code display limit"));
-        }
-    }
-    text.push_str("}\n");
-    Ok(text)
-}
-
-fn find_class<'a>(node: &'a Value, owner: &str, depth: usize) -> Option<&'a Value> {
-    if depth > 64 {
-        return None;
-    }
-    if node["name"] == owner {
-        return Some(node);
-    }
-    node["inner-classes"]
-        .as_array()?
-        .iter()
-        .find_map(|inner| find_class(inner, owner, depth + 1))
+    source::code(&confined(&root, &file)?, &owner, &signature)
 }
 
 fn confined(root: &Path, relative: &str) -> Result<PathBuf> {
@@ -160,6 +132,7 @@ fn confined(root: &Path, relative: &str) -> Result<PathBuf> {
     Ok(path)
 }
 
+#[cfg(test)]
 fn read_json(path: &Path) -> Result<Value> {
     use std::io::Read;
     let mut bytes = Vec::new();
