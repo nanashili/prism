@@ -13,6 +13,7 @@ mod database_migrations;
 mod execution;
 pub(crate) mod function_search;
 mod functions;
+pub(crate) mod verification;
 pub(crate) use functions::FunctionImport;
 mod history;
 mod investigation;

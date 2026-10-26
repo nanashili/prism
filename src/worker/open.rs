@@ -13,6 +13,9 @@ impl State {
         self.sink.analysis("Reading file", 0, None)?;
         self.sink.send(Event::Progress("Reading file".into()))?;
         self.engine = None;
+        if let Some(project) = self.debug_project.take() {
+            self.store.invalidate_runtime_evidence(&project)?;
+        }
 
         let document = path
             .extension()
@@ -33,6 +36,7 @@ impl State {
         self.project = Some(project);
         self.comparison = None;
         self.runtime.set_context(context)?;
+        self.sync_verification_context()?;
 
         match kind.as_str() {
             "app" | "binary" | "android" if !analyzed => self.index(),

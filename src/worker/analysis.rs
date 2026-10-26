@@ -43,6 +43,21 @@ impl State {
 
     pub(super) fn analysis_call(&mut self, name: &str, arguments: Value) -> Result<Value> {
         Self::reject_direct_decompilation_tool(name)?;
+        // Unknown provider operations may mutate analysis even when they fail.
+        if !matches!(
+            name,
+            "procedure_assembly"
+                | "analyze_function"
+                | "procedure_callers"
+                | "procedure_callees"
+                | "list_procedures"
+                | "list_segments"
+                | "list_strings"
+                | "inspect_analysis_view"
+        ) {
+            let project = self.project.as_ref().ok_or("Open a file first")?;
+            self.store.invalidate_verification(&project.target.sha256)?;
+        }
         self.engine()?.tool(name, arguments)
     }
 

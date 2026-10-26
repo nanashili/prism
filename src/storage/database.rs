@@ -106,6 +106,7 @@ impl Store {
         super::function_search::initialize(&db)?;
         super::execution::migrate(&db)?;
         super::type_recovery::migrate(&db)?;
+        super::verification::initialize(&db)?;
         let cache = super::cache::open(&path.with_extension("views.db"))?;
         Ok(Self { db, cache })
     }
