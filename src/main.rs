@@ -1,5 +1,6 @@
 mod agent;
 mod analysis;
+mod analysis_repair;
 mod bridge;
 mod cleanup;
 mod comparison;

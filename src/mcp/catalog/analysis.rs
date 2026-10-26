@@ -3,7 +3,22 @@ use serde_json::{Value, json};
 
 pub(super) fn definitions() -> Vec<Value> {
     vec![
+        super::analysis_repair::definition(),
         super::decompilation::definition(),
+        super::execution::definition(),
+        super::type_recovery::definition(),
+        tool(
+            "index_function_search",
+            "Index a page of up to 300 saved native Rust Ghidra functions and their cached/durable evidence; follow next_offset until null. Builds normalized decompiler/CFG structural signatures in Rust. Does not run analysis or decompilation. Refresh after changing evidence or notes. reset=true clears derived search indexes for this binary across configurations. Requires the native Rust Ghidra backend.",
+            &[],
+            json!({"offset":{"type":"integer","minimum":0},"reset":{"type":"boolean"}}),
+        ),
+        tool(
+            "semantic_search",
+            "Find indexed native functions by behavior, e.g. 'parse a binary header' or 'implement an object pool'. Returns ranked evidence, excerpts and reasons. Uses term/synonym retrieval, behavior heuristics and native Rust decompiler/CFG structural similarity, not BSim or trained embeddings. Run index_function_search first. similar_to optionally selects a structural exemplar address. Scores are leads, not verified behavior.",
+            &["query"],
+            json!({"query":{"type":"string","minLength":1,"maxLength":1024},"limit":{"type":"integer","minimum":1,"maximum":100},"similar_to":{"type":"string","minLength":1,"maxLength":64}}),
+        ),
         tool(
             "compare_versions",
             "Compare the open destination binary with a baseline app, binary or .prism project. Rust-native matching uses exact bytes, normalized instructions, structural signatures and matched callees; Rust REA listing spans are distinguished from recovered CFG/body evidence. Opens providers sequentially, pauses decompilation and returns a summary plus the first 100 matches. No annotation transfer occurs. Review candidates in Diff or use version_matches for other pages.",

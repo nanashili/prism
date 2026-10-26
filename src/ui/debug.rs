@@ -10,16 +10,25 @@ pub(super) struct DebugForm {
     pub breakpoint: String,
     pub expression: String,
     pub thread: u64,
+    pub isolated: bool,
 }
 
 impl Prism {
     pub(super) fn debug_screen(&mut self, ui: &mut egui::Ui) {
         ui.heading("Debugger");
         ui.label("LLDB runs the selected program when you choose Launch.");
+        ui.checkbox(
+            &mut self.debug.isolated,
+            "I authorize debugging this target in an isolated environment",
+        );
+        ui.small("Prism does not create a sandbox. Use an isolated test machine or VM for untrusted targets.");
         ui.horizontal(|ui| {
             ui.label("Arguments");
             ui.text_edit_singleline(&mut self.debug.args);
-            if ui.button("Launch").clicked() {
+            if ui
+                .add_enabled(self.debug.isolated, egui::Button::new("Launch"))
+                .clicked()
+            {
                 let path = self
                     .workspace
                     .project
@@ -36,7 +45,10 @@ impl Prism {
         ui.horizontal(|ui| {
             ui.label("Process ID");
             ui.add(egui::DragValue::new(&mut self.debug.pid));
-            if ui.button("Attach").clicked() {
+            if ui
+                .add_enabled(self.debug.isolated, egui::Button::new("Attach"))
+                .clicked()
+            {
                 self.enqueue_view(ViewJob::Debug(crate::debug::Action::Attach(self.debug.pid)));
             }
             if ui.button("Disconnect").clicked() {

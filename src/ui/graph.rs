@@ -2,7 +2,7 @@ use super::app::Prism;
 use super::theme::Palette;
 use crate::analysis::graph::{Graph, address_value};
 use eframe::egui::{self, Align2, FontId, Pos2, Rect, Sense, Stroke, Vec2};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 struct Node {
     block: usize,
@@ -34,6 +34,35 @@ impl GraphView {
 }
 
 impl Prism {
+    pub(super) fn refresh_execution_evidence(&mut self, project: &str) -> crate::error::Result<()> {
+        if self
+            .workspace
+            .project
+            .as_ref()
+            .is_none_or(|opened| opened.target.sha256 != project)
+        {
+            return Ok(());
+        }
+        let traces = self.store.execution_traces(project)?;
+        for tab in self
+            .workspace
+            .panes
+            .iter_mut()
+            .flat_map(|pane| &mut pane.tabs)
+        {
+            if tab.view == crate::model::View::Graph && !tab.text.is_empty() {
+                let mut graph: Graph = serde_json::from_str(&tab.text)?;
+                graph.annotate(&traces);
+                tab.receive_content(
+                    crate::model::View::Graph,
+                    "",
+                    serde_json::to_string(&graph)?,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
     pub(super) fn graph_view(&mut self, ui: &mut egui::Ui) {
         let Some(view) = &self.workspace.graph else {
             self.code(ui);
@@ -52,6 +81,19 @@ impl Prism {
             1.0
         };
         let font = super::code_fonts::family(ui.ctx(), &self.settings.code_font);
+        let observed: BTreeSet<_> = graph
+            .dynamic
+            .iter()
+            .flat_map(|trace| trace.blocks.iter().map(|block| block.start.as_str()))
+            .collect();
+        if !graph.dynamic.is_empty() {
+            ui.label(format!(
+                "{} blocks observed across {} workflow traces",
+                observed.len(),
+                graph.dynamic.len()
+            ));
+            ui.small("Highlighted blocks have runtime observations. Unobserved blocks may still execute in other runs.");
+        }
         egui::ScrollArea::both()
             .id_salt("control-flow")
             .show_viewport(ui, |ui, viewport| {
@@ -69,7 +111,11 @@ impl Prism {
                         rect,
                         8,
                         palette.well,
-                        Stroke::new(1.0, palette.line),
+                        if observed.contains(block.start.as_str()) {
+                            Stroke::new(2.0, palette.accent)
+                        } else {
+                            Stroke::new(1.0, palette.line)
+                        },
                         egui::StrokeKind::Inside,
                     );
                     ui.painter().text(
@@ -101,7 +147,7 @@ impl Prism {
                     }
                 }
             });
-        let mut selected = None;
+        let mut selected = dynamic_evidence(ui, graph);
         ui.horizontal_wrapped(|ui| {
             let callers = if graph.callers_deferred {
                 "callers in References".to_owned()
@@ -125,6 +171,51 @@ impl Prism {
             self.select_view(crate::model::View::Graph);
         }
     }
+}
+
+fn dynamic_evidence(ui: &mut egui::Ui, graph: &Graph) -> Option<String> {
+    let mut selected = None;
+    for trace in &graph.dynamic {
+        ui.push_id(&trace.trace_id, |ui| {
+            let title = format!("Workflow: {} · {}", trace.workflow, trace.trace_id);
+            ui.collapsing(title, |ui| {
+                ui.label(format!(
+                    "{:?} · {} · {}",
+                    trace.source, trace.runtime_version, trace.captured_at
+                ));
+                let status = if trace.complete {
+                    "Collector reports a normal end; observations cover only the selected workflow."
+                } else {
+                    "Partial capture or debugger sample; execution evidence is incomplete."
+                };
+                ui.label(status);
+                ui.label(format!(
+                    "{} observed blocks · {} observed call targets · {} unmapped observations",
+                    trace.blocks.len(),
+                    trace.calls.len(),
+                    trace.unmapped_observations
+                ));
+
+                for call in trace.calls.iter().take(100) {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("{} →", call.site));
+                        if let Some(target) = &call.target {
+                            if ui.small_button(target).clicked() {
+                                selected = Some(target.clone());
+                            }
+                        } else {
+                            ui.label(format!("{} (outside target module)", call.runtime_target));
+                        }
+                        ui.label(format!("· {} observations", call.observations));
+                    });
+                }
+                if trace.calls.len() > 100 {
+                    ui.small("Showing 100 call targets. Use execution_evidence to inspect the full trace.");
+                }
+            });
+        });
+    }
+    selected
 }
 
 fn layout(graph: &Graph) -> Vec<Node> {

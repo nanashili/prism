@@ -10,6 +10,7 @@ pub(crate) enum Event {
     },
     Progress(String),
     Analysis(Option<AnalysisProgress>),
+    ExecutionEvidenceChanged(String),
     Reconstruction {
         project: String,
         status: Box<Value>,

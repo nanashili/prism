@@ -23,13 +23,7 @@ impl State {
                 Ok("Comparison complete".into())
             }
             ViewJob::Debug(action) => {
-                let text = crate::debug::execute(
-                    &mut self.debugger,
-                    action,
-                    &self.settings,
-                    self.cancelled.clone(),
-                    self.sink.clone(),
-                )?;
+                let text = self.execute_evidence_debug(action)?;
                 self.send_view(request, View::Debug, text)?;
                 Ok(String::new())
             }

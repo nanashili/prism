@@ -7,9 +7,31 @@ impl State {
         match tool {
             "compare_versions" => self.compare_versions(&args),
             "version_matches" => self.version_matches(&args),
+            "execution_evidence" => self.execution_evidence(&args),
+            "recover_types" => {
+                let project = self.project.as_ref().ok_or("Open a file first")?;
+                if args["project"].as_str() != Some(project.target.sha256.as_str()) {
+                    return Err(failure("The open project changed before type recovery"));
+                }
+                if !matches!(project.target.kind.as_str(), "app" | "binary") {
+                    return Err(failure("Type recovery currently requires a native binary"));
+                }
+                let context = self.decompilation_context()?;
+                let analyzer = super::analysis_cache_identity::namespace(&context);
+                let mut payload = args;
+                payload
+                    .as_object_mut()
+                    .ok_or("Supply type recovery arguments")?
+                    .remove("project");
+                self.store
+                    .recover_types(&context.project, &analyzer, &payload)
+            }
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
+            "analysis_repair" => self.analysis_repair(&args),
             "inspect_selection" => self.inspect_selection(&args),
+            "index_function_search" => self.index_function_search(&args),
+            "semantic_search" => self.semantic_search(&args),
             "list_functions" => {
                 let project = self.project.as_ref().ok_or("Open a file first")?;
                 let offset = usize::try_from(args["offset"].as_u64().unwrap_or_default())?;
