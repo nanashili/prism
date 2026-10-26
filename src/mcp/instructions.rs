@@ -41,7 +41,12 @@ pub const BATCH_INSTRUCTIONS: &str = concat!(
     "as a decompilation export path. If required batch tools are unavailable or fail, ",
     "report the blocker rather than falling back to individual pseudocode requests or writes. ",
     "For managed bytecode, use only advertised bulk export or paginated type/method operations; ",
-    "never route bytecode through a native decompiler."
+    "never route bytecode through a native decompiler. ",
+    "For native behavior search, index saved evidence with index_function_search, following ",
+    "next_offset until null, then use semantic_search. Refresh after evidence or notes change. ",
+    "Inspect source excerpts and native structural exemplar explanations; retrieval scores are leads, not ",
+    "verified behavior. Missing matches do not establish absence. Use decompile_batch for missing ",
+    "pseudocode; indexing never performs discovery or decompilation. "
 );
 
 /// Reply formatting shared by MCP clients and desktop chat sessions.

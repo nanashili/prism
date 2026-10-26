@@ -26,6 +26,8 @@ impl State {
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
             "inspect_selection" => self.inspect_selection(&args),
+            "index_function_search" => self.index_function_search(&args),
+            "semantic_search" => self.semantic_search(&args),
             "list_functions" => {
                 let project = self.project.as_ref().ok_or("Open a file first")?;
                 let offset = usize::try_from(args["offset"].as_u64().unwrap_or_default())?;
