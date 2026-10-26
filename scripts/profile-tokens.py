@@ -8,6 +8,7 @@ import importlib.metadata
 import importlib.util
 import json
 import secrets
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,35 @@ def measure_json(value: Any, tokenizer: Any) -> dict[str, int]:
     }
 
 
+def validated_calls(report: dict[str, Any]) -> list[dict[str, Any]]:
+    calls = report.get("calls", [])
+    if not isinstance(calls, list) or any(not isinstance(call, dict) for call in calls):
+        raise ValueError("Feature report calls must be an array of objects")
+
+    statuses = {"ok", "error", "expected_error", "unexpected_success"}
+    if any(call.get("status") not in statuses for call in calls):
+        raise ValueError("Feature report contains an unrecognized call status")
+
+    for status, field in (
+        ("expected_error", "expected_errors"),
+        ("unexpected_success", "unexpected_successes"),
+    ):
+        declared = report.get(field, [])
+        if not isinstance(declared, list):
+            raise ValueError(f"Feature report {field} must be an array")
+
+        observed = Counter(
+            json.dumps(call, sort_keys=True)
+            for call in calls
+            if call["status"] == status
+        )
+        recorded = Counter(json.dumps(call, sort_keys=True) for call in declared)
+        if observed != recorded:
+            raise ValueError(f"Feature report {field} does not match its calls")
+
+    return calls
+
+
 def call_payloads(
     report: dict[str, Any], tokenizer: Any
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
@@ -52,7 +82,8 @@ def call_payloads(
     request_tokens = 0
     response_tokens = 0
 
-    for index, call in enumerate(report.get("calls", [])):
+    calls = validated_calls(report)
+    for index, call in enumerate(calls):
         request = {
             "method": "tools/call",
             "params": {
@@ -82,6 +113,10 @@ def call_payloads(
     return rows, {
         "request_tokens": request_tokens,
         "response_tokens": response_tokens,
+        "expected_errors": sum(call["status"] == "expected_error" for call in calls),
+        "unexpected_successes": sum(
+            call["status"] == "unexpected_success" for call in calls
+        ),
     }
 
 
@@ -308,13 +343,15 @@ def run_live_acceptance(
         "status": "red",
         "checks": {},
         "errors": [],
+        "cleanup_errors": [],
     }
 
     port = profile.free_port()
     token = secrets.token_hex(32)
     with profile.profiling_environment(support, port, token):
-        client = smoke.McpClient(prism, target, support)
+        client = None
         try:
+            client = smoke.McpClient(prism, target, support)
             client.request(
                 "initialize",
                 {
@@ -335,10 +372,11 @@ def run_live_acceptance(
         except Exception as error:
             result["errors"].append(str(error))
         finally:
-            try:
-                result["cleanup_errors"] = client.close()
-            except Exception as error:
-                result["cleanup_errors"] = [f"MCP cleanup failed: {error}"]
+            if client is not None:
+                try:
+                    result["cleanup_errors"] = client.close()
+                except Exception as error:
+                    result["cleanup_errors"] = [f"MCP cleanup failed: {error}"]
             result["errors"].extend(result["cleanup_errors"])
 
     result["status"] = (
@@ -375,8 +413,6 @@ def measure_report(
         "call_summary": {
             "count": len(rows),
             **aggregate,
-            "expected_errors": len(report.get("expected_errors", [])),
-            "unexpected_successes": len(report.get("unexpected_successes", [])),
         },
         "catalog_json": measure_json(catalog, tokenizer),
         "largest_responses": sorted(
