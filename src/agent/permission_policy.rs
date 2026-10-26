@@ -44,8 +44,14 @@ pub(super) fn cancelled() -> Value {
 fn category(title: &str) -> Tool {
     if let Some(tool) = server_tool(title, "prism") {
         return match tool {
-            "get_state" | "list_functions" | "read_bytes" | "analysis_tools"
-            | "decompile_batch" | "investigation" => Tool::Read,
+            "get_state"
+            | "list_functions"
+            | "read_bytes"
+            | "analysis_tools"
+            | "decompile_batch"
+            | "investigation"
+            | "semantic_search"
+            | "index_function_search" => Tool::Read,
             "open_function"
             | "current_view"
             | "set_view"
@@ -74,8 +80,13 @@ fn category(title: &str) -> Tool {
     }
     if let Some(tool) = server_tool(title, "prism-analysis") {
         return match tool {
-            "list_functions" | "read_bytes" | "analysis_tools" | "decompile_batch"
-            | "investigation" => Tool::Read,
+            "list_functions"
+            | "read_bytes"
+            | "analysis_tools"
+            | "decompile_batch"
+            | "investigation"
+            | "semantic_search"
+            | "index_function_search" => Tool::Read,
             _ => Tool::Shell,
         };
     }

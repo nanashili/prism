@@ -5,6 +5,11 @@ use std::collections::BinaryHeap;
 #[cfg(test)]
 mod tests;
 
+mod evidence;
+#[cfg(test)]
+mod evidence_tests;
+pub(crate) use evidence::TraceEvidence;
+
 #[derive(Default, Deserialize, Serialize)]
 pub(crate) struct Graph {
     pub blocks: Vec<Block>,
@@ -12,6 +17,8 @@ pub(crate) struct Graph {
     #[serde(default)]
     pub callers_deferred: bool,
     pub callees: Vec<String>,
+    #[serde(default)]
+    pub dynamic: Vec<TraceEvidence>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -81,6 +88,7 @@ impl Graph {
             callers: references("callers"),
             callers_deferred: value["callers_scanned"] == false,
             callees: references("callees"),
+            dynamic: Vec::new(),
         })
     }
 }

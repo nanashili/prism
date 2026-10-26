@@ -15,6 +15,7 @@ pub(crate) enum Event {
         id: String,
     },
     InvestigationCreated(Box<crate::investigation::Graph>),
+    ExecutionEvidenceChanged(String),
     Reconstruction {
         project: String,
         status: Box<Value>,

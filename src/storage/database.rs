@@ -102,6 +102,10 @@ impl Store {
         migrate_draft_attachments(&db)?;
         super::chat_models::migrate(&db)?;
         super::investigation::migrate(&db)?;
+        super::analysis_repair::initialize(&db)?;
+        super::function_search::initialize(&db)?;
+        super::execution::migrate(&db)?;
+        super::type_recovery::migrate(&db)?;
         let cache = super::cache::open(&path.with_extension("views.db"))?;
         Ok(Self { db, cache })
     }

@@ -7,5 +7,6 @@ mod window;
 
 pub(crate) use identity::Context;
 pub(crate) use job::ExportRunner;
+pub(crate) use ownership::Ownership;
 #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 pub(crate) use window::BatchWindow;
