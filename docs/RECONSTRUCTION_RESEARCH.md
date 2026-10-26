@@ -12,7 +12,7 @@ Traditional reconstruction is a pipeline: disassembly extracts instructions,
 then decompilation reconstructs higher-level structure and source-like code.
 That separation is explicit in the USENIX description of reverse engineering
 and matters because a readable result is not necessarily behaviorally correct
-([Kruegel et al., 2004](https://www.usenix.org/legacy/publications/library/proceedings/sec04/tech/full_papers/kruegel/kruegel_html/node1.html)).
+([Kruegel et al., 2004](https://www.usenix.org/conference/13th-usenix-security-symposium/static-disassembly-obfuscated-binaries)).
 Compilation is lossy: names, types, structured control flow, and other
 source-level information may be absent ([Yang and Nagy, 2025](https://www.usenix.org/system/files/atc25-yang-zao.pdf)).
 Universal reconstruction therefore needs an explicit uncertainty state and
@@ -28,10 +28,10 @@ including subgraphs, cycles, dominance, and strongly connected components
 [GraphAlgorithms](https://ghidra.re/ghidra_docs/api/ghidra/graph/GraphAlgorithms.html)).
 The function graph is therefore a defensible basis for dependency-aware work
 units rather than sending a whole binary to a generator. These links document
-the upstream Java API, not Prism’s effective public surface: Prism uses the
-pinned `koute` Rust wrapper and its existing native worker, which expose only a
-subset of Java Ghidra services. Any implementation must first map each proposed
-field or graph query to the wrapper capability actually available in Prism;
+the upstream Java API. Prism accesses the native `nanashili/rea-rust` release
+through MCP, which exposes a subset of those analysis services. Any implementation
+must first map each proposed field or graph query to the REA capability available
+in the selected release;
 unavailable values remain unknown rather than being inferred from the Java
 documentation.
 
@@ -188,12 +188,10 @@ this decompilation target cannot be transferred to reconstruction.
    durable, hashed artifacts. The bounded UI view cache is evictable and cannot
    be the sole completion record. Resume only verified outputs; preserve
    explicit failed and pending addresses. Stream output with back-pressure.
-3. Introduce a CPU and memory bounded pool with private mutable decompiler state
-   and a coordinator owning checkpoint publication. The current native snapshot
-   takes an exclusive per-image lock, so simply spawning more existing workers
-   will fail rather than provide safe concurrency. Profile restore, state
-   sharing, per-worker memory and effective throughput before choosing a worker
-   count. Retain per-function cleanup and orderly worker teardown.
+3. Introduce provider concurrency only after measuring CPU, memory, provider
+   limits, and effective throughput. Keep admission bounded, retain per-function
+   cleanup, and require orderly provider teardown. The coordinator should record
+   the provider identity and resource settings with each measurement.
 4. Schedule bounded chunks dynamically so expensive functions do not hold up an
    entire static partition. Record timeouts and retry only unresolved work
    within an explicit budget. Report coverage as well as elapsed time; a timed

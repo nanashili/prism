@@ -1,5 +1,6 @@
 use super::{app::Prism, view_tab::ViewTab};
 use crate::model::View;
+use crate::ui::presentation::TabCloseScope;
 
 impl Prism {
     pub(super) fn preview_function(&mut self, address: &str, name: &str, view: View) {
@@ -119,7 +120,9 @@ impl Prism {
         }
     }
 
-    pub(super) fn close_other_tabs(&mut self, index: usize, right_only: bool) {
+    pub(super) fn close_other_tabs(&mut self, index: usize, right_only: TabCloseScope) {
+        let right_only = right_only == TabCloseScope::ToTheRight;
+
         self.focus_current_pane();
         let active = self.workspace.active;
         if right_only {

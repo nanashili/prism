@@ -16,4 +16,8 @@ pub(crate) mod tool_servers;
 mod tool_updates;
 mod updates;
 
-pub(crate) use background::{Agent, Prompt};
+pub(crate) use background::{Agent, Prompt, PromptContext};
+
+pub(crate) use permission_policy::PermissionDecision;
+
+pub(crate) use prompt_content::ImageSupport;

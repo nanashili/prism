@@ -11,11 +11,13 @@ impl Session {
     pub(super) fn configure(
         &mut self,
         prompt: &Prompt,
-        restore: bool,
+        restore: SessionRestore,
         sink: &Sink,
         cancelled: &AtomicBool,
         controls: &Receiver<super::Control>,
     ) -> Result<()> {
+        let restore = restore == SessionRestore::Restore;
+
         let mut choices = choices(prompt, restore, sink)?;
         let menus = options::menus(&self.updates.options);
         select_model(&mut choices, &menus, prompt, restore, sink)?;
@@ -77,7 +79,7 @@ impl Session {
                 }));
             }
         };
-        let response = if resolved.legacy {
+        let response = if resolved.modes_api {
             serde_json::json!({"modes":{"currentModeId":resolved.value}})
         } else {
             response
@@ -123,7 +125,7 @@ fn select_model(
         choices.push(options::Pick {
             id: options::MODEL_PICK.into(),
             value: value.clone(),
-            legacy: model.legacy,
+            modes_api: model.modes_api,
         });
     }
     Ok(())
@@ -148,4 +150,16 @@ fn choices(prompt: &Prompt, restore: bool, sink: &Sink) -> Result<Vec<options::P
         choices.push(pick.clone());
     }
     Ok(choices)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum SessionRestore {
+    Restore,
+    Fresh,
+}
+
+impl From<bool> for SessionRestore {
+    fn from(value: bool) -> Self {
+        if value { Self::Restore } else { Self::Fresh }
+    }
 }

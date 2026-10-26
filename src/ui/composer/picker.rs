@@ -1,4 +1,5 @@
 use super::completion::Suggestion;
+use crate::ui::presentation::{InputFocus, Selection};
 use eframe::egui;
 
 #[derive(Default)]
@@ -8,7 +9,9 @@ pub(super) struct Keys {
     pub moved: bool,
 }
 
-pub(super) fn keys(ui: &egui::Ui, focused: bool, count: usize, selected: &mut usize) -> Keys {
+pub(super) fn keys(ui: &egui::Ui, focused: InputFocus, count: usize, selected: &mut usize) -> Keys {
+    let focused = focused == InputFocus::Focused;
+
     if !focused {
         return Keys::default();
     }
@@ -48,7 +51,7 @@ pub(super) fn rows(
             ui.spacing_mut().item_spacing.y = 0.0;
             for (index, item) in entries.iter().enumerate() {
                 let selected = index == selected;
-                let row = item.row(ui, selected);
+                let row = item.row(ui, Selection::from(selected));
                 if keys.moved && selected {
                     row.scroll_to_me(None);
                 }

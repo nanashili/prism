@@ -2,7 +2,15 @@ use super::{Mode, endpoint::Endpoint, session::Session};
 use crate::error::{Result, failure};
 use std::ffi::OsString;
 
-pub fn run_cli(mut arguments: impl Iterator<Item = OsString>) -> Result<()> {
+/// Runs the MCP helper over standard input and output until the client disconnects.
+///
+/// # Errors
+/// Returns an error for invalid arguments, unavailable endpoints, or protocol I/O failures.
+pub fn run_cli(arguments: impl Iterator<Item = OsString>) -> std::result::Result<(), crate::Error> {
+    run(arguments).map_err(crate::Error::from_source)
+}
+
+fn run(mut arguments: impl Iterator<Item = OsString>) -> Result<()> {
     let mut mode = Mode::Combined;
     let mut endpoint = None;
 

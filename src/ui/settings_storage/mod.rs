@@ -1,3 +1,4 @@
+use crate::storage::ChatArchive;
 mod chats;
 mod measurement;
 mod overview;
@@ -28,7 +29,7 @@ impl StorageUi {
         }
     }
 
-    pub fn review_chats(&mut self, archived: bool) {
+    pub fn review_chats(&mut self, archived: ChatArchive) {
         self.review = Some(chats::Review::new(archived));
     }
 

@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn open(
     path: &Path,
     cancelled: &AtomicBool,

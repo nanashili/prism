@@ -1,15 +1,17 @@
 use super::{Database, root};
 use crate::error::Result;
+use crate::reconstruction::{DatabaseOpen, ValidationCommand};
 use rusqlite::params;
 use serde_json::{Value, json};
 use std::sync::atomic::AtomicBool;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn build_generation(
     project: &str,
     args: &Value,
     cancelled: &AtomicBool,
 ) -> Result<Value> {
-    let mut database = Database::open(&root(project, args)?, false)?;
+    let mut database = Database::open(&root(project, args)?, DatabaseOpen::Existing)?;
     database.verify_project(project)?;
     let generation = database.generation(args["generation"].as_i64())?;
     let snapshot = database.snapshot(generation, cancelled)?;
@@ -36,7 +38,10 @@ pub(crate) fn build_generation(
         Err(error) => error.to_string(),
     };
     save_build_receipt(&database, &snapshot, succeeded, &output)?;
-    let validation = super::language::validation_kind(&snapshot.language, custom_command.is_some());
+    let validation = super::language::validation_kind(
+        &snapshot.language,
+        ValidationCommand::from(custom_command.is_some()),
+    );
     let command_identity = super::build_commands::identity(&snapshot.language, custom_command)?;
     let revision = snapshot.revision.to_string();
     let identity = database.db.query_row(

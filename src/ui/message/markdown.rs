@@ -1,6 +1,6 @@
 use super::style::ChatStyle;
 use eframe::egui;
-use egui_commonmark_extended::{CommonMarkCache, CommonMarkViewer};
+use egui_commonmark_extended::{CommonMarkCache, CommonMarkViewer, ImageUriScheme, TableLayout};
 use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
 use std::borrow::Cow;
 
@@ -41,10 +41,10 @@ pub(super) fn show_cached(
         visuals.widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
 
         CommonMarkViewer::new()
-            .explicit_image_uri_scheme(true)
+            .explicit_image_uri_scheme(ImageUriScheme::Explicit)
             .default_width(Some(width))
             .table_max_width(Some(width))
-            .responsive_tables(true)
+            .responsive_tables(TableLayout::Responsive)
             .max_image_width(Some(width))
             .line_height(style.appearance.line_spacing / 100.0)
             .code_line_height(style.appearance.line_spacing / 100.0)

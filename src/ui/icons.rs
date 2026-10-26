@@ -26,7 +26,7 @@ macro_rules! icons {
 
 icons! {
     New => "new", NewChat => "new-chat", Folder => "folder",
-    Binary => "binary", App => "app", Model => "model", Gpu => "gpu",
+    Binary => "binary", App => "app", Gpu => "gpu",
     Slash => "slash", Ask => "asks", Send => "send", Stop => "stop",
     History => "history", Thought => "thought",
     Agent => "agent", ChevronUp => "chevron-up", Disclosure => "disclosure",

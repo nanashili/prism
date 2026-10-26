@@ -9,7 +9,7 @@ const MAX_DURABLE_ERROR_DETAILS_BYTES: usize = 64 * 1024;
 pub(crate) struct ExportRunner {
     pub(super) job: DecompilationJob,
     _ownership: super::ownership::Ownership,
-    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+    #[cfg(feature = "rea-rust-ghidra")]
     pub(crate) batch: Option<super::window::BatchWindow>,
 }
 
@@ -47,7 +47,7 @@ impl ExportRunner {
         Ok(Self {
             job,
             _ownership: ownership,
-            #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+            #[cfg(feature = "rea-rust-ghidra")]
             batch: None,
         })
     }
@@ -112,7 +112,7 @@ impl ExportRunner {
                 }
                 Some(serialized)
             }
-            ("failed", None) | ("succeeded", None) => None,
+            ("failed" | "succeeded", None) => None,
             ("succeeded", Some(_)) => {
                 return Err(failure("Successful decompilation included error details"));
             }

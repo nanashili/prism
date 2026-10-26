@@ -16,7 +16,7 @@ impl Attachment {
 
     pub fn from_path(path: &Path) -> Result<Self> {
         let uri = Url::from_file_path(path)
-            .map_err(|_| failure("Choose an absolute file or folder path"))?;
+            .map_err(|()| failure("Choose an absolute file or folder path"))?;
         let name = path
             .file_name()
             .unwrap_or(path.as_os_str())
@@ -41,7 +41,7 @@ impl Attachment {
         if uri.scheme() == "file" {
             let path = uri
                 .to_file_path()
-                .map_err(|_| failure("Invalid local file URL"))?;
+                .map_err(|()| failure("Invalid local file URL"))?;
             return Self::from_path(&path);
         }
         if !matches!(uri.scheme(), "https" | "http") || uri.host_str().is_none() {

@@ -11,7 +11,7 @@ pub(crate) struct Goal {
     pub updated_at: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum GoalStatus {
     Active,
@@ -21,27 +21,43 @@ pub(crate) enum GoalStatus {
     Limited,
 }
 
-impl Goal {
+#[derive(Debug)]
+pub(crate) enum GoalUpdate {
+    Unchanged,
+    Clear,
+    Set(Goal),
+}
+
+impl GoalUpdate {
     /// Missing or malformed metadata leaves the goal alone; explicit null clears it.
-    pub fn from_metadata(meta: &Value) -> Option<Option<Self>> {
-        let value = meta.pointer("/jetbrains/air/goal")?;
+    pub fn from_metadata(meta: &Value) -> Self {
+        let Some(value) = meta.pointer("/jetbrains/air/goal") else {
+            return Self::Unchanged;
+        };
         if value.is_null() {
-            return Some(None);
+            return Self::Clear;
         }
-        let mut goal: Self = serde_json::from_value(value.clone()).ok()?;
+
+        let Ok(mut goal) = serde_json::from_value::<Goal>(value.clone()) else {
+            return Self::Unchanged;
+        };
         if goal.objective.trim().is_empty()
             || goal.objective.chars().count() > 4000
             || [goal.time_used_seconds, goal.created_at, goal.updated_at]
                 .iter()
                 .any(|value| !value.is_finite() || *value < 0.0)
         {
-            return None;
+            return Self::Unchanged;
         }
         goal.objective = goal.objective.trim().into();
-        Some(Some(goal))
+        Self::Set(goal)
     }
+}
 
-    pub fn elapsed(&self, connected: bool) -> u64 {
+impl Goal {
+    pub fn elapsed(&self, connected: ConnectionState) -> u64 {
+        let connected = connected == ConnectionState::Connected;
+
         let since_update = if connected && self.status == GoalStatus::Active {
             ((super::now_ms() as f64 - self.updated_at) / 1000.0).max(0.0)
         } else {
@@ -59,6 +75,22 @@ impl GoalStatus {
             Self::Blocked => "Goal blocked",
             Self::Complete => "Goal complete",
             Self::Limited => "Goal limit reached",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ConnectionState {
+    Connected,
+    Disconnected,
+}
+
+impl From<bool> for ConnectionState {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::Connected
+        } else {
+            Self::Disconnected
         }
     }
 }

@@ -129,7 +129,10 @@ impl Prism {
         self.commit_edit(project)
     }
 
-    fn commit_edit(&mut self, project: crate::model::Project) -> crate::error::Result<()> {
+    pub(super) fn commit_edit(
+        &mut self,
+        project: crate::model::Project,
+    ) -> crate::error::Result<()> {
         if self.pending > 0 {
             return Err("Wait for the current operation before editing the project".into());
         }
@@ -233,5 +236,9 @@ fn edit_size(project: &crate::model::Project) -> usize {
         .map(|(key, value)| key.len() + value.len())
         .sum();
     let patches: usize = project.patches.values().map(Vec::len).sum();
-    names + notes + patches + project.bookmarks.iter().map(String::len).sum::<usize>()
+    let transfers = project
+        .imported
+        .get("version-transfers.json")
+        .map_or(0, |history| history.to_string().len());
+    names + notes + patches + transfers + project.bookmarks.iter().map(String::len).sum::<usize>()
 }

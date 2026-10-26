@@ -1,5 +1,6 @@
 use super::app::Prism;
 use crate::model::{Screen, View};
+use crate::ui::presentation::{OpenTarget, TypingState};
 use eframe::egui::{self, Key, Modifiers};
 
 impl Prism {
@@ -35,7 +36,7 @@ impl Prism {
                 continue;
             }
             let combo = super::shortcut_catalog::combo(&self.settings, id, default);
-            if super::key_combo::pressed(context, combo, typing) {
+            if super::key_combo::pressed(context, combo, TypingState::from(typing)) {
                 self.run_shortcut(id);
             }
         }
@@ -103,7 +104,7 @@ impl Prism {
                     }
                 }
                 if ui.button("Open file").clicked() {
-                    self.choose_open(false);
+                    self.choose_open(OpenTarget::File);
                     self.palette = false;
                 }
                 if ui.button("Setup").clicked() {

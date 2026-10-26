@@ -1,4 +1,5 @@
 use crate::settings::permissions::{Level, Tool};
+use crate::ui::presentation::StatusTone;
 use eframe::egui;
 
 #[derive(Clone)]
@@ -39,13 +40,6 @@ pub(in crate::ui) enum Path {
     Debugger,
     Rizin,
     Rea,
-    #[cfg(feature = "prism-ghidra-rea")]
-    Ghidra,
-    #[cfg(feature = "prism-ghidra-rea")]
-    Java,
-    ReaNode,
-    #[cfg(feature = "rea-rust-ghidra")]
-    RustRea,
     #[cfg(feature = "rea-rust-ghidra")]
     RustGhidraWorker,
     Hopper,
@@ -59,8 +53,6 @@ pub(in crate::ui) enum Control<'a> {
     Choice(&'a mut String, &'static [&'static str], bool),
     Memory(&'a mut u32),
     Timeout(&'a mut u64),
-    #[cfg(feature = "prism-ghidra-rea")]
-    Workers(&'a mut u8),
     Range(&'a mut f32, f32, f32, f32, &'static str),
     Text(&'a mut String, &'static str),
     Permission(Tool, Level),
@@ -168,7 +160,9 @@ impl<'a> Row<'a> {
         self
     }
 
-    pub fn status(mut self, label: impl Into<String>, good: bool) -> Self {
+    pub fn status(mut self, label: impl Into<String>, good: StatusTone) -> Self {
+        let good = good == StatusTone::Good;
+
         self.status = Some((label.into(), good));
         self
     }

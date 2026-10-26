@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 impl Store {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(crate) fn prepare_navigation(
         &mut self,
         project: &str,
@@ -58,6 +59,7 @@ fn registered_modules(store: &Store, project: &str) -> Result<BTreeSet<String>> 
     Ok(modules)
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 fn index_functions(
     db: &rusqlite::Transaction<'_>,
     project: &str,
@@ -84,17 +86,20 @@ fn index_functions(
         let path: String = row.get(3)?;
         let owner: String = row.get(4)?;
         let origin = classify::origin(&name, &kind, &path);
-        let marker = (origin != "Imports")
-            .then(|| classify::marker(&name, modules))
-            .flatten();
+        let marker = if origin == "Imports" {
+            classify::ModuleMarker::Unrelated
+        } else {
+            classify::marker(&name, modules)
+        };
         let module = classify::source_module(&path)
-            .or(marker.flatten())
+            .or(marker.module())
             .unwrap_or("");
         let file = classify::file_group(&name, &path, &owner, origin);
         insert.execute(params![address, position, module, file, origin])?;
-        if let Some(marker) = marker {
+        if !matches!(marker, classify::ModuleMarker::Unrelated) {
+            let module = marker.module();
             if let Some((start, Some(previous_module))) = &previous
-                && marker == Some(previous_module.as_str())
+                && module == Some(previous_module.as_str())
             {
                 db.execute(
                     "UPDATE sidebar_functions SET module=?1,inferred=1
@@ -102,7 +107,7 @@ fn index_functions(
                     params![previous_module, start, position],
                 )?;
             }
-            previous = Some((position, marker.map(str::to_owned)));
+            previous = Some((position, module.map(str::to_owned)));
         }
         position += 1;
     }

@@ -15,8 +15,11 @@ impl State {
         let result = self
             .engine()?
             .collect_decompilation_batch(addresses, &cancelled);
-        self.discard_unusable_engine();
-        result
+        crate::error::finish(
+            result,
+            self.discard_unusable_engine(),
+            "Closing the analysis session",
+        )
     }
 
     pub(in crate::worker) fn batch_pseudocode(&mut self, address: &str) -> Result<String> {

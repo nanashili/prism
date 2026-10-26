@@ -1,8 +1,10 @@
 use super::{app::Prism, syntax, theme::Palette};
 use crate::settings::Settings;
+use crate::ui::presentation::PaletteTheme;
 use eframe::egui::{self, FontId, RichText};
 
 impl Prism {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn code(&mut self, ui: &mut egui::Ui) {
         if self.workspace.text.is_empty() {
             ui.add_space(24.0);
@@ -84,7 +86,7 @@ pub(super) fn line(
                 egui::Label::new(syntax::highlight(
                     text,
                     font.clone(),
-                    ui.visuals().dark_mode,
+                    PaletteTheme::from(ui.visuals().dark_mode),
                     &settings.color_scheme,
                 ))
                 .selectable(true)

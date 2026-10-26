@@ -1,13 +1,17 @@
 use super::theme::Palette;
 use crate::model::ChatSummary;
+use crate::ui::presentation::{ActivityState, Selection};
 use eframe::egui::{self, Align2, FontId, Rect, Sense};
 
 pub(super) fn chat_row(
     ui: &mut egui::Ui,
     chat: &ChatSummary,
-    selected: bool,
-    busy: bool,
+    selected: Selection,
+    busy: ActivityState,
 ) -> (egui::Response, egui::Response) {
+    let selected = selected == Selection::Selected;
+    let busy = busy == ActivityState::Active;
+
     let (rect, hover) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), 32.0), Sense::hover());
     let menu_rect = Rect::from_min_max(egui::pos2(rect.right() - 28.0, rect.top()), rect.max);
@@ -104,8 +108,10 @@ fn paint_chat_row(
 pub(super) fn project_row(
     ui: &mut egui::Ui,
     recent: &crate::model::Recent,
-    selected: bool,
+    selected: Selection,
 ) -> egui::Response {
+    let selected = selected == Selection::Selected;
+
     let p = Palette::for_context(ui.ctx());
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), 44.0), Sense::click());

@@ -3,8 +3,8 @@
 Prism coordinates reconstruction through the existing chat agent, Rust worker and
 MCP bridge. The selected binary remains unchanged. Each output root is bound to
 its input SHA-256 and contains its own `.prism-reconstruction/state.sqlite`.
-This is a new Prism workflow; original Reference reconstruction jobs are preserved
-by import but are not migrated into these generations.
+Each generation is owned by Prism and is not resumed from another application's
+data.
 
 ## Workflow and ownership
 
@@ -55,7 +55,7 @@ merge. These readiness gates do not prove recovered behavior.
 
 The worker reuses its loaded analysis engine, checksum-verified durable
 pseudocode artifacts and configuration-scoped view cache. Reconstruction
-evidence excludes legacy upstream UI cache fallback entries.
+evidence excludes incompatible UI cache fallback entries.
 Native Ghidra evidence adds local control-flow and direct-reference information
 without requesting a whole-program caller scan. Successful new evidence in a
 page is saved in one transaction. Native analysis stays serialized; batching

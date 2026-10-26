@@ -19,9 +19,11 @@ name = "prism-mcp"
 path = "src/bin/prism-mcp.rs"
 
 [features]
-default = ["desktop", "prism-ghidra-rea"]
-prism-ghidra-rea = ["desktop"]
+default = ["desktop", "rea-rust-ghidra"]
 rea-rust-ghidra = ["desktop"]
+profiling = ["dep:hotpath", "hotpath/hotpath", "hotpath/threads"]
+profiling-alloc = ["profiling", "hotpath/hotpath-alloc"]
+profiling-mcp = ["profiling", "hotpath/hotpath-mcp"]
 desktop = [
     "dep:eframe", "dep:egui_extras", "dep:egui_commonmark_extended", "dep:pulldown-cmark", "dep:image",
     "dep:rusqlite", "dep:sha2", "dep:zstd", "dep:tempfile", "dep:object",
@@ -33,42 +35,43 @@ desktop = [
 ]
 
 [build-dependencies]
-embed-resource = { version = "=3.0.11", optional = true }
+embed-resource = { version = "3.0.11", optional = true }
 
 [dependencies]
-eframe = { version = "=0.33.3", optional = true, default-features = false, features = ["default_fonts", "glow", "x11", "wayland", "accesskit"] }
-egui_extras = { version = "=0.33.3", optional = true, default-features = false, features = ["image", "svg"] }
-egui_commonmark_extended = { version = "=0.28.3", optional = true, default-features = false, features = ["pulldown_cmark"] }
-pulldown-cmark = { version = "=0.13.4", optional = true, default-features = false }
-image = { version = "=0.25.9", optional = true, default-features = false, features = ["png"] }
-serde = { version = "=1.0.228", features = ["derive", "rc"] }
-serde_json = "=1.0.145"
-rusqlite = { version = "=0.38.0", optional = true, features = ["bundled", "backup"] }
+eframe = { version = "0.33.3", optional = true, default-features = false, features = ["default_fonts", "glow", "x11", "wayland", "accesskit"] }
+egui_extras = { version = "0.33.3", optional = true, default-features = false, features = ["image", "svg"] }
+egui_commonmark_extended = { version = "0.28.3", optional = true, default-features = false, features = ["pulldown_cmark"] }
+pulldown-cmark = { version = "0.13.4", optional = true, default-features = false }
+image = { version = "0.25.9", optional = true, default-features = false, features = ["png"] }
+serde = { version = "1.0.228", features = ["derive", "rc"] }
+serde_json = "1.0.145"
+rusqlite = { version = "0.38.0", optional = true, features = ["bundled", "backup"] }
 # Enable SHA-256 CPU instructions on ARM, with runtime detection and a software fallback.
-sha2 = { version = "=0.10.9", optional = true, features = ["asm"] }
-zstd = { version = "=0.13.3", optional = true, default-features = false }
-tempfile = { version = "=3.23.0", optional = true }
-object = { version = "=0.37.3", optional = true, default-features = false, features = ["read", "std"] }
-rfd = { version = "=0.17.2", optional = true }
-shlex = { version = "=1.3.0", optional = true }
-dirs = "=6.0.0"
-getrandom = { version = "=0.3.4", optional = true }
-url = { version = "=2.5.8", optional = true }
-base64 = { version = "=0.22.1", optional = true }
+sha2 = { version = "0.10.9", optional = true, features = ["asm"] }
+zstd = { version = "0.13.3", optional = true, default-features = false }
+tempfile = { version = "3.23.0", optional = true }
+object = { version = "0.37.3", optional = true, default-features = false, features = ["read", "std"] }
+rfd = { version = "0.17.2", optional = true }
+shlex = { version = "1.3.0", optional = true }
+dirs = "6.0.0"
+getrandom = { version = "0.3.4", optional = true }
+url = { version = "2.5.8", optional = true }
+base64 = { version = "0.22.1", optional = true }
+hotpath = { version = "=0.29.2", default-features = false, optional = true }
 
 [target.'cfg(unix)'.dependencies]
-libc = { version = "=0.2.177", optional = true }
+libc = { version = "0.2.177", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2 = { version = "=0.6.5", optional = true }
-objc2-foundation = { version = "=0.3.2", optional = true, default-features = false, features = ["std", "NSString", "NSGeometry"] }
-objc2-app-kit = { version = "=0.3.2", optional = true, default-features = false, features = ["std", "NSView", "NSWindow", "NSResponder", "NSWorkspace", "NSImage", "NSImageRep", "NSBitmapImageRep", "NSGraphics", "NSGraphicsContext", "NSGlassEffectView", "objc2-core-foundation", "objc2-quartz-core"] }
-objc2-core-foundation = { version = "=0.3.2", optional = true, default-features = false, features = ["std"] }
-objc2-core-graphics = { version = "=0.3.2", optional = true, default-features = false, features = ["std", "CGPath", "CGColor", "CGGeometry"] }
-objc2-quartz-core = { version = "=0.3.2", optional = true, default-features = false, features = ["std", "CALayer", "CAShapeLayer", "CATransaction", "objc2-core-graphics"] }
-raw-window-handle = { version = "=0.6.2", optional = true }
-window-vibrancy = { version = "=0.8.1", optional = true }
-liquid-glass-rs = { version = "=0.1.1", optional = true }
+objc2 = { version = "0.6.5", optional = true }
+objc2-foundation = { version = "0.3.2", optional = true, default-features = false, features = ["std", "NSString", "NSGeometry"] }
+objc2-app-kit = { version = "0.3.2", optional = true, default-features = false, features = ["std", "NSView", "NSWindow", "NSResponder", "NSWorkspace", "NSAccessibility", "NSImage", "NSImageRep", "NSBitmapImageRep", "NSGraphics", "NSGraphicsContext", "NSGlassEffectView", "objc2-core-foundation", "objc2-quartz-core"] }
+objc2-core-foundation = { version = "0.3.2", optional = true, default-features = false, features = ["std"] }
+objc2-core-graphics = { version = "0.3.2", optional = true, default-features = false, features = ["std", "CGPath", "CGColor", "CGGeometry"] }
+objc2-quartz-core = { version = "0.3.2", optional = true, default-features = false, features = ["std", "CALayer", "CAShapeLayer", "CATransaction", "objc2-core-graphics"] }
+raw-window-handle = { version = "0.6.2", optional = true }
+window-vibrancy = { version = "0.8.1", optional = true }
+liquid-glass-rs = { version = "0.1.1", optional = true }
 
 [profile.release]
 opt-level = "s"
@@ -81,10 +84,24 @@ panic = "abort"
 debug = 0
 incremental = false
 
+[profile.profiling]
+inherits = "release"
+debug = true
+strip = false
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+
 [lints.clippy]
-correctness = "deny"
-suspicious = "warn"
-perf = "warn"
+all = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+undocumented_unsafe_blocks = "warn"
+allow_attributes_without_reason = "warn"
+missing_errors_doc = "warn"
+must_use_candidate = "warn"
+unwrap_used = "warn"
 
 [patch.crates-io]
 egui_commonmark_extended = { path = "vendor/egui_commonmark_extended" }

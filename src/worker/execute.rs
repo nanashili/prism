@@ -5,10 +5,16 @@ use crate::project::files;
 use std::io::Write;
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn execute(&mut self, job: Job) -> Result<String> {
         match job {
             Job::Open(path) => self.open(path),
             Job::Index => self.index(),
+            Job::StartInvestigation {
+                project,
+                objective,
+                budget,
+            } => self.start_investigation(&project, &objective, budget),
             Job::Sidebar {
                 project,
                 generation,
@@ -76,6 +82,7 @@ impl State {
         }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn configure(&mut self, settings: crate::settings::Settings) -> Result<String> {
         let _transition = self.runtime.begin_transition()?;
         let backend_changed = !settings.same_analysis_backend(&self.settings);
@@ -93,11 +100,12 @@ impl State {
         }
         if backend_changed {
             self.pause_decompilation()?;
-            self.engine = None;
+            self.close_engine()?;
         }
         self.settings = settings;
         if let Some(context) = context {
             self.runtime.set_context(context)?;
+            self.sync_verification_context()?;
         }
         Ok("Settings applied".into())
     }

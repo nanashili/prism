@@ -1,5 +1,6 @@
 use super::{code_fonts, settings_controls as control, settings_rows as rows};
 use crate::settings::Settings;
+use crate::ui::presentation::RowPosition;
 use eframe::egui;
 
 pub(super) fn show(ui: &mut egui::Ui, settings: &mut Settings) {
@@ -9,7 +10,7 @@ pub(super) fn show(ui: &mut egui::Ui, settings: &mut Settings) {
         interface_size(ui, settings);
         rows::row(
             ui,
-            false,
+            RowPosition::Following,
             "Transparency",
             "How much of your desktop shows through around the edges. All the way down is solid.",
             212.0,
@@ -26,7 +27,7 @@ pub(super) fn show(ui: &mut egui::Ui, settings: &mut Settings) {
         );
         rows::row(
             ui,
-            false,
+            RowPosition::Following,
             "Frost",
             "How much the desktop behind the window is blurred.",
             212.0,
@@ -59,7 +60,7 @@ fn interface_size(ui: &mut egui::Ui, settings: &mut Settings) {
     let width = control::segmented_width(ui, &options);
     rows::row(
         ui,
-        true,
+        RowPosition::First,
         "Interface size",
         "Text and controls outside the code.",
         width,
@@ -82,7 +83,7 @@ pub(super) fn code_settings(ui: &mut egui::Ui, settings: &mut Settings) {
         let fonts: Vec<_> = fonts.iter().map(String::as_str).collect();
         rows::row(
             ui,
-            true,
+            RowPosition::First,
             "Code font",
             "Used for pseudocode, assembly, hex and code in replies.",
             150.0,
@@ -92,7 +93,7 @@ pub(super) fn code_settings(ui: &mut egui::Ui, settings: &mut Settings) {
         );
         rows::row(
             ui,
-            false,
+            RowPosition::Following,
             "Code size",
             "Applies to every code view and the graph.",
             212.0,
@@ -109,12 +110,19 @@ pub(super) fn code_settings(ui: &mut egui::Ui, settings: &mut Settings) {
         );
         let options = ["Compact", "Normal", "Relaxed"];
         let width = control::segmented_width(ui, &options);
-        rows::row(ui, false, "Line spacing", "", width, |ui| {
-            control::segmented(ui, &mut settings.line_spacing, &options);
-        });
         rows::row(
             ui,
-            false,
+            RowPosition::Following,
+            "Line spacing",
+            "",
+            width,
+            |ui| {
+                control::segmented(ui, &mut settings.line_spacing, &options);
+            },
+        );
+        rows::row(
+            ui,
+            RowPosition::Following,
             "Colours",
             "How keywords, names, strings and numbers are coloured.",
             150.0,
@@ -128,7 +136,7 @@ pub(super) fn code_settings(ui: &mut egui::Ui, settings: &mut Settings) {
         );
         rows::row(
             ui,
-            false,
+            RowPosition::Following,
             "Line numbers",
             "In pseudocode and shader views.",
             34.0,
@@ -138,7 +146,7 @@ pub(super) fn code_settings(ui: &mut egui::Ui, settings: &mut Settings) {
         );
         rows::row(
             ui,
-            false,
+            RowPosition::Following,
             "Use the code size in graphs",
             "Off keeps graph blocks small so more fits on screen.",
             34.0,

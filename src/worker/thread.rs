@@ -22,11 +22,13 @@ pub(super) struct State {
     pub(super) settings: Settings,
     pub(super) engine: Option<crate::analysis::Engine>,
     pub(super) project: Option<Project>,
+    pub(super) comparison: Option<std::sync::Arc<crate::comparison::Report>>,
     pub(super) cancelled: Arc<AtomicBool>,
     pub(super) stop_generation: Arc<AtomicU64>,
     pub(super) observed_stop: u64,
     pub(super) sink: Sink,
     pub(super) debugger: Option<crate::debug::Debugger>,
+    pub(super) debug_project: Option<String>,
     pub(super) sidebar_counts: Option<(String, crate::storage::navigation::Counts)>,
     pub(super) decompilation: Option<ExportRunner>,
     pub(super) runtime: RuntimeSnapshot,
@@ -67,6 +69,8 @@ impl Worker {
                 observed_stop: 0,
                 sink,
                 debugger: None,
+                debug_project: None,
+                comparison: None,
                 sidebar_counts: None,
                 decompilation: None,
                 runtime: worker_runtime,
@@ -101,6 +105,22 @@ impl Worker {
             .ok_or_else(|| failure("The analysis worker is closed"))
     }
 
+    pub fn stop(&mut self) {
+        self.stopped.store(true, Ordering::Relaxed);
+        self.cancel();
+        self.sender.take();
+    }
+
+    pub fn close(mut self) -> Result<()> {
+        self.stop();
+        if let Some(thread) = self.thread.take() {
+            thread
+                .join()
+                .map_err(|_| failure("The analysis worker stopped unexpectedly"))?;
+        }
+        Ok(())
+    }
+
     pub fn runtime(&self) -> RuntimeSnapshot {
         self.runtime.clone()
     }
@@ -108,13 +128,17 @@ impl Worker {
 
 impl Drop for Worker {
     fn drop(&mut self) {
-        self.stopped.store(true, Ordering::Relaxed);
-        self.cancel();
-        self.sender.take();
-        if let Some(thread) = self.thread.take()
+        self.stop();
+        if self
+            .thread
+            .as_ref()
+            .is_some_and(std::thread::JoinHandle::is_finished)
+            && let Some(thread) = self.thread.take()
             && thread.join().is_err()
         {
             eprintln!("The analysis worker stopped unexpectedly");
         }
+        // A running worker owns its resources and observes the stop flag. Its
+        // handle can detach here; normal shutdown uses close() to observe errors.
     }
 }

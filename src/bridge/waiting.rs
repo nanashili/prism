@@ -9,6 +9,7 @@ use std::sync::{
 };
 use std::time::Duration;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn send(
     sink: &Sink,
     mut event: Event,
@@ -26,6 +27,7 @@ pub(super) fn send(
     }
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn answer(
     socket: &TcpStream,
     receiver: mpsc::Receiver<Result<Value>>,

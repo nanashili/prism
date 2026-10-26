@@ -30,3 +30,11 @@ pub(crate) use api::{call, root};
 pub(crate) use database::Database;
 pub(crate) use evidence::EvidenceItem;
 pub(crate) use generation::Configuration;
+
+pub(crate) use database::DatabaseOpen;
+
+pub(crate) use generation::GenerationStart;
+
+pub(crate) use generation_copy::{EvidenceReuse, SourceReuse};
+
+pub(crate) use language::ValidationCommand;

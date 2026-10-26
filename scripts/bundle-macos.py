@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bundle Prism with Java Ghidra through REA, or opt in to experimental Rust REA."""
+"""Bundle Prism with the native rea-rust provider."""
 import argparse
 import json
 import plistlib
@@ -19,22 +19,22 @@ BINARY_NAMES = ("prism", "prism-mcp")
 BUILD_RECEIPT = ".prism-bundle-build.json"
 
 
-def release_binaries(skip_build, rust_backend):
+def release_binaries(skip_build):
     target = target_directory()
     if skip_build:
-        return verify_recorded_build(target, rust_backend)
+        return verify_recorded_build(target)
 
-    paths = build_release(rust_backend)
+    paths = build_release()
     binaries = identify_binaries(paths)
-    identity = release_identity(target, binaries, rust_backend)
+    identity = release_identity(target, binaries)
     (target / BUILD_RECEIPT).write_text(
         json.dumps(identity, indent=2, sort_keys=True) + "\n", encoding="utf-8",
     )
     return binaries
 
 
-def build_release(rust_backend):
-    feature = "rea-rust-ghidra" if rust_backend else "prism-ghidra-rea"
+def build_release():
+    feature = "rea-rust-ghidra"
     command = [
         "cargo", "build", "--release", "--locked", "--jobs", "2",
         "--no-default-features", "--features", f"desktop,{feature}",
@@ -55,7 +55,6 @@ def build_release(rust_backend):
 
 def build_artifacts(messages, feature):
     binaries = {}
-    other = "prism-ghidra-rea" if feature == "rea-rust-ghidra" else "rea-rust-ghidra"
     for message in messages:
         if message.get("reason") != "compiler-artifact":
             continue
@@ -63,7 +62,7 @@ def build_artifacts(messages, feature):
         if name not in BINARY_NAMES or message.get("executable") is None:
             continue
         features = message["features"]
-        if feature not in features or other in features:
+        if feature not in features:
             raise ValueError(f"Cargo built {name} with an unexpected provider feature set")
         path = Path(message["executable"]).resolve(strict=True)
         if name in binaries and binaries[name] != path:
@@ -90,10 +89,10 @@ def identify_binaries(paths):
     return binaries
 
 
-def release_identity(target, binaries, rust_backend):
+def release_identity(target, binaries):
     return {
         "schema_version": 1,
-        "provider": "ghidra-rust" if rust_backend else "ghidra",
+        "provider": "ghidra-rust",
         "binaries": {
             path.name: {"path": str(path.relative_to(target)), "sha256": digest}
             for path, digest in binaries.items()
@@ -101,19 +100,19 @@ def release_identity(target, binaries, rust_backend):
     }
 
 
-def verify_recorded_build(target, rust_backend):
+def verify_recorded_build(target):
     receipt = target / BUILD_RECEIPT
     try:
         recorded = json.loads(receipt.read_text(encoding="utf-8"))
         paths = recorded_binary_paths(target, recorded)
         binaries = identify_binaries(paths)
-        if recorded != release_identity(target, binaries, rust_backend):
-            raise ValueError("The selected provider or executable hashes do not match")
+        if recorded != release_identity(target, binaries):
+            raise ValueError("The native provider or executable hashes do not match")
         return binaries
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         raise ValueError(
             f"Cannot reuse release build receipt {receipt}: {error}. "
-            "Run this bundle command without --skip-build to build the selected provider."
+            "Run this bundle command without --skip-build to build the native provider."
         ) from error
 
 
@@ -236,28 +235,9 @@ def argument_parser():
         "--skip-build", action="store_true",
         help="Reuse release executables verified by a matching bundle-build receipt",
     )
-    providers = parser.add_mutually_exclusive_group()
-    providers.add_argument(
-        "--rea-rust-ghidra", dest="rust_backend", action="store_true",
-        help="Opt in to the experimental Rust REA provider and its bundled runtime",
-    )
-    providers.add_argument(
-        "--java-ghidra", dest="rust_backend", action="store_false",
-        help="Select the default Java Ghidra support with external REA, Node, Java and Ghidra",
-    )
-    parser.set_defaults(rust_backend=False)
     parser.add_argument(
         "--rea-package", type=Path,
-        help="Built REA package with installed runtime dependencies",
-    )
-    parser.add_argument(
-        "--node-runtime", type=Path,
-        help="Portable Node distribution containing bin/node and LICENSE",
-    )
-    parser.add_argument("--rust-ghidra-worker", type=Path, help="REA's compiled native worker")
-    parser.add_argument(
-        "--worker-notices", type=Path,
-        help="Prepared license notices for the worker and its native dependencies",
+        help="Optional extracted rea-rust release to copy into the app bundle",
     )
     parser.add_argument("--output", type=Path, default=ROOT / "build/Prism.app")
     parser.add_argument(
@@ -267,36 +247,16 @@ def argument_parser():
     return parser
 
 
-def runtime_inputs(parser, arguments):
-    supplied = (
-        arguments.rea_package, arguments.node_runtime,
-        arguments.rust_ghidra_worker, arguments.worker_notices,
-    )
-    if not arguments.rust_backend:
-        if any(path is not None for path in supplied):
-            parser.error(
-                "Rust runtime inputs require --rea-rust-ghidra and cannot be "
-                "combined with --java-ghidra"
-            )
-        return None
-    if any(path is None for path in supplied):
-        parser.error(
-            "The Rust REA bundle requires --rea-package, --node-runtime, "
-            "--rust-ghidra-worker and --worker-notices. "
-            "Use --java-ghidra for a bundle that relies on externally configured "
-            "REA, Node, Java and Ghidra."
-        )
-    return rea_bundle.Inputs.resolve(arguments)
-
-
 def main():
     parser = argument_parser()
     arguments = parser.parse_args()
     if sys.platform != "darwin":
         parser.error("macOS is required to create this application bundle")
     try:
-        runtime = runtime_inputs(parser, arguments)
-        binaries = release_binaries(arguments.skip_build, arguments.rust_backend)
+        runtime = (
+            None if arguments.rea_package is None else rea_bundle.Inputs.resolve(arguments)
+        )
+        binaries = release_binaries(arguments.skip_build)
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         parser.error(str(error))
 
@@ -306,7 +266,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="prism-bundle-", dir=destination.parent) as temporary:
         bundle = Path(temporary) / destination.name
         copied = populate(bundle, binaries, executable_name, runtime)
-        bundle_native.sign_code(bundle, executable_name, arguments.rust_backend)
+        bundle_native.sign_code(bundle, executable_name)
         if runtime is not None:
             rea_bundle.write_manifest(bundle / "Contents/Resources", runtime, copied)
         bundle_native.sign_application(bundle)
@@ -315,11 +275,10 @@ def main():
         path.stat().st_size for path in destination.rglob("*")
         if path.is_file() and not path.is_symlink()
     )
-    prerequisites = (
-        "includes Rust REA runtime; macOS Swift tools remain required"
-        if runtime is not None else
-        "configure external REA, Node, Java and Ghidra in Settings > Engines"
-    )
+    if runtime is not None:
+        prerequisites = "includes the supplied native rea-rust release"
+    else:
+        prerequisites = "configure native rea-rust in Settings > Engines"
     print(f"{destination}\n{size / (1024 * 1024):.2f} MiB; {prerequisites}")
 
 

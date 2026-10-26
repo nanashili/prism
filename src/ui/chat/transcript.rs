@@ -1,3 +1,4 @@
+use crate::ui::presentation::ThoughtDisplay;
 mod identities;
 mod rows;
 mod viewport;
@@ -34,9 +35,11 @@ impl TranscriptView {
         ui: &mut egui::Ui,
         chat: &Chat,
         tab: u64,
-        thinking: bool,
+        thinking: ThoughtDisplay,
         style: &ChatStyle,
     ) {
+        let thinking = thinking == ThoughtDisplay::Visible;
+
         let history = chat.history.page.as_ref();
         let page_id = history.and_then(|page| page.messages.first()?.id);
         let id = egui::Id::new(("transcript-page", tab, history.is_some(), page_id));

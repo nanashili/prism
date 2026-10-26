@@ -1,4 +1,5 @@
 use super::super::{composer_toolbar, theme::Palette};
+use crate::ui::presentation::Presence;
 use eframe::egui::{self, FontId, Rect, Sense};
 
 pub(super) struct Layout {
@@ -9,7 +10,15 @@ pub(super) struct Layout {
     pub font_size: f32,
 }
 
-pub(super) fn allocate(ui: &mut egui::Ui, draft: &str, context: bool, attachments: bool) -> Layout {
+pub(super) fn allocate(
+    ui: &mut egui::Ui,
+    draft: &str,
+    context: Presence,
+    attachments: Presence,
+) -> Layout {
+    let context = context == Presence::Present;
+    let attachments = attachments == Presence::Present;
+
     let width = ui.available_width();
     let color = Palette::for_context(ui.ctx()).text;
     let font_size = 13.5;

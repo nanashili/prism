@@ -8,6 +8,7 @@ const MAX_PSEUDOCODE_BYTES: usize = 512 * 1024;
 const MAX_BATCH_RESPONSE_BYTES: usize = 1008 * 1024;
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn single_address_decompile_batch(&mut self, address: &str) -> Result<String> {
         let reply = self.decompile_batch(&json!({"procedures":[address]}))?;
         let items = reply["items"]
@@ -38,11 +39,12 @@ impl State {
             })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn decompile_batch(&mut self, args: &Value) -> Result<Value> {
         if args.get("action").is_some() {
             return self.durable_decompile_batch(args);
         }
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         if self.settings.analysis_backend().retains_prepared_session() {
             return Err(failure(
                 "The prepared Ghidra provider uses durable batches. Supply action=start with addresses or filter, then read status and results using the returned job ID.",
@@ -86,24 +88,44 @@ impl State {
                 }
                 Err(error) => json!({"address":address,"error":error.to_string()}),
             };
+            if let Some(pseudocode) = item["pseudocode"].as_str() {
+                let signals = crate::analysis_repair::pseudocode_signals(pseudocode);
+                if !signals.is_empty() {
+                    item["analysis_warnings"] = serde_json::to_value(signals)?;
+                }
+            }
             let mut size = serde_json::to_vec(&item)?.len();
             if size > MAX_PSEUDOCODE_BYTES {
                 item = json!({"address":address,"error":"Serialized pseudocode exceeds the 512 KiB function limit. Inspect assembly or record a blocker."});
                 size = serde_json::to_vec(&item)?.len();
             }
-            if let Some(pseudocode) = item["pseudocode"].as_str() {
-                self.cache_accepted_batch_pseudocode(address, pseudocode)?;
-            }
             if bytes + size > MAX_BATCH_RESPONSE_BYTES {
                 break;
             }
 
+            if let Some(pseudocode) = item["pseudocode"].as_str() {
+                self.cache_accepted_batch_pseudocode(address, pseudocode)?;
+            }
             bytes += size;
             items.push(item);
             next += 1;
         }
-        Ok(json!({"items":items,"offset":offset,"page_size":4,
+        let context = self.decompilation_context()?;
+        let analyzer = super::analysis_cache_identity::namespace(&context);
+        let addresses: Vec<&str> = items
+            .iter()
+            .filter_map(|item| item["address"].as_str())
+            .collect();
+        let types = if addresses.is_empty() {
+            None
+        } else {
+            self.store
+                .recovered_type_context(&context.project, &analyzer, &addresses)?
+        };
+        Ok(
+            json!({"items":items,"offset":offset,"page_size":4,"type_recovery":types,
             "next_offset":(next < procedures.len()).then_some(next),
-            "total":procedures.len(),"behavior_verified":false}))
+            "total":procedures.len(),"behavior_verified":false}),
+        )
     }
 }

@@ -7,6 +7,7 @@ use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};
 
 impl Session {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn call(
         &mut self,
         method: &str,
@@ -58,6 +59,7 @@ impl Session {
         }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn receive(
         &mut self,
         message: Value,

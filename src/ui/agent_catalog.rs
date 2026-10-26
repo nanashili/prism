@@ -1,4 +1,5 @@
 use crate::agent::catalog::Entry;
+use crate::ui::presentation::PaletteTheme;
 use eframe::egui;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -20,6 +21,7 @@ pub(super) struct Catalog {
     pub models_revision: u64,
     pub query: String,
     pub status: String,
+    pub scanned: bool,
     receiver: Option<Receiver<Update>>,
     cancelled: Arc<AtomicBool>,
     thread: Option<std::thread::JoinHandle<()>>,
@@ -48,13 +50,20 @@ impl Catalog {
         }
     }
 
+    pub fn close(&mut self) -> crate::error::Result<()> {
+        self.cancelled.store(true, Ordering::Relaxed);
+        self.receiver.take();
+        if let Some(thread) = self.thread.take() {
+            thread.join().map_err(|_| {
+                crate::error::failure("The agent catalog worker stopped unexpectedly")
+            })?;
+        }
+        Ok(())
+    }
+
     pub fn rescan(&mut self) {
-        self.installed = self
-            .entries
-            .iter()
-            .filter(|entry| crate::agent::launch::installed(entry))
-            .map(|entry| entry.id.clone())
-            .collect();
+        self.installed = installed_agents(&self.entries);
+        self.scanned = true;
     }
 
     pub fn poll(&mut self, context: &egui::Context) {
@@ -66,6 +75,7 @@ impl Catalog {
                 Update::Entries(entries, installed) => {
                     self.entries = entries;
                     self.installed = installed;
+                    self.scanned = true;
                 }
                 Update::Models(models) => {
                     for (key, choices) in models {
@@ -80,11 +90,11 @@ impl Catalog {
                         egui::TextureOptions::LINEAR,
                     );
                     context.data_mut(|data| {
-                        data.insert_temp(egui::Id::new(("agent-logo", id)), texture)
+                        data.insert_temp(egui::Id::new(("agent-logo", id)), texture);
                     });
                 }
                 Update::Error(error) => {
-                    self.status = format!("Using the offline agent list: {error}")
+                    self.status = format!("Using the offline agent list: {error}");
                 }
             }
         }
@@ -126,7 +136,7 @@ fn load_catalog(sender: SyncSender<Update>, context: egui::Context, cancelled: &
         if cancelled.load(Ordering::Relaxed) {
             return;
         }
-        if super::agent_logos::shipped(&entry.id, false).is_some() {
+        if super::agent_logos::shipped(&entry.id, PaletteTheme::Light).is_some() {
             continue;
         }
         if let Some(image) = registry_icon(entry, cancelled) {
@@ -139,19 +149,28 @@ fn load_catalog(sender: SyncSender<Update>, context: egui::Context, cancelled: &
 }
 
 fn publish_entries(sender: &SyncSender<Update>, entries: Vec<Entry>) -> bool {
-    let installed = entries
-        .iter()
-        .filter(|entry| crate::agent::launch::installed(entry))
-        .map(|entry| entry.id.clone())
-        .collect();
+    let installed = installed_agents(&entries);
     sender.send(Update::Entries(entries, installed)).is_ok()
+}
+
+fn installed_agents(entries: &[Entry]) -> HashSet<String> {
+    let local = crate::agent::launch::LocalAgents::discover();
+    entries
+        .iter()
+        .filter(|entry| local.installed(entry))
+        .map(|entry| entry.id.clone())
+        .collect()
 }
 
 impl Drop for Catalog {
     fn drop(&mut self) {
         self.cancelled.store(true, Ordering::Relaxed);
         self.receiver.take();
-        if let Some(thread) = self.thread.take()
+        if self
+            .thread
+            .as_ref()
+            .is_some_and(std::thread::JoinHandle::is_finished)
+            && let Some(thread) = self.thread.take()
             && thread.join().is_err()
         {
             eprintln!("The agent catalog worker stopped unexpectedly");

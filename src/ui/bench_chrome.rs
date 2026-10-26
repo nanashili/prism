@@ -1,6 +1,7 @@
 use super::app::Prism;
 use super::{icons::Icon, popup, theme::Palette, widgets};
 use crate::model::View;
+use crate::ui::presentation::{HistoryDirection, SaveDestination, Selection};
 use crate::worker::Job;
 use eframe::egui::{self, Align2, FontId, Frame, Rect, Sense, Stroke};
 
@@ -21,7 +22,7 @@ impl Prism {
                     self.workbench_crumbs(ui);
                     if header_pill(ui, Icon::Search, "Find").clicked() {
                         ui.ctx().memory_mut(|memory| {
-                            memory.request_focus(egui::Id::new("function-filter"))
+                            memory.request_focus(egui::Id::new("function-filter"));
                         });
                     }
                     if self.view_relevant(View::Debug)
@@ -45,7 +46,7 @@ impl Prism {
             })
             .inner;
         if back.clicked() {
-            self.navigate_history(false);
+            self.navigate_history(HistoryDirection::Backward);
         }
         let next = ui
             .add_enabled_ui(
@@ -54,7 +55,7 @@ impl Prism {
             )
             .inner;
         if next.clicked() {
-            self.navigate_history(true);
+            self.navigate_history(HistoryDirection::Forward);
         }
     }
 
@@ -66,8 +67,7 @@ impl Prism {
             .workspace
             .project
             .as_ref()
-            .map(|project| project.target.name.as_str())
-            .unwrap_or("");
+            .map_or("", |project| project.target.name.as_str());
         let name = self.selected_name();
         let text = if name.is_empty() {
             title.to_owned()
@@ -103,10 +103,10 @@ impl Prism {
                 ("Compare files", Icon::Split, 3),
                 ("Notes and names", Icon::Note, 4),
             ] {
-                if popup::row(ui, Some(icon), label, "", false).clicked() {
+                if popup::row(ui, Some(icon), label, "", Selection::Unselected).clicked() {
                     match action {
                         0 => self.enqueue(Job::Index),
-                        1 => self.save_document(false),
+                        1 => self.save_document(SaveDestination::Current),
                         2 => self.export_text(),
                         3 => self.select_view(View::Diff),
                         _ => self.select_view(View::Notes),
@@ -114,7 +114,15 @@ impl Prism {
                     ui.close();
                 }
             }
-            if popup::row(ui, Some(Icon::Copy), "Copy current view", "", false).clicked() {
+            if popup::row(
+                ui,
+                Some(Icon::Copy),
+                "Copy current view",
+                "",
+                Selection::Unselected,
+            )
+            .clicked()
+            {
                 ui.ctx().copy_text(self.workspace.text.clone());
                 ui.close();
             }

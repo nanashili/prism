@@ -33,13 +33,14 @@ pub(super) fn run(
         admission: super::admission::Admission::default(),
     };
     let mut requests = Vec::new();
-    for connection in listener.incoming() {
-        if stopped.load(Ordering::Relaxed) {
-            break;
-        }
+    while !stopped.load(Ordering::Relaxed) {
         reap_finished(&mut requests);
-        let socket = match connection {
-            Ok(socket) => socket,
+        let socket = match listener.accept() {
+            Ok((socket, _)) => socket,
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                std::thread::sleep(Duration::from_millis(25));
+                continue;
+            }
             Err(error) => {
                 eprintln!("Bridge listener failed: {error}");
                 break;

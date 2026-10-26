@@ -87,21 +87,23 @@ def validate_libraries(path, bundle):
 
 def executable_directory(path, bundle):
     resources = bundle / "Contents/Resources"
-    worker = resources / "rea/bin/rea-ghidra-rust-worker"
+    worker = resources / "rea-rust/bin/rea-ghidra-rust-worker"
     if path == worker:
         return worker.parent
-    if path.is_relative_to(resources):
-        return resources / "node/bin"
+    if path.is_relative_to(resources / "rea-rust"):
+        return resources / "rea-rust/bin"
     return bundle / "Contents/MacOS"
 
 
-def sign_code(bundle, executable_name, rust_backend):
+def sign_code(bundle, executable_name):
     main = bundle / "Contents/MacOS" / executable_name
     required = architectures(main)
     resources = bundle / "Contents/Resources"
-    if rust_backend:
-        for relative in ("node/bin/node", "rea/bin/rea-ghidra-rust-worker"):
-            require_architectures(resources / relative, required)
+    runtime = resources / "rea-rust/bin"
+    for name in ("rea", "rea-mcp-server", "rea-ghidra-rust-worker"):
+        path = runtime / name
+        if path.is_file():
+            require_architectures(path, required)
     require_architectures(bundle / "Contents/MacOS/prism-mcp", required)
     for path in native_files(bundle):
         validate_libraries(path, bundle)

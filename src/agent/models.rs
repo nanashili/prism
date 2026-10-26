@@ -41,13 +41,6 @@ pub(crate) fn choices(options: &serde_json::Value) -> Vec<Choice> {
         .unwrap_or_default()
 }
 
-pub(crate) fn import_from(source: &Path, destination: &Path) -> Result<()> {
-    if destination.try_exists()? || !source.try_exists()? {
-        return Ok(());
-    }
-    write(destination, &read(source)?)
-}
-
 fn read(path: &Path) -> Result<Known> {
     let file = match std::fs::File::open(path) {
         Ok(file) => file,

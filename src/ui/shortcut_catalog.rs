@@ -106,7 +106,7 @@ pub(super) fn combo<'a>(settings: &'a Settings, id: &str, default: &'a str) -> &
         return value;
     }
     match (settings.views.keymap.as_str(), id) {
-        ("Hopper", "palette") | ("Cursor or VS Code" | "Zed", "palette") => "shift-cmd-p",
+        ("Hopper" | "Cursor or VS Code" | "Zed", "palette") => "shift-cmd-p",
         ("Hopper", "back") => "backspace",
         ("Hopper", "bookmark") => "cmd-f6",
         ("Ghidra", "palette") => "cmd-3",

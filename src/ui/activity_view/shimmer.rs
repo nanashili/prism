@@ -1,3 +1,4 @@
+use crate::ui::presentation::ActivityState;
 use crate::ui::theme::Palette;
 use eframe::egui::{self, Rect, Shape, layers::ShapeIdx};
 use std::sync::Arc;
@@ -7,9 +8,11 @@ const BAND_RADIUS: f32 = 60.0;
 
 pub(in crate::ui) fn scope<R>(
     ui: &mut egui::Ui,
-    active: bool,
+    active: ActivityState,
     content: impl FnOnce(&mut egui::Ui) -> R,
 ) -> R {
+    let active = active == ActivityState::Active;
+
     if !active
         || !ui.is_visible()
         || !ui.input(|input| input.focused)

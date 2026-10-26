@@ -1,4 +1,5 @@
 use crate::settings::permissions::Permissions;
+use crate::ui::presentation::Selection;
 use crate::ui::{settings_controls as controls, theme::Palette};
 use eframe::egui::{self, Align2, FontId, Rect, Sense, Stroke, vec2};
 
@@ -62,7 +63,7 @@ pub(in crate::ui) fn show(ui: &mut egui::Ui, permissions: &mut Permissions) {
                 egui::StrokeKind::Inside,
             );
             let center = rect.min + vec2(21.0, 23.0);
-            controls::radio_indicator(ui, center, selected, &response);
+            controls::radio_indicator(ui, center, Selection::from(selected), &response);
             ui.painter().text(
                 rect.min + vec2(36.0, 23.0),
                 Align2::LEFT_CENTER,

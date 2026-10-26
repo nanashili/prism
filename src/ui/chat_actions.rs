@@ -1,13 +1,15 @@
 use super::{app::Prism, icons::Icon, popup};
+use crate::storage::{ChatArchive, ChatPin};
+use crate::ui::presentation::Selection;
 use eframe::egui;
 
 impl Prism {
     pub(super) fn chat_menu(&mut self, ui: &mut egui::Ui, id: i64, title: &str) {
-        if popup::row(ui, Some(Icon::Thread), "Open", "", false).clicked() {
+        if popup::row(ui, Some(Icon::Thread), "Open", "", Selection::Unselected).clicked() {
             self.load_chat(id);
             ui.close();
         }
-        if popup::row(ui, Some(Icon::Rename), "Rename", "", false).clicked() {
+        if popup::row(ui, Some(Icon::Rename), "Rename", "", Selection::Unselected).clicked() {
             self.chat_rename = Some((id, title.into()));
             ui.close();
         }
@@ -19,13 +21,13 @@ impl Prism {
                 Some(Icon::Star),
                 if pinned { "Unpin" } else { "Pin" },
                 "",
-                false,
+                Selection::Unselected,
             )
             .clicked()
             {
                 let result = self
                     .store
-                    .pin_chat(id, !pinned)
+                    .pin_chat(id, ChatPin::from(!pinned))
                     .and_then(|()| self.refresh_chats());
                 if let Err(error) = result {
                     self.error = Some(error.to_string());
@@ -37,13 +39,13 @@ impl Prism {
                 Some(Icon::Folder),
                 if archived { "Unarchive" } else { "Archive" },
                 "",
-                false,
+                Selection::Unselected,
             )
             .clicked()
             {
                 let result = self
                     .store
-                    .archive_chat(id, !archived)
+                    .archive_chat(id, ChatArchive::from(!archived))
                     .and_then(|()| self.refresh_chats());
                 let open = if self.chat.id == Some(id) {
                     Some(self.chat_tabs.active)
@@ -63,7 +65,7 @@ impl Prism {
             }
         }
         ui.separator();
-        if popup::row(ui, Some(Icon::New), "New chat", "", false).clicked() {
+        if popup::row(ui, Some(Icon::New), "New chat", "", Selection::Unselected).clicked() {
             self.new_chat();
             ui.close();
         }
@@ -74,7 +76,7 @@ impl Prism {
                 Some(Icon::Close),
                 &format!("Delete \"{title}\" for good"),
                 "",
-                false,
+                Selection::Unselected,
             )
             .clicked()
             {

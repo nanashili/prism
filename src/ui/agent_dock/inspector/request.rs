@@ -78,7 +78,7 @@ impl Prism {
                     }
                 }
                 Err(mpsc::TryRecvError::Empty) => {
-                    context.request_repaint_after(std::time::Duration::from_millis(80))
+                    context.request_repaint_after(std::time::Duration::from_millis(80));
                 }
                 Err(mpsc::TryRecvError::Disconnected) => {
                     inspection.pending = None;

@@ -1,6 +1,7 @@
 use super::app::Prism;
 use super::{icons::Icon, popup, theme::Palette, widgets};
 use crate::model::Screen;
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Align2, FontId, Rect, Sense};
 
 impl Prism {
@@ -49,7 +50,7 @@ impl Prism {
                         } else {
                             "Ctrl+,"
                         },
-                        false,
+                        Selection::Unselected,
                         32.0,
                     )
                     .clicked()
@@ -63,7 +64,7 @@ impl Prism {
                         Some(Icon::Retry),
                         "Run setup again",
                         "",
-                        false,
+                        Selection::Unselected,
                         32.0,
                     )
                     .clicked()
@@ -71,8 +72,15 @@ impl Prism {
                         self.screen = Screen::Setup;
                         ui.close();
                     }
-                    if popup::row_with_height(ui, Some(Icon::Star), "What’s new", "", false, 32.0)
-                        .clicked()
+                    if popup::row_with_height(
+                        ui,
+                        Some(Icon::Star),
+                        "What’s new",
+                        "",
+                        Selection::Unselected,
+                        32.0,
+                    )
+                    .clicked()
                     {
                         self.news = Some(0);
                         ui.close();

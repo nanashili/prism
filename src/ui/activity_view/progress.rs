@@ -1,4 +1,5 @@
 use crate::model::{Child, TurnProgress};
+use crate::ui::presentation::{Disclosure, ThoughtDisplay};
 use crate::ui::{icons::Icon, message, theme::Palette, tool_step};
 use eframe::egui;
 use message::style::{BlockKind, ChatStyle};
@@ -6,10 +7,12 @@ use message::style::{BlockKind, ChatStyle};
 pub(super) fn show(
     ui: &mut egui::Ui,
     progress: &TurnProgress,
-    thinking: bool,
+    thinking: ThoughtDisplay,
     style: &ChatStyle,
     cache: &mut message::BodyCache,
 ) {
+    let thinking = thinking == ThoughtDisplay::Visible;
+
     show_plan(ui, progress, style);
     show_children(ui, progress, thinking, style, cache);
     if progress.limited {
@@ -25,7 +28,14 @@ fn show_plan(ui: &mut egui::Ui, progress: &TurnProgress, style: &ChatStyle) {
             .filter(|item| item.status == "completed")
             .count();
         let label = format!("Plan · {done} of {} done", progress.plan.len());
-        if tool_step::disclosure(ui, ui.id().with("plan"), Icon::Plan, &label, "", true) {
+        if tool_step::disclosure(
+            ui,
+            ui.id().with("plan"),
+            Icon::Plan,
+            &label,
+            "",
+            Disclosure::Open,
+        ) {
             ui.indent("plan-items", |ui| {
                 for item in &progress.plan {
                     ui.horizontal_top(|ui| {
@@ -75,7 +85,7 @@ fn show_children(
             Icon::Thread,
             &label,
             "",
-            false,
+            Disclosure::Closed,
         ) {
             ui.indent("child-agents", |ui| {
                 for child in &progress.children {
@@ -111,7 +121,7 @@ fn show_child(
         Icon::Spark,
         title,
         status(&child.status),
-        false,
+        Disclosure::Closed,
     ) {
         return;
     }
@@ -121,7 +131,7 @@ fn show_child(
     if thinking && !child.thought.is_empty() {
         ui.collapsing("Thinking", |ui| {
             style.block(ui, BlockKind::Thinking, |ui| {
-                message::render_body(ui, &child.thought, style, cache)
+                message::render_body(ui, &child.thought, style, cache);
             });
         });
     }

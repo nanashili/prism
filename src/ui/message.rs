@@ -1,3 +1,4 @@
+use crate::ui::presentation::{ActivityState, ChoiceAccess, ThoughtDisplay};
 mod blocks;
 mod body_cache;
 pub(in crate::ui) mod choices;
@@ -14,9 +15,9 @@ use style::ChatStyle;
 pub(super) fn render_message(
     ui: &mut egui::Ui,
     message: &Message,
-    thinking: bool,
-    active: bool,
-    choices_allowed: bool,
+    thinking: ThoughtDisplay,
+    active: ActivityState,
+    choices_allowed: ChoiceAccess,
     style: &ChatStyle,
 ) {
     render_message_cached(
@@ -33,12 +34,14 @@ pub(super) fn render_message(
 pub(super) fn render_message_cached(
     ui: &mut egui::Ui,
     message: &Message,
-    thinking: bool,
-    active: bool,
-    choices_allowed: bool,
+    thinking: ThoughtDisplay,
+    active: ActivityState,
+    choices_allowed: ChoiceAccess,
     style: &ChatStyle,
     cache: &mut BodyCache,
 ) {
+    let choices_allowed = choices_allowed == ChoiceAccess::Allowed;
+
     cache.begin_row(ui.id());
     let user = message.role == "user";
     let response = ui.scope(|ui| {

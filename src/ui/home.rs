@@ -1,5 +1,6 @@
 use super::app::Prism;
 use super::{icons::Icon, theme::Palette};
+use crate::ui::presentation::Interaction;
 use eframe::egui::{self, Align2, FontId, Rect, Sense, Stroke};
 
 impl Prism {
@@ -48,15 +49,17 @@ impl Prism {
 
         self.landing.update(
             ui.ctx(),
-            interacting
-                || !self.chat.draft.is_empty()
-                || !self.chat.messages.is_empty()
-                || self.chat.busy
-                || self.palette
-                || self.error.is_some()
-                || self.notifications.open
-                || self.news.is_some()
-                || self.chat_rename.is_some(),
+            Interaction::from(
+                interacting
+                    || !self.chat.draft.is_empty()
+                    || !self.chat.messages.is_empty()
+                    || self.chat.busy
+                    || self.palette
+                    || self.error.is_some()
+                    || self.notifications.open
+                    || self.news.is_some()
+                    || self.chat_rename.is_some(),
+            ),
         );
     }
 

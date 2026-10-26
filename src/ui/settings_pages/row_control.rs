@@ -1,10 +1,9 @@
 use super::model::{Button, Command, Control, Row};
 use super::row::{select_width, text_width};
 use crate::ui::{settings_controls as controls, theme::Palette};
-use eframe::egui::{self, FontId, RichText, Stroke};
+use eframe::egui::{self, RichText, Stroke};
 
 pub(super) fn show(ui: &mut egui::Ui, row: &mut Row<'_>) -> Option<Command> {
-    let p = Palette::for_context(ui.ctx());
     if let Some((text, good)) = &row.status {
         status(ui, text, *good);
     }
@@ -20,31 +19,16 @@ pub(super) fn show(ui: &mut egui::Ui, row: &mut Row<'_>) -> Option<Command> {
             }
         }
         Control::Range(value, min, max, step, unit) => {
-            controls::range(ui, &row.title, value, *min..=*max, *step, unit)
+            controls::range(ui, &row.title, value, *min..=*max, *step, unit);
         }
         Control::Memory(value) => {
-            numeric_choice(ui, *value, &[256, 512, 1024, 2048, 4096, 8192], "MiB")
+            numeric_choice(ui, *value, &[256, 512, 1024, 2048, 4096, 8192], "MiB");
         }
         Control::Timeout(value) => {
-            numeric_choice(ui, *value, &[30, 60, 120, 300, 600, 900, 1800], "seconds")
+            numeric_choice(ui, *value, &[30, 60, 120, 300, 600, 900, 1800], "seconds");
         }
-        #[cfg(feature = "prism-ghidra-rea")]
-        Control::Workers(value) => numeric_choice(ui, *value, &[1, 2, 4, 8], "workers"),
         Control::Text(value, hint) => {
-            egui::Frame::NONE
-                .stroke(Stroke::new(1.0, p.line3))
-                .corner_radius(8)
-                .inner_margin(egui::Margin::symmetric(10, 5))
-                .show(ui, |ui| {
-                    ui.add(
-                        egui::TextEdit::singleline(*value)
-                            .font(FontId::monospace(12.0))
-                            .frame(false)
-                            .desired_width(198.0)
-                            .char_limit(2048)
-                            .hint_text(*hint),
-                    );
-                });
+            controls::text_input(ui, value, hint, 220.0, 2048);
         }
         Control::Permission(tool, level) => {
             let mut selected = level.label().to_owned();
@@ -125,6 +109,9 @@ pub(in crate::ui) fn action_button(ui: &mut egui::Ui, button: &Button) -> egui::
     };
     let response = ui
         .add_enabled_ui(button.unavailable.is_none(), |ui| {
+            if !button.primary && !button.danger {
+                return controls::button(ui, &button.label);
+            }
             ui.add_sized(
                 [text_width(ui, &button.label, 12.5) + 22.0, 28.0],
                 egui::Button::new(RichText::new(&button.label).size(12.5).color(color))

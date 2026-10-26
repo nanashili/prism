@@ -1,6 +1,7 @@
 use crate::agent::options::{MODEL_PICK, OptionMenu, Pick};
 use crate::error::Result;
 use crate::ui::app::Prism;
+use crate::ui::presentation::SessionAge;
 
 impl Prism {
     pub(super) fn cached_model_menu(&self) -> Option<OptionMenu> {
@@ -20,7 +21,7 @@ impl Prism {
             current: first.value.clone(),
             category: "model".into(),
             choices: choices.clone(),
-            legacy: false,
+            modes_api: false,
         })
     }
 
@@ -32,7 +33,7 @@ impl Prism {
             picks.push(Pick {
                 id: MODEL_PICK.into(),
                 value: model.current.clone(),
-                legacy: model.legacy,
+                modes_api: model.modes_api,
             });
         } else if !picks.iter().any(|pick| pick.id == MODEL_PICK)
             && let Some(value) = self
@@ -43,7 +44,7 @@ impl Prism {
             picks.push(Pick {
                 id: MODEL_PICK.into(),
                 value: value.clone(),
-                legacy: false,
+                modes_api: false,
             });
         }
         picks
@@ -60,8 +61,10 @@ impl Prism {
     pub(in crate::ui) fn remember_confirmed_model(
         &mut self,
         menus: &[OptionMenu],
-        new_session: bool,
+        new_session: SessionAge,
     ) -> Result<()> {
+        let new_session = new_session == SessionAge::New;
+
         let Some(model) = menus.iter().find(|menu| menu.category == "model") else {
             return Ok(());
         };

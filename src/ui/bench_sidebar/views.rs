@@ -1,5 +1,6 @@
 use super::parts;
 use crate::model::View;
+use crate::ui::presentation::Selection;
 use crate::ui::{app::Prism, icons::Icon, popup};
 use eframe::egui;
 
@@ -47,7 +48,7 @@ impl Prism {
                             Some(if split { Icon::Split } else { icon }),
                             if split { "Open in split" } else { "Open" },
                             "",
-                            false,
+                            Selection::Unselected,
                         )
                         .clicked()
                         {

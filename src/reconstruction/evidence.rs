@@ -32,6 +32,7 @@ impl Database {
         )?)?)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn save_evidence_batch(
         &mut self,
         generation: i64,

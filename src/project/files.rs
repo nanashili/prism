@@ -18,10 +18,11 @@ pub(crate) fn preserve_original(source: &Path, destination: &Path) -> Result<()>
     Ok(())
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn hash(path: &Path, cancelled: &AtomicBool) -> Result<String> {
     let mut file = File::open(path)?;
     let mut digest = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
+    let mut buffer = vec![0u8; 64 * 1024];
     loop {
         if cancelled.load(Ordering::Relaxed) {
             return Err(failure("Cancelled"));
@@ -58,6 +59,7 @@ pub(crate) fn executable(path: &Path) -> Result<PathBuf> {
         .ok_or_else(|| failure("This app bundle has no executable in Contents/MacOS"))
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn inspect(path: &Path, cancelled: &AtomicBool) -> Result<Target> {
     let actual = executable(path)?;
     let header = bytes(&actual, 0, 32)?;
@@ -124,6 +126,7 @@ pub(crate) fn text(path: &Path) -> Result<String> {
     Ok(String::from_utf8_lossy(&bytes).into_owned())
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn hex(path: &Path, offset: u64) -> Result<String> {
     use std::fmt::Write;
     let data = bytes(path, offset, 4096)?;

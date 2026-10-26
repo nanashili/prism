@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 impl Database {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn submit(&mut self, generation: i64, payload: &Value) -> Result<Value> {
         let submission = Submission::deserialize(payload)?;
         submission.validate()?;

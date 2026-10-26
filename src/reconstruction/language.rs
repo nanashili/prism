@@ -28,7 +28,9 @@ pub(super) fn describe(language: &str) -> Result<Value> {
     }))
 }
 
-pub(super) fn validation_kind(language: &str, custom: bool) -> &'static str {
+pub(super) fn validation_kind(language: &str, custom: ValidationCommand) -> &'static str {
+    let custom = custom == ValidationCommand::Custom;
+
     if custom {
         return "custom";
     }
@@ -36,5 +38,17 @@ pub(super) fn validation_kind(language: &str, custom: bool) -> &'static str {
         "rust" | "typescript" | "python" => "checked",
         "c" | "c++" | "c#" | "swift" | "go" | "java" | "zig" => "built",
         _ => "custom",
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ValidationCommand {
+    Custom,
+    BuiltIn,
+}
+
+impl From<bool> for ValidationCommand {
+    fn from(value: bool) -> Self {
+        if value { Self::Custom } else { Self::BuiltIn }
     }
 }

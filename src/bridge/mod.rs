@@ -7,3 +7,5 @@ mod server;
 mod waiting;
 
 pub(crate) use server::Bridge;
+
+pub(crate) use server::{AnalysisTools, WindowTools};

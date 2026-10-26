@@ -11,13 +11,13 @@ pub(super) fn connect(
     backend: AnalysisBackend,
     cancelled: Arc<AtomicBool>,
 ) -> Result<Rpc> {
-    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+    #[cfg(feature = "rea-rust-ghidra")]
     let framing = if backend.retains_prepared_session() {
         Framing::ReaLines
     } else {
         Framing::Lines
     };
-    #[cfg(not(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra")))]
+    #[cfg(not(feature = "rea-rust-ghidra"))]
     let framing = {
         backend.require_available()?;
         Framing::Lines

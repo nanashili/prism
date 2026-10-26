@@ -1,4 +1,5 @@
 use super::model::{Button, Command, Group, Preview};
+use crate::ui::presentation::RowPosition;
 use crate::ui::{settings_navigation::SettingsPage, theme::Palette};
 use eframe::egui::{self, RichText};
 
@@ -59,9 +60,12 @@ fn card(
         .corner_radius(14)
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
+            let columns = super::row::Columns::for_rows(&group.rows);
             for (index, row) in group.rows.iter_mut().enumerate() {
                 ui.push_id(index, |ui| {
-                    if let Some(command) = super::row::show(ui, row, index == 0) {
+                    if let Some(command) =
+                        super::row::show(ui, row, RowPosition::from(index == 0), columns)
+                    {
                         if confirmation(&command).is_some() {
                             *confirming = Some(command);
                         } else {

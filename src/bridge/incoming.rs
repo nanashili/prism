@@ -19,6 +19,7 @@ pub(super) struct Incoming {
 }
 
 impl Incoming {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn read(
         socket: &mut TcpStream,
         token: &str,
@@ -87,10 +88,14 @@ fn read_frame(socket: &mut TcpStream, stopped: &AtomicBool, deadline: Instant) -
                     return Err(failure("The bridge request exceeds 8 MiB"));
                 }
                 let end = buffer[..length].iter().position(|byte| *byte == b'\n');
-                bytes.extend_from_slice(&buffer[..end.map_or(length, |index| index + 1)]);
-                if end.is_some() {
+                if let Some(index) = end {
+                    bytes.extend_from_slice(&buffer[..=index]);
+                    if index + 1 != length {
+                        return Err(failure("Unexpected data after the tool request"));
+                    }
                     return Ok(bytes);
                 }
+                bytes.extend_from_slice(&buffer[..length]);
             }
             Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
                 std::thread::sleep(Duration::from_millis(10));
@@ -98,5 +103,40 @@ fn read_frame(socket: &mut TcpStream, stopped: &AtomicBool, deadline: Instant) -
             Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
             Err(error) => return Err(error.into()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_frame;
+    use crate::error::Result;
+    use std::io::Write;
+    use std::net::{TcpListener, TcpStream};
+    use std::sync::atomic::AtomicBool;
+    use std::thread;
+    use std::time::{Duration, Instant};
+
+    fn connected_pair() -> Result<(TcpStream, TcpStream)> {
+        let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0))?;
+        let address = listener.local_addr()?;
+        let client = TcpStream::connect(address)?;
+        let (server, _) = listener.accept()?;
+        Ok((server, client))
+    }
+
+    #[test]
+    fn rejects_data_after_the_request_delivered_in_the_same_read() -> Result<()> {
+        let (mut server, mut client) = connected_pair()?;
+        let sender = thread::spawn(move || client.write_all(b"{}\ntrailing"));
+
+        let error = read_frame(
+            &mut server,
+            &AtomicBool::new(false),
+            Instant::now() + Duration::from_secs(1),
+        )
+        .expect_err("trailing bytes must be rejected");
+        sender.join().expect("client sender should finish")?;
+        assert!(error.to_string().contains("Unexpected data"));
+        Ok(())
     }
 }

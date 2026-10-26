@@ -37,6 +37,7 @@ impl<W: Write + Send + 'static> Pending<W> {
         !id.is_null() && self.requests.contains_key(&id.to_string())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn accept(
         &mut self,
         request: &Value,
@@ -66,7 +67,7 @@ impl<W: Write + Send + 'static> Pending<W> {
             }
         });
         if let Err(message) = validation {
-            self.write(&error(id.clone(), -32602, &message))?;
+            self.write(&error(id.clone(), -32602, &message.to_string()))?;
             return Ok(true);
         }
         let class = classify_call(
@@ -99,10 +100,12 @@ impl<W: Write + Send + 'static> Pending<W> {
         count < class.capacity() && bytes <= class.byte_budget().saturating_sub(used)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn write(&self, response: &Value) -> Result<()> {
         output::write(&self.output, response)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn start(
         &mut self,
         id: Value,
@@ -121,8 +124,7 @@ impl<W: Write + Send + 'static> Pending<W> {
             .stack_size(256 * 1024)
             .spawn(move || {
                 let result = endpoint
-                    .map(Ok)
-                    .unwrap_or_else(Endpoint::discover)
+                    .map_or_else(Endpoint::discover, Ok)
                     .and_then(|endpoint| endpoint.call_cancellable(&params, &flag, deadline));
                 let result = match result {
                     Ok(value) => tool_result(value),
@@ -144,6 +146,7 @@ impl<W: Write + Send + 'static> Pending<W> {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn reap(&mut self) -> Result<()> {
         let completed: Vec<_> = self
             .requests
@@ -161,19 +164,17 @@ impl<W: Write + Send + 'static> Pending<W> {
     }
 
     pub(super) fn finish(mut self, primary: Result<()>) -> Result<()> {
-        match (primary, self.close()) {
-            (Err(primary), Err(cleanup)) => {
-                Err(failure(format!("{primary}\nMCP shutdown: {cleanup}")))
-            }
-            (Err(error), Ok(())) | (Ok(()), Err(error)) => Err(error),
-            (Ok(()), Ok(())) => Ok(()),
+        crate::error::finish(primary, self.close(), "MCP shutdown")
+    }
+
+    fn cancel(&self) {
+        for request in self.requests.values() {
+            request.cancelled.store(true, Ordering::Relaxed);
         }
     }
 
     fn close(&mut self) -> Result<()> {
-        for request in self.requests.values() {
-            request.cancelled.store(true, Ordering::Relaxed);
-        }
+        self.cancel();
         let mut failures = Vec::new();
         for (_, request) in std::mem::take(&mut self.requests) {
             collect_failure(request.thread, &mut failures);
@@ -184,9 +185,9 @@ impl<W: Write + Send + 'static> Pending<W> {
 
 impl<W: Write + Send + 'static> Drop for Pending<W> {
     fn drop(&mut self) {
-        if let Err(error) = self.close() {
-            eprintln!("Closing MCP requests failed: {error}");
-        }
+        // finish() performs observable, fallible joining. Early returns only
+        // signal requests; each request owns its output until it has stopped.
+        self.cancel();
     }
 }
 

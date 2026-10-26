@@ -1,25 +1,16 @@
 use super::super::model::{Button, Command, Path, Row};
 use crate::settings::Settings;
+use crate::ui::presentation::StatusTone;
 use eframe::egui;
 
 pub(super) fn rows(settings: &Settings) -> Vec<Row<'static>> {
     let provider = settings.provider.as_str();
     vec![
-        #[cfg(all(
-            feature = "rea-rust-ghidra",
-            any(target_os = "macos", target_os = "linux")
-        ))]
+        #[cfg(feature = "rea-rust-ghidra")]
         rea_engine(
             "Ghidra (Rust through REA)",
-            "Rust Ghidra through REA. Saved-function batches reuse the prepared session and native cache. Choose the Rust REA launcher and worker below.",
+            "Native nanashili/rea-rust Ghidra. Saved-function batches reuse the prepared session and native cache. Choose the launcher in Analysis tools below.",
             "ghidra-rust-rea",
-            provider,
-        ),
-        #[cfg(feature = "prism-ghidra-rea")]
-        rea_engine(
-            "Ghidra (Java through REA)",
-            "Prism's Java Ghidra provider through REA. Uses your Ghidra installation and keeps its prepared session for saved-function batches.",
-            "ghidra-rea",
             provider,
         ),
         engine(
@@ -49,13 +40,7 @@ pub(super) fn rows(settings: &Settings) -> Vec<Row<'static>> {
     ]
 }
 
-#[cfg(any(
-    feature = "prism-ghidra-rea",
-    all(
-        feature = "rea-rust-ghidra",
-        any(target_os = "macos", target_os = "linux")
-    )
-))]
+#[cfg(feature = "rea-rust-ghidra")]
 fn rea_engine(name: &str, description: &str, id: &str, selected: &str) -> Row<'static> {
     let mut row = Row::new(name, description).image(egui::include_image!(
         "../../../../resources/upstream/engines/ghidra.png"
@@ -76,9 +61,10 @@ fn engine(
     selected: bool,
 ) -> Row<'static> {
     let found = !path.is_empty() && std::path::Path::new(path).exists();
-    let mut row = Row::new(name, description)
-        .image(image)
-        .status(if found { "Installed" } else { "Not found" }, found);
+    let mut row = Row::new(name, description).image(image).status(
+        if found { "Installed" } else { "Not found" },
+        StatusTone::from(found),
+    );
     let id = match key {
         Path::Rizin => "rizin",
         Path::Hopper => "hopper",

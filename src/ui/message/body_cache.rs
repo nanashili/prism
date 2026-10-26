@@ -1,4 +1,5 @@
 use super::{layout::LayoutKey, markdown, style::ChatStyle};
+use crate::ui::presentation::ThoughtDisplay;
 use eframe::egui;
 use egui_commonmark_extended::CommonMarkCache;
 
@@ -58,7 +59,7 @@ impl BodyCache {
             return;
         }
 
-        let layout = LayoutKey::new(ui, style, false);
+        let layout = LayoutKey::new(ui, style, ThoughtDisplay::Hidden);
         let index = match existing {
             Some(index) if self.entries[index].matches(text, style) => index,
             previous => {

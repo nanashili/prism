@@ -3,6 +3,7 @@ use crate::error::{Result, failure};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
 use std::path::Path;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn open(path: &Path) -> Result<Connection> {
     let cache = Connection::open(path)?;
     cache.busy_timeout(std::time::Duration::from_secs(3))?;
@@ -38,6 +39,7 @@ pub(super) fn open(path: &Path) -> Result<Connection> {
 }
 
 impl Store {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn cache(&self, project: &str, address: &str, kind: &str) -> Result<Option<String>> {
         let cached: Option<(Vec<u8>, bool)> = self
             .cache
@@ -63,6 +65,7 @@ impl Store {
         Ok(Some(String::from_utf8(raw)?))
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn cache_view(
         &self,
         project: &str,
@@ -90,6 +93,7 @@ impl Store {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn trim_cache(&self, budget: u64) -> Result<()> {
         let transaction = self.cache.unchecked_transaction()?;
         trim(&transaction, budget)?;

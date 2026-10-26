@@ -18,29 +18,16 @@ pub(super) fn worker_executable(settings: &Settings, launcher: &Path) -> Result<
 
     let worker = configured.canonicalize().map_err(|error| {
         failure(format!(
-            "Cannot read REA's Rust Ghidra worker at {}: {error}. Supply a complete packaged runtime or choose its worker in Settings > Engines. From a REA source checkout, run `npm run build:ghidra:rust-worker` so the crate's pinned Rust toolchain is used.",
+            "Cannot read REA's native Rust Ghidra worker at {}: {error}. Download the matching nanashili/rea-rust release with its worker, or choose the worker executable in Settings > Engines.",
             configured.display(),
         ))
     })?;
-    let metadata = worker.metadata()?;
-    if !metadata.is_file() {
-        return Err(failure("REA's Rust Ghidra worker must be a regular file"));
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if metadata.permissions().mode() & 0o111 == 0 {
-            return Err(failure(format!(
-                "REA's Rust Ghidra worker at {} is not executable. Build the worker or choose an executable file in Settings > Engines.",
-                worker.display(),
-            )));
-        }
-    }
-    if worker == std::env::current_exe()?.canonicalize()? {
-        return Err(failure(
-            "Choose REA's Rust Ghidra worker executable in Settings > Engines",
-        ));
-    }
+    super::rust_package::validate(&worker).map_err(|error| {
+        failure(format!(
+            "The configured REA Rust Ghidra worker is invalid at {}: {error}",
+            worker.display()
+        ))
+    })?;
 
     Ok(worker)
 }
@@ -61,6 +48,10 @@ pub(super) fn configure(command: &mut Command, settings: &Settings, launcher: &P
 
     command.env("REA_GHIDRA_RUST_ENABLED", "true");
     command.env("REA_GHIDRA_RUST_WORKER", worker);
+    command.env(
+        "REA_GHIDRA_RUST_DECOMPILE_THREADS",
+        settings.tools.ghidra_threads.to_string(),
+    );
     command.env(
         "REA_GHIDRA_RUST_MEMORY_MIB",
         settings.analysis_memory_mib.to_string(),

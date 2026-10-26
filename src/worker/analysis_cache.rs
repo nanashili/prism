@@ -65,9 +65,6 @@ impl State {
             if self.settings.analysis_backend().retains_prepared_session() {
                 return Ok(None);
             }
-            return self
-                .store
-                .cache(project, address, &format!("upstream:{}", view.label()));
         }
         Ok(None)
     }

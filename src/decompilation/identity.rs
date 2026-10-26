@@ -6,10 +6,6 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 
-// Preserve serialized options for compatible prepared-provider jobs.
-// Their active runtimes have separate provider-specific backend identity fields.
-const LEGACY_JOB_ENGINE_ID: &str = "ghidra-rust-268c3a4-v3";
-
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub(super) enum Selection {
@@ -66,20 +62,16 @@ pub(crate) struct Context {
 }
 
 impl Context {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(crate) fn new(project: &str, settings: &Settings) -> Result<Self> {
         let backend = settings.analysis_backend();
         backend.require_available()?;
         let configuration = configuration(settings);
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         let configuration = if backend.retains_prepared_session() {
             let mut configuration = configuration;
             let identity = crate::analysis::rea_backend_identity(settings)?;
-            let key = if backend == crate::settings::AnalysisBackend::RustGhidraRea {
-                "rust_rea_backend"
-            } else {
-                "prism_backend"
-            };
-            configuration[key] = identity;
+            configuration["rust_rea_backend"] = identity;
             configuration
         } else {
             configuration
@@ -95,7 +87,7 @@ impl Context {
     pub(crate) fn matches(&self, job: &DecompilationJob) -> bool {
         self.project == job.project
             && self.provider == job.provider
-            && compatible_configuration(&self.configuration, &job.options)
+            && self.configuration == job.options
     }
 
     pub(super) fn verify(&self, job: &DecompilationJob) -> Result<()> {
@@ -124,13 +116,12 @@ fn configuration(settings: &Settings) -> Value {
     if settings.analysis_backend() == crate::settings::AnalysisBackend::RustGhidraRea {
         return json!({
             "format": 1,
-            "native_engine": LEGACY_JOB_ENGINE_ID,
             "provider": settings.provider,
             "memory_mib": settings.analysis_memory_mib,
             "timeout_seconds": settings.timeout_seconds
         });
     }
-    let mut configuration = json!({
+    json!({
         "format": 1,
         "provider": settings.provider,
         "rea": settings.rea,
@@ -138,36 +129,5 @@ fn configuration(settings: &Settings) -> Value {
         "jadx": settings.jadx,
         "memory_mib": settings.analysis_memory_mib,
         "timeout_seconds": settings.timeout_seconds
-    });
-    if settings.analysis_backend().retains_prepared_session() {
-        configuration["native_engine"] = LEGACY_JOB_ENGINE_ID.into();
-        configuration["ghidra_directory"] = settings.tools.ghidra_dir.clone().into();
-    }
-    configuration
-}
-
-fn compatible_configuration(current: &str, saved: &str) -> bool {
-    if current == saved {
-        return true;
-    }
-    let (Ok(Value::Object(current)), Ok(Value::Object(mut saved))) = (
-        serde_json::from_str::<Value>(current),
-        serde_json::from_str::<Value>(saved),
-    ) else {
-        return false;
-    };
-
-    // Rust REA jobs retain exact serialized runtime identity. Java jobs cannot
-    // enter compatibility normalization even if a provider name is reused.
-    if current.contains_key("rust_rea_backend")
-        || current.contains_key("prism_backend")
-        || saved.contains_key("rust_rea_backend")
-        || saved.contains_key("prism_backend")
-    {
-        return false;
-    }
-
-    saved.remove("native_engine");
-    saved.remove("ghidra_directory");
-    current == saved
+    })
 }

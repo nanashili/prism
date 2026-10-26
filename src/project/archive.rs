@@ -39,6 +39,7 @@ pub(crate) struct Archive {
 }
 
 impl Archive {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn open(path: &Path) -> Result<Self> {
         let mut file = File::open(path)?;
         let mut header = [0u8; 12];
@@ -62,6 +63,7 @@ impl Archive {
         })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn extract(&mut self, name: &str, output: &mut impl Write, limit: u64) -> Result<()> {
         let entry = self
             .manifest
@@ -121,7 +123,7 @@ fn copy_verified(reader: impl Read, output: &mut impl Write, entry: &Entry) -> R
     let mut source = reader.take(entry.raw.checked_add(1).ok_or("Invalid decoded size")?);
     let mut digest = Sha256::new();
     let mut total = 0;
-    let mut buffer = [0u8; 64 * 1024];
+    let mut buffer = vec![0u8; 64 * 1024];
     loop {
         let count = source.read(&mut buffer)?;
         if count == 0 {
@@ -145,17 +147,21 @@ fn copy_verified(reader: impl Read, output: &mut impl Write, entry: &Entry) -> R
     Ok(())
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn decode(bytes: &[u8], limit: u64) -> Result<Vec<u8>> {
     let mut decoder = zstd::stream::read::Decoder::new(bytes)?;
     decoder.window_log_max(25)?;
     let mut output = Vec::new();
-    decoder.take(limit + 1).read_to_end(&mut output)?;
+    decoder
+        .take(limit.saturating_add(1))
+        .read_to_end(&mut output)?;
     if output.len() as u64 > limit {
         return Err(failure("Compressed data exceeds its read limit"));
     }
     Ok(output)
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn pack_part(
     name: &str,
     reader: impl Read,
@@ -166,7 +172,7 @@ pub(crate) fn pack_part(
     let mut encoder = zstd::stream::write::Encoder::new(&mut *output, 3)?;
     let mut digest = Sha256::new();
     let mut reader = reader;
-    let mut buffer = [0u8; 64 * 1024];
+    let mut buffer = vec![0u8; 64 * 1024];
     let mut raw = 0;
     loop {
         let count = reader.read(&mut buffer)?;

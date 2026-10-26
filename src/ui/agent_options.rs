@@ -1,6 +1,7 @@
 use super::app::Prism;
 use super::{agent_option_rows, popup, widgets};
 use crate::agent::options::{OptionMenu, menus};
+use crate::ui::presentation::{Border, Caret, Selection};
 use eframe::egui;
 
 mod menu_cache;
@@ -81,8 +82,14 @@ impl Prism {
         } else {
             super::theme::Palette::for_context(ui.ctx()).text3
         };
-        let response =
-            widgets::chip_tinted(ui, Some(icon), selected_label(menu), false, false, color);
+        let response = widgets::chip_tinted(
+            ui,
+            Some(icon),
+            selected_label(menu),
+            Border::Hidden,
+            Caret::Hidden,
+            color,
+        );
         popup::menu(&response, 440.0)
             .align(egui::RectAlign::TOP_START)
             .show(|ui| self.access_options(ui, menu));
@@ -93,8 +100,7 @@ fn selected_label(menu: &OptionMenu) -> &str {
     menu.choices
         .iter()
         .find(|choice| choice.value == menu.current)
-        .map(|choice| choice.name.as_str())
-        .unwrap_or(&menu.name)
+        .map_or(&menu.name, |choice| choice.name.as_str())
 }
 
 fn model_label(model: Option<&OptionMenu>, effort: Option<&OptionMenu>) -> String {
@@ -139,7 +145,7 @@ fn choices(ui: &mut egui::Ui, menu: &OptionMenu) -> Option<String> {
                     ui,
                     choice,
                     &menu.category,
-                    choice.value == menu.current,
+                    Selection::from(choice.value == menu.current),
                 )
                 .clicked()
                 {

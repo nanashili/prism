@@ -1,11 +1,14 @@
+use crate::ui::presentation::PaletteTheme;
 use eframe::egui::{self, Color32, FontId, TextFormat};
 
 pub(super) fn highlight(
     text: &str,
     font: FontId,
-    dark: bool,
+    dark: PaletteTheme,
     scheme: &str,
 ) -> egui::text::LayoutJob {
+    let dark = dark == PaletteTheme::Dark;
+
     let [base, keyword, number, string, comment] = colors(dark, scheme);
     let mut job = egui::text::LayoutJob::default();
     let mut offset = 0;
@@ -31,8 +34,7 @@ pub(super) fn highlight(
                 let end = tail
                     .char_indices()
                     .find(|(_, character)| !character.is_alphanumeric() && *character != '_')
-                    .map(|(index, _)| index)
-                    .unwrap_or(tail.len());
+                    .map_or(tail.len(), |(index, _)| index);
                 let word = &tail[..end];
                 let color = if first.is_ascii_digit() {
                     number

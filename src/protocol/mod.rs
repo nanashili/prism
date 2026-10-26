@@ -1,5 +1,4 @@
 mod framing;
-pub(crate) mod json_array;
 mod memory;
 pub(crate) mod process;
 mod response;

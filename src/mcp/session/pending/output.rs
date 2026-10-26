@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::io::{self, Write};
 use std::sync::Mutex;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn write(output: &Mutex<impl Write>, response: &Value) -> Result<()> {
     let mut bytes = MessageBuffer(Vec::new());
     if serde_json::to_writer(&mut bytes, response).is_err() {

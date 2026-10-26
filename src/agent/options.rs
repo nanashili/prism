@@ -4,7 +4,8 @@ use serde_json::Value;
 pub(crate) struct Pick {
     pub id: String,
     pub value: String,
-    pub legacy: bool,
+    #[serde(default)]
+    pub modes_api: bool,
 }
 
 impl Pick {
@@ -20,7 +21,7 @@ pub(crate) struct OptionMenu {
     pub current: String,
     pub category: String,
     pub choices: Vec<Choice>,
-    pub legacy: bool,
+    pub modes_api: bool,
 }
 
 #[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -54,7 +55,7 @@ pub(crate) fn menus(value: &Value) -> Vec<OptionMenu> {
             category: option["category"].as_str().unwrap_or("other").into(),
             current: option["currentValue"].as_str().unwrap_or_default().into(),
             choices,
-            legacy: false,
+            modes_api: false,
         });
     }
     if let Some(modes) = value["modes"]["availableModes"].as_array()
@@ -79,7 +80,7 @@ pub(crate) fn menus(value: &Value) -> Vec<OptionMenu> {
                 .unwrap_or_default()
                 .into(),
             choices,
-            legacy: true,
+            modes_api: true,
         });
     }
     menus
@@ -93,7 +94,7 @@ fn parse_choice(value: &Value) -> Option<Choice> {
     })
 }
 
-/// ACP updates replace the option list but only patch legacy mode/model state.
+/// ACP updates replace the option list but preserve the separate modes API state.
 pub(crate) fn merge(current: &mut Value, update: Value) {
     if update.get("sessionId").is_some() {
         *current = update;
@@ -128,7 +129,7 @@ pub(crate) fn resolve(options: &Value, pick: &Pick) -> Option<Pick> {
             || Pick {
                 id: menu.id,
                 value: pick.value.clone(),
-                legacy: menu.legacy,
+                modes_api: menu.modes_api,
             },
         )
     })
@@ -137,7 +138,7 @@ pub(crate) fn resolve(options: &Value, pick: &Pick) -> Option<Pick> {
 pub(super) fn needs_change(options: &Value, pick: &Pick) -> bool {
     menus(options).iter().any(|menu| {
         menu.id == pick.id
-            && menu.legacy == pick.legacy
+            && menu.modes_api == pick.modes_api
             && menu.current != pick.value
             && menu.choices.iter().any(|choice| choice.value == pick.value)
     })

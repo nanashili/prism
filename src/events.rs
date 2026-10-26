@@ -10,12 +10,19 @@ pub(crate) enum Event {
     },
     Progress(String),
     Analysis(Option<AnalysisProgress>),
+    InvestigationChanged {
+        project: String,
+        id: String,
+    },
+    InvestigationCreated(Box<crate::investigation::Graph>),
+    ExecutionEvidenceChanged(String),
     Reconstruction {
         project: String,
         status: Box<Value>,
         start_agent: bool,
     },
     Opened(Box<Project>, bool),
+    Comparison(std::sync::Arc<crate::comparison::Report>),
     Functions {
         rows: Vec<Procedure>,
         offset: usize,

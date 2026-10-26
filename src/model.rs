@@ -13,7 +13,7 @@ pub(crate) use agent_updates::{
 };
 pub(crate) use approval::Approval;
 pub(crate) use attachment::Attachment;
-pub(crate) use goal::{Goal, GoalStatus};
+pub(crate) use goal::{Goal, GoalStatus, GoalUpdate};
 pub(crate) use json_preview::json_preview;
 pub(crate) use queued_prompt::QueuedPrompt;
 pub(crate) use turn_progress::{Child, TurnProgress};
@@ -154,3 +154,5 @@ pub(crate) struct ChatSummary {
     pub pinned: bool,
     pub archived: bool,
 }
+
+pub(crate) use goal::ConnectionState;

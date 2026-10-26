@@ -1,8 +1,10 @@
 use super::{app::Prism, theme::Palette};
 use crate::model::Screen;
+use crate::ui::presentation::Disclosure;
 use eframe::egui::{self, Frame, Margin, Stroke};
 
 impl Prism {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn shell(&mut self, context: &egui::Context) {
         let palette = Palette::for_context(context);
         let background = self.window_effects.sidebar(
@@ -13,7 +15,7 @@ impl Prism {
         let sidebar_expanded = super::panel_layout::expansion(
             context,
             "navigation-expansion",
-            self.screen != Screen::Workbench || !self.workspace.navigation.hidden,
+            Disclosure::from(self.screen != Screen::Workbench || !self.workspace.navigation.hidden),
         );
         self.sidebar(context, sidebar_expanded);
 

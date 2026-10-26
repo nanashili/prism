@@ -71,3 +71,24 @@ fn saving_changed_input_preserves_the_existing_archive_and_input() -> Result<()>
     assert_eq!(std::fs::read(&project.target.path)?, changed);
     Ok(())
 }
+
+#[test]
+fn compressed_archive_reads_honor_zero_exact_and_maximum_limits() -> Result<()> {
+    let compressed = zstd::stream::encode_all(INPUT, 3)?;
+
+    assert!(
+        super::archive::decode(&compressed, 0).is_err(),
+        "nonempty content must exceed a zero-byte limit"
+    );
+    assert_eq!(
+        super::archive::decode(&compressed, INPUT.len() as u64)?,
+        INPUT,
+        "an exact-size limit must retain every decoded byte"
+    );
+    assert_eq!(
+        super::archive::decode(&compressed, u64::MAX)?,
+        INPUT,
+        "the maximum limit must not overflow or discard decoded content"
+    );
+    Ok(())
+}

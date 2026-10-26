@@ -4,17 +4,15 @@ use crate::worker::RuntimeSnapshot;
 use crate::worker::WorkerPort;
 use prism::mcp::{self, Mode};
 use serde_json::{Value, json};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::net::{SocketAddr, TcpListener};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
 
 pub(crate) struct Bridge {
     address: SocketAddr,
     token: String,
-    persist_endpoint: bool,
     stopped: Arc<AtomicBool>,
-    thread: Option<std::thread::JoinHandle<()>>,
+    thread: Option<std::thread::JoinHandle<Result<()>>>,
 }
 
 impl Bridge {
@@ -39,6 +37,7 @@ impl Bridge {
     ) -> Result<Self> {
         let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0))?;
         let address = listener.local_addr()?;
+        listener.set_nonblocking(true)?;
         let mut random = [0u8; 32];
         getrandom::fill(&mut random).map_err(|error| failure(error.to_string()))?;
         let token: String = random.iter().map(|byte| format!("{byte:02x}")).collect();
@@ -48,23 +47,61 @@ impl Bridge {
         let stopped = Arc::new(AtomicBool::new(false));
         let flag = stopped.clone();
         let thread_token = token.clone();
-        let thread = std::thread::spawn(move || {
-            super::listener::run(listener, thread_token, worker, sink, flag, mode, runtime);
-        });
+        let launched = std::thread::Builder::new()
+            .name("prism-window-bridge".into())
+            .spawn(move || {
+                super::listener::run(listener, thread_token, worker, sink, flag, mode, runtime);
+                if persist_endpoint {
+                    remove_endpoint(address)?;
+                }
+                Ok(())
+            });
+        let thread = match launched {
+            Ok(thread) => thread,
+            Err(error) => {
+                let cleanup = if persist_endpoint {
+                    remove_endpoint(address)
+                } else {
+                    Ok(())
+                };
+                return crate::error::finish(
+                    Err(error.into()),
+                    cleanup,
+                    "Removing the window address",
+                );
+            }
+        };
         Ok(Self {
             address,
             token,
-            persist_endpoint,
             stopped,
             thread: Some(thread),
         })
+    }
+
+    pub fn close(mut self) -> Result<()> {
+        self.stopped.store(true, Ordering::Relaxed);
+        if let Some(thread) = self.thread.take() {
+            thread
+                .join()
+                .map_err(|_| failure("The window bridge stopped unexpectedly"))??;
+        }
+        Ok(())
     }
 
     pub fn endpoint(&self) -> (String, String) {
         (self.address.to_string(), self.token.clone())
     }
 
-    pub fn configurations(&self, window: bool, analysis: bool, chat: u64) -> Result<Vec<Value>> {
+    pub fn configurations(
+        &self,
+        window: WindowTools,
+        analysis: AnalysisTools,
+        chat: u64,
+    ) -> Result<Vec<Value>> {
+        let window = window == WindowTools::Enabled;
+        let analysis = analysis == AnalysisTools::Enabled;
+
         let base = mcp_configuration(std::env::current_exe()?);
         let mut servers = Vec::new();
         for (enabled, mode) in [(window, Mode::Window), (analysis, Mode::Analysis)] {
@@ -94,20 +131,9 @@ fn mcp_configuration(executable: std::path::PathBuf) -> Value {
 
 impl Drop for Bridge {
     fn drop(&mut self) {
+        // The listener polls this flag; its owning thread removes the endpoint
+        // after serving requests. Joining belongs to the explicit close path.
         self.stopped.store(true, Ordering::Relaxed);
-        if let Err(error) = TcpStream::connect_timeout(&self.address, Duration::from_secs(1)) {
-            eprintln!("Waking the window bridge failed: {error}");
-        }
-        if let Some(thread) = self.thread.take()
-            && thread.join().is_err()
-        {
-            eprintln!("The window bridge stopped unexpectedly");
-        }
-        if self.persist_endpoint
-            && let Err(error) = remove_endpoint(self.address)
-        {
-            eprintln!("Removing the window address failed: {error}");
-        }
     }
 }
 
@@ -154,5 +180,29 @@ mod tests {
 
         assert_eq!(configuration["args"], json!(["mcp"]));
         assert_eq!(configuration["env"], json!([]));
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum WindowTools {
+    Enabled,
+    Disabled,
+}
+
+impl From<bool> for WindowTools {
+    fn from(value: bool) -> Self {
+        if value { Self::Enabled } else { Self::Disabled }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum AnalysisTools {
+    Enabled,
+    Disabled,
+}
+
+impl From<bool> for AnalysisTools {
+    fn from(value: bool) -> Self {
+        if value { Self::Enabled } else { Self::Disabled }
     }
 }

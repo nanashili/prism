@@ -20,6 +20,7 @@ pub(crate) struct ResourcePage {
 }
 
 impl Store {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(crate) fn resource_page(
         &mut self,
         root: Option<&Path>,
@@ -62,6 +63,7 @@ impl Store {
         })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn prepare_resources(&mut self, root: &Path, cancelled: &AtomicBool) -> Result<()> {
         self.db
             .execute_batch("CREATE TEMP TABLE IF NOT EXISTS resource_identity(root TEXT)")?;

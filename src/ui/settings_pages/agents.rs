@@ -1,14 +1,17 @@
 use super::model::{Command, Group, Lead, Row};
 use crate::settings::Settings;
 use crate::ui::agent_catalog::Catalog;
+use crate::ui::presentation::{CatalogScope, StatusTone};
 use eframe::egui;
 
 pub(super) fn groups<'a>(
     s: &'a mut Settings,
     catalog: &Catalog,
-    browsing: bool,
+    browsing: CatalogScope,
     custom_tool_server: &'a mut Option<String>,
 ) -> Vec<Group<'a>> {
+    let browsing = browsing == CatalogScope::All;
+
     let selected = crate::ui::agent_picker::id(s).to_owned();
     let mut here = Vec::new();
     let mut more = Vec::new();
@@ -34,7 +37,7 @@ pub(super) fn groups<'a>(
         }
         if installed {
             let hidden = s.conversation.hidden_agents.contains(&entry.id);
-            here.push(row.status("Installed", true).button(
+            here.push(row.status("Installed", StatusTone::Good).button(
                 if hidden {
                     "Show in composer"
                 } else {

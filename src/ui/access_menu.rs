@@ -3,6 +3,7 @@ use super::app::Prism;
 use super::{agent_picker, icons::Icon, settings_navigation::SettingsPage, theme::Palette};
 use crate::agent::options::{Choice, OptionMenu};
 use crate::model::Screen;
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, FontId, Rect, RichText, Sense};
 
 impl Prism {
@@ -33,7 +34,10 @@ impl Prism {
                     )
                 }) {
                     let row = presentation(choice, codex);
-                    if row.show(ui, choice.value == menu.current).clicked() {
+                    if row
+                        .show(ui, Selection::from(choice.value == menu.current))
+                        .clicked()
+                    {
                         self.pick_option(menu, choice.value.clone());
                         ui.close();
                     }

@@ -13,6 +13,7 @@ enum State {
     Running {
         receiver: Receiver<Result<Usage, String>>,
         cancelled: Arc<AtomicBool>,
+        restart: bool,
     },
     Ready,
     Failed(String),
@@ -25,6 +26,7 @@ pub(super) struct Measurement {
 }
 
 impl Measurement {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn update(&mut self, context: &egui::Context) {
         self.receive();
         if matches!(self.state, State::Idle) {
@@ -44,14 +46,26 @@ impl Measurement {
     }
 
     pub fn invalidate(&mut self) {
-        self.cancel();
-        self.state = State::Idle;
+        match &mut self.state {
+            State::Running {
+                cancelled, restart, ..
+            } => {
+                cancelled.store(true, Ordering::Relaxed);
+                *restart = true;
+            }
+            _ => self.state = State::Idle,
+        }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn receive(&mut self) {
-        let State::Running { receiver, .. } = &self.state else {
+        let State::Running {
+            receiver, restart, ..
+        } = &self.state
+        else {
             return;
         };
+        let restart = *restart;
         let result = match receiver.try_recv() {
             Ok(result) => result,
             Err(TryRecvError::Empty) => return,
@@ -62,9 +76,15 @@ impl Measurement {
         self.state = match result {
             Ok(report) => {
                 self.report = Some(report);
-                State::Ready
+                if restart { State::Idle } else { State::Ready }
             }
-            Err(error) => State::Failed(error),
+            Err(error) => {
+                if restart {
+                    State::Idle
+                } else {
+                    State::Failed(error)
+                }
+            }
         };
     }
 
@@ -78,7 +98,7 @@ impl Measurement {
             .spawn(move || {
                 let report = usage::measure(&crate::settings::support_dir(), &scan_cancelled)
                     .map_err(|error| error.to_string());
-                // A closed receiver means the page invalidated the scan or the app exited.
+                // A closed receiver means the measurement was dropped or the app exited.
                 if sender.send(report).is_ok() {
                     context.request_repaint();
                 }
@@ -90,6 +110,7 @@ impl Measurement {
                 State::Running {
                     receiver,
                     cancelled,
+                    restart: false,
                 }
             }
             Err(error) => State::Failed(format!("Could not start measuring storage: {error}")),
@@ -106,5 +127,36 @@ impl Measurement {
 impl Drop for Measurement {
     fn drop(&mut self) {
         self.cancel();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalidation_keeps_cancelled_scan_owned_until_it_finishes() {
+        let (sender, receiver) = mpsc::sync_channel(1);
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let mut measurement = Measurement {
+            report: None,
+            state: State::Running {
+                receiver,
+                cancelled: Arc::clone(&cancelled),
+                restart: false,
+            },
+        };
+
+        measurement.invalidate();
+
+        assert!(cancelled.load(Ordering::Relaxed));
+        measurement.update(&egui::Context::default());
+
+        sender
+            .send(Err("cancelled".into()))
+            .expect("the cancelled scan receiver remains owned until it finishes");
+        measurement.receive();
+
+        assert!(matches!(measurement.state, State::Idle));
     }
 }

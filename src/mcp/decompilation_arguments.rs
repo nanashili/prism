@@ -4,16 +4,20 @@ use serde_json::{Map, Value};
 pub const MAX_DURABLE_ADDRESSES: usize = 16_384;
 
 /// Validates the shared protocol and saved-selection address-count bound.
-pub fn validate_durable_address_count(count: usize) -> Result<(), String> {
+///
+/// # Errors
+/// Returns an error when the selection is empty or exceeds [`MAX_DURABLE_ADDRESSES`].
+pub fn validate_durable_address_count(count: usize) -> Result<(), crate::Error> {
     if !(1..=MAX_DURABLE_ADDRESSES).contains(&count) {
         return Err(format!(
             "Supply 1 to {MAX_DURABLE_ADDRESSES} indexed addresses for a durable selection"
-        ));
+        )
+        .into());
     }
     Ok(())
 }
 
-pub(super) fn validate(arguments: &Map<String, Value>) -> Result<(), String> {
+pub(super) fn validate(arguments: &Map<String, Value>) -> Result<(), crate::Error> {
     let action = arguments.get("action").and_then(Value::as_str);
     let allowed: &[&str] = match action {
         None => &["procedures", "offset"],
@@ -25,9 +29,9 @@ pub(super) fn validate(arguments: &Map<String, Value>) -> Result<(), String> {
     };
     for key in arguments.keys() {
         if !allowed.contains(&key.as_str()) {
-            return Err(format!(
-                "Argument {key} is not supported by this decompilation action"
-            ));
+            return Err(
+                format!("Argument {key} is not supported by this decompilation action").into(),
+            );
         }
     }
 

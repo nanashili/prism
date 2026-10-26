@@ -1,3 +1,5 @@
+use crate::storage::ChatArchive;
+use crate::ui::presentation::{ActivityState, HeaderBehavior, Selection};
 mod header;
 
 use super::{app::Prism, sidebar_rows::chat_row, theme::Palette};
@@ -31,12 +33,13 @@ impl Prism {
         let mut chats = self.store.chats_for(
             project.as_deref(),
             &self.chat_list.filter,
-            self.chat_list.archived,
+            ChatArchive::from(self.chat_list.archived),
             self.chat_list.offset,
         )?;
-        self.chat_list.total = self
-            .store
-            .chat_count(project.as_deref(), self.chat_list.archived)?;
+        self.chat_list.total = self.store.chat_count(
+            project.as_deref(),
+            ChatArchive::from(self.chat_list.archived),
+        )?;
         self.chat_list.has_more = chats.len() > 50;
         chats.truncate(50);
         self.chats = chats;
@@ -69,7 +72,7 @@ impl Prism {
             ui.add_space(16.0);
         }
         let was_searching = self.chat_list.search;
-        let (expanded, mut changed) = self.chat_list_header(ui, collapsible);
+        let (expanded, mut changed) = self.chat_list_header(ui, HeaderBehavior::from(collapsible));
         if !expanded {
             return;
         }
@@ -124,7 +127,12 @@ impl Prism {
                     .parked
                     .iter()
                     .any(|tab| tab.chat.id == Some(id) && tab.chat.busy);
-            let (response, more) = chat_row(ui, chat, self.chat.id == Some(id), busy);
+            let (response, more) = chat_row(
+                ui,
+                chat,
+                Selection::from(self.chat.id == Some(id)),
+                ActivityState::from(busy),
+            );
             if response.clicked() {
                 self.load_chat(id);
             }

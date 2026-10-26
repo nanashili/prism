@@ -1,7 +1,7 @@
 //! LaTeX-style math delimiter support (#60): `\(...\)` renders as inline
 //! math and `\[...\]` as display math, matching LaTeX/Pandoc conventions.
 //!
-//! pulldown-cmark applies CommonMark backslash escapes while parsing, so the
+//! pulldown-cmark applies `CommonMark` backslash escapes while parsing, so the
 //! backslash of `\(` never survives into a [`Event::Text`] and such
 //! delimiters cannot be recognized after parsing. The conversion therefore
 //! rewrites the raw source before it reaches the parser.
@@ -19,6 +19,8 @@
 //!    recording every length change, and
 //! 4. remaps every event range parsed from the rewritten copy back to
 //!    original coordinates before caching.
+
+use crate::{options::MathSupport, Frontmatter};
 
 use egui_commonmark_backend_extended::pulldown::parser_options;
 use pulldown_cmark::{Event, Options, Parser, Tag};
@@ -38,9 +40,9 @@ struct Rewrite {
 #[derive(Debug, Default)]
 struct OffsetMap {
     /// Sorted by `norm_pos`, recorded after every replacement. For a
-    /// normalized position `p`, the original position is `p + delta` using
-    /// the last entry with `norm_pos <= p` (`delta = 0` before the first).
-    shifts: Vec<(usize, i64)>,
+    /// normalized position, the last entry supplies a normalized/source
+    /// anchor pair. Offsets after the anchor are identical in both strings.
+    shifts: Vec<(usize, usize)>,
 }
 
 impl OffsetMap {
@@ -48,9 +50,8 @@ impl OffsetMap {
         match self.shifts.partition_point(|&(n, _)| n <= pos) {
             0 => pos,
             i => {
-                let &(n, delta) = &self.shifts[i - 1];
-                debug_assert!(n <= pos);
-                (pos as i64 + delta) as usize
+                let &(normalized, original) = &self.shifts[i - 1];
+                original + (pos - normalized)
             }
         }
     }
@@ -67,9 +68,11 @@ impl OffsetMap {
 /// refer to `text`, the original source.
 pub fn parse_events(
     text: &str,
-    math_enabled: bool,
-    frontmatter_enabled: bool,
+    math: MathSupport,
+    frontmatter: Frontmatter,
 ) -> Vec<(Event<'static>, Range<usize>)> {
+    let math_enabled = math == MathSupport::Enabled;
+    let frontmatter_enabled = frontmatter == Frontmatter::Visible;
     if !math_enabled {
         return parse_owned(text, false, frontmatter_enabled);
     }
@@ -79,7 +82,7 @@ pub fn parse_events(
     }
     let (normalized, map) = build_normalized(text, &rewrites);
     let mut events = parse_owned(&normalized, true, frontmatter_enabled);
-    for (_, range) in events.iter_mut() {
+    for (_, range) in &mut events {
         map.map_range(range);
     }
     events
@@ -138,7 +141,7 @@ fn context_ranges(text: &str) -> Contexts {
             Event::Code(_) | Event::Html(_) | Event::InlineHtml(_) => protected.push(range),
             Event::Start(Tag::CodeBlock(_)) => protected.push(range),
             Event::Start(Tag::Paragraph | Tag::Heading { .. } | Tag::Table(_)) => {
-                blocks.push(range)
+                blocks.push(range);
             }
             _ => {}
         }
@@ -278,17 +281,15 @@ fn scan_run(text: &str, run: Range<usize>, out: &mut Vec<Rewrite>) {
 
 /// Splice `rewrites` (sorted by position) into a copy of `text` and build the
 /// offset map from rewritten coordinates back to original ones.
-fn build_normalized<'a>(text: &'a str, rewrites: &[Rewrite]) -> (String, OffsetMap) {
+fn build_normalized(text: &str, rewrites: &[Rewrite]) -> (String, OffsetMap) {
     let mut out = String::with_capacity(text.len());
-    let mut shifts: Vec<(usize, i64)> = Vec::with_capacity(rewrites.len());
-    let mut delta: i64 = 0;
+    let mut shifts = Vec::with_capacity(rewrites.len());
     let mut prev = 0usize;
     for rw in rewrites {
         out.push_str(&text[prev..rw.at]);
         out.push_str(rw.replacement);
-        delta += rw.original_len as i64 - rw.replacement.len() as i64;
-        shifts.push((out.len(), delta));
         prev = rw.at + rw.original_len;
+        shifts.push((out.len(), prev));
     }
     out.push_str(&text[prev..]);
     (out, OffsetMap { shifts })
@@ -301,7 +302,7 @@ mod tests {
 
     /// Collect (event-debug, original-slice) pairs.
     fn outline(text: &str) -> Vec<(String, String)> {
-        parse_events(text, true, false)
+        parse_events(text, MathSupport::Enabled, Frontmatter::Hidden)
             .into_iter()
             .map(|(event, range)| (format!("{event:?}"), text[range].to_string()))
             .collect()
@@ -315,7 +316,7 @@ mod tests {
     }
 
     fn plain_texts(text: &str) -> Vec<String> {
-        parse_events(text, true, false)
+        parse_events(text, MathSupport::Enabled, Frontmatter::Hidden)
             .into_iter()
             .filter(|(event, _)| matches!(event, Event::Text(_)))
             .map(|(event, _)| match event {
@@ -344,7 +345,7 @@ mod tests {
             r"| \(a_t/(D_t^{opp}+\epsilon)\) |",
             "\n",
         );
-        let formulas: Vec<_> = parse_events(text, true, false)
+        let formulas: Vec<_> = parse_events(text, MathSupport::Enabled, Frontmatter::Hidden)
             .into_iter()
             .filter_map(|(event, range)| match event {
                 Event::InlineMath(tex) => Some((tex.into_string(), text[range].to_string())),
@@ -367,8 +368,7 @@ mod tests {
     #[test]
     fn display_pair_across_lines_converts() {
         let text = "\\[\nr_a=1\n\\]";
-        let (event, slice) =
-            find_math(text, "r_a=1").expect("display math expected");
+        let (event, slice) = find_math(text, "r_a=1").expect("display math expected");
         assert!(event.contains("DisplayMath"));
         assert_eq!(slice, "\\[\nr_a=1\n\\]");
     }
@@ -399,7 +399,7 @@ mod tests {
             r"| first | \(\operatorname{EW}[|\Delta OI|]\) | native |",
             "\n",
         );
-        let events = parse_events(text, true, false);
+        let events = parse_events(text, MathSupport::Enabled, Frontmatter::Hidden);
 
         assert_eq!(
             events
@@ -494,7 +494,7 @@ mod tests {
     #[test]
     fn ranges_after_conversion_point_into_the_original() {
         let text = "a \\(x\\) b";
-        let events = parse_events(text, true, false);
+        let events = parse_events(text, MathSupport::Enabled, Frontmatter::Hidden);
         let after = events
             .iter()
             .find(|(e, _)| matches!(e, Event::Text(t) if t.contains('b')))
@@ -503,7 +503,7 @@ mod tests {
         let end_tag = events
             .iter()
             .find(|(e, _)| matches!(e, Event::End(TagEnd::Paragraph)))
-            .unwrap();
+            .expect("the fixture contains the trailing emphasis");
         assert_eq!(end_tag.1, 0..text.len());
     }
 
@@ -511,17 +511,16 @@ mod tests {
     fn fast_path_when_nothing_converts() {
         // No LaTeX pairs: identical output to a direct parse.
         assert_eq!(
-            parse_events("plain $x$ text", true, false),
+            parse_events("plain $x$ text", MathSupport::Enabled, Frontmatter::Hidden),
             parse_owned("plain $x$ text", true, false)
         );
     }
 
     #[test]
     fn math_disabled_leaves_everything_alone() {
-        let events = parse_events("\\(x\\)", false, false);
-        assert!(events.iter().all(|(e, _)| !matches!(
-            e,
-            Event::InlineMath(_) | Event::DisplayMath(_)
-        )));
+        let events = parse_events("\\(x\\)", MathSupport::Disabled, Frontmatter::Hidden);
+        assert!(events
+            .iter()
+            .all(|(e, _)| !matches!(e, Event::InlineMath(_) | Event::DisplayMath(_))));
     }
 }

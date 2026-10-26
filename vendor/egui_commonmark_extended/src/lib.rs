@@ -81,6 +81,8 @@
 #![cfg_attr(feature = "document-features", doc = "# Features")]
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 
+use options::ListSpacing;
+
 use egui::{self, Id};
 use egui_commonmark_backend_extended::elements::{
     paint_list_marker, reserve_list_marker, ListMarkerKind, ListMarkerSlot,
@@ -88,31 +90,35 @@ use egui_commonmark_backend_extended::elements::{
 
 #[cfg(feature = "svg")]
 mod mime_svg_loader;
+mod options;
 mod parsers;
+pub use options::{
+    Frontmatter, ImageAltText, ImageUriScheme, RenderScope, StrongFont, TableLayout,
+};
 
-pub use egui_commonmark_backend_extended::RenderHtmlFn;
-pub use egui_commonmark_backend_extended::RenderMathFn;
 pub use egui_commonmark_backend_extended::alerts::{Alert, AlertBundle};
 pub use egui_commonmark_backend_extended::misc::{
     header_position_key, CommonMarkCache, STRONG_FONT_FAMILY,
 };
 pub use egui_commonmark_backend_extended::typography::{Measurement, TypographyConfig};
 #[cfg(feature = "math")]
+pub use egui_commonmark_backend_extended::warm_math_fonts;
+pub use egui_commonmark_backend_extended::RenderHtmlFn;
+pub use egui_commonmark_backend_extended::RenderMathFn;
+#[cfg(feature = "math")]
 pub use egui_commonmark_backend_extended::{
     cached_inline_math_height, render_math, render_math_in_table,
 };
-#[cfg(feature = "math")]
-pub use egui_commonmark_backend_extended::warm_math_fonts;
 
 #[cfg(feature = "macros")]
-pub use egui_commonmark_macros_extended::*;
+pub use egui_commonmark_macros_extended::{commonmark, commonmark_str};
 
 #[cfg(feature = "macros")]
 // Do not rely on this directly!
 #[doc(hidden)]
 pub use egui_commonmark_backend_extended;
 
-use egui_commonmark_backend_extended::*;
+use egui_commonmark_backend_extended::{newline, CodeBlock, CommonMarkOptions, Image, Link};
 
 fn prepare_show(cache: &mut CommonMarkCache, ctx: &egui::Context) {
     egui_commonmark_backend_extended::prepare_show(cache, ctx);
@@ -120,7 +126,9 @@ fn prepare_show(cache: &mut CommonMarkCache, ctx: &egui::Context) {
     mime_svg_loader::install(ctx);
 }
 
+/// Builds a Markdown view while keeping parsing and layout data in a caller-owned cache.
 #[derive(Debug, Default)]
+#[must_use]
 pub struct CommonMarkViewer<'f> {
     options: CommonMarkOptions<'f>,
     responsive_tables: bool,
@@ -130,19 +138,20 @@ pub struct CommonMarkViewer<'f> {
     content_version: Option<u64>,
     /// Vertical scroll offset to apply this frame. Set this in place of the
     /// caller's old `ScrollArea::vertical_scroll_offset` — when the renderer
-    /// owns the ScrollArea (via `show_scrollable`) the caller can no longer
+    /// owns the `ScrollArea` (via `show_scrollable`) the caller can no longer
     /// configure it directly.
     pending_scroll_offset: Option<f32>,
     /// Whether this frame must paint the complete document instead of a
     /// viewport slice. Navigation to an already measured Y does not need it.
     force_full_render: bool,
-    /// Scroll source config for the renderer-owned ScrollArea. Useful when
+    /// Scroll source config for the renderer-owned `ScrollArea`. Useful when
     /// the caller needs to disable drag-scroll (e.g. to keep text selection
     /// working) while preserving wheel-scroll.
     scroll_source: Option<egui::scroll_area::ScrollSource>,
 }
 
 impl<'f> CommonMarkViewer<'f> {
+    /// Creates a viewer with the default typography, image, and table behavior.
     pub fn new() -> Self {
         Self::default()
     }
@@ -181,14 +190,14 @@ impl<'f> CommonMarkViewer<'f> {
     /// Preserves manual column adjustments until the pane changes. Body words
     /// and inline identifiers contribute minimum widths; horizontal scrolling
     /// keeps wide tables reachable without squeezing identifiers into fragments.
-    pub fn responsive_tables(mut self, enabled: bool) -> Self {
-        self.responsive_tables = enabled;
+    pub fn responsive_tables(mut self, layout: TableLayout) -> Self {
+        self.responsive_tables = layout == TableLayout::Responsive;
         self
     }
 
     /// Show alt text when hovering over images. By default this is enabled.
-    pub fn show_alt_text_on_hover(mut self, show: bool) -> Self {
-        self.options.show_alt_text_on_hover = show;
+    pub fn show_alt_text_on_hover(mut self, visibility: ImageAltText) -> Self {
+        self.options.show_alt_text_on_hover = visibility == ImageAltText::OnHover;
         self
     }
 
@@ -207,10 +216,9 @@ impl<'f> CommonMarkViewer<'f> {
 
     /// By default any image without a uri scheme such as `foo://` is assumed to
     /// be of the type `file://`. This assumption can sometimes be wrong or be done
-    /// incorrectly, so if you want to always be explicit with the scheme then set
-    /// this to `true`
-    pub fn explicit_image_uri_scheme(mut self, use_explicit: bool) -> Self {
-        self.options.use_explicit_uri_scheme = use_explicit;
+    /// incorrectly. Select [`ImageUriScheme::Explicit`] to require a scheme.
+    pub fn explicit_image_uri_scheme(mut self, scheme: ImageUriScheme) -> Self {
+        self.options.use_explicit_uri_scheme = scheme == ImageUriScheme::Explicit;
         self
     }
 
@@ -293,8 +301,8 @@ impl<'f> CommonMarkViewer<'f> {
     /// Callers must register `STRONG_FONT_FAMILY` with egui before enabling
     /// this option. The default stays off so generic library consumers do not
     /// emit an unregistered font family for `**strong**` spans.
-    pub fn use_strong_font_family(mut self, enabled: bool) -> Self {
-        self.options.use_strong_font_family = enabled;
+    pub fn use_strong_font_family(mut self, font: StrongFont) -> Self {
+        self.options.use_strong_font_family = font == StrongFont::Dedicated;
         self
     }
 
@@ -305,8 +313,8 @@ impl<'f> CommonMarkViewer<'f> {
     /// it is painted: with it off, `---` opens a thematic break and the
     /// metadata lines become an ordinary paragraph. Enabling it by default
     /// would therefore change existing consumers' output.
-    pub fn render_frontmatter(mut self, enabled: bool) -> Self {
-        self.options.render_frontmatter = enabled;
+    pub fn render_frontmatter(mut self, visibility: Frontmatter) -> Self {
+        self.options.render_frontmatter = visibility == Frontmatter::Visible;
         self
     }
 
@@ -486,20 +494,20 @@ impl<'f> CommonMarkViewer<'f> {
     /// call) to leave the scroll position untouched.
     ///
     /// Use this instead of the caller setting `vertical_scroll_offset` on an
-    /// outer `ScrollArea` — `show_scrollable` owns the ScrollArea internally.
+    /// outer `ScrollArea` — `show_scrollable` owns the `ScrollArea` internally.
     pub fn pending_scroll_offset(mut self, offset: Option<f32>) -> Self {
         self.pending_scroll_offset = offset;
         self
     }
 
     /// Paint the complete document this frame so off-screen target positions
-    /// can be measured. Keep this disabled for scrolling to a cached position.
-    pub fn force_full_render(mut self, force: bool) -> Self {
-        self.force_full_render = force;
+    /// can be measured. Use [`RenderScope::Viewport`] for cached positions.
+    pub fn force_full_render(mut self, scope: RenderScope) -> Self {
+        self.force_full_render = scope == RenderScope::FullDocument;
         self
     }
 
-    /// Configure which scroll inputs the renderer-owned ScrollArea reacts to.
+    /// Configure which scroll inputs the renderer-owned `ScrollArea` reacts to.
     ///
     /// Default is whatever `egui::ScrollArea::vertical()` provides. Callers
     /// can pass e.g. `ScrollSource { drag: false, scroll_bar: true,
@@ -519,7 +527,7 @@ impl<'f> CommonMarkViewer<'f> {
         prepare_show(cache, ui.ctx());
 
         let (response, _) = parsers::pulldown::CommonMarkViewerInternal::new()
-            .responsive_tables(self.responsive_tables)
+            .responsive_tables(TableLayout::from(self.responsive_tables))
             .show(ui, cache, &self.options, text, None);
 
         response
@@ -539,15 +547,15 @@ impl<'f> CommonMarkViewer<'f> {
 
         let (mut inner_response, checkmark_events) =
             parsers::pulldown::CommonMarkViewerInternal::new()
-                .responsive_tables(self.responsive_tables)
+                .responsive_tables(TableLayout::from(self.responsive_tables))
                 .show(ui, cache, &self.options, text, None);
 
         // Update source text for checkmarks that were clicked
         for ev in checkmark_events {
             if ev.checked {
-                text.replace_range(ev.span, "[x]")
+                text.replace_range(ev.span, "[x]");
             } else {
-                text.replace_range(ev.span, "[ ]")
+                text.replace_range(ev.span, "[ ]");
             }
 
             inner_response.response.mark_changed();
@@ -559,7 +567,7 @@ impl<'f> CommonMarkViewer<'f> {
     /// Shows markdown inside a [`ScrollArea`] with viewport-clipped rendering.
     ///
     /// Renders only the events whose layout y-positions intersect the visible
-    /// viewport, using waypoints (split_points) populated on the first paint
+    /// viewport, using waypoints (`split_points`) populated on the first paint
     /// and a layout signature (width / font size / theme) that invalidates
     /// them when the rendering context changes.
     ///
@@ -582,7 +590,7 @@ impl<'f> CommonMarkViewer<'f> {
     ) -> egui::scroll_area::ScrollAreaOutput<()> {
         prepare_show(cache, ui.ctx());
         parsers::pulldown::CommonMarkViewerInternal::new()
-            .responsive_tables(self.responsive_tables)
+            .responsive_tables(TableLayout::from(self.responsive_tables))
             .show_scrollable(
                 Id::new(source_id),
                 ui,
@@ -591,7 +599,7 @@ impl<'f> CommonMarkViewer<'f> {
                 text,
                 self.content_version,
                 self.pending_scroll_offset,
-                self.force_full_render,
+                RenderScope::from(self.force_full_render),
                 self.scroll_source,
             )
     }
@@ -696,7 +704,8 @@ impl List {
         }
     }
 
-    pub fn end_level(&mut self, ui: &mut egui::Ui, insert_newline: bool) {
+    pub fn end_level(&mut self, ui: &mut egui::Ui, spacing: ListSpacing) {
+        let insert_newline = spacing == ListSpacing::Newline;
         self.items.pop();
 
         if self.items.is_empty() && insert_newline {

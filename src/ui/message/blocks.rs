@@ -1,4 +1,5 @@
 use super::style::ChatStyle;
+use crate::ui::presentation::PaletteTheme;
 use eframe::egui;
 
 pub(in crate::ui) fn code_text(ui: &mut egui::Ui, text: &str, style: &ChatStyle) {
@@ -9,8 +10,12 @@ pub(in crate::ui) fn code_text(ui: &mut egui::Ui, text: &str, style: &ChatStyle)
         "Quiet"
     };
     for line in text.split_inclusive('\n') {
-        let highlighted =
-            crate::ui::syntax::highlight(line, style.code_font.clone(), style.dark, scheme);
+        let highlighted = crate::ui::syntax::highlight(
+            line,
+            style.code_font.clone(),
+            PaletteTheme::from(style.dark),
+            scheme,
+        );
         for section in highlighted.sections {
             let mut format = section.format;
             if format.color == egui::Color32::from_rgb(92, 99, 112)

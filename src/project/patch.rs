@@ -24,6 +24,7 @@ pub(crate) fn parse_hex(text: &str) -> Result<Vec<u8>> {
         .collect()
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn export(project: &Project, destination: &Path) -> Result<()> {
     super::files::preserve_original(&project.target.path, destination)?;
     for (offset, bytes) in &project.patches {
@@ -50,7 +51,7 @@ fn copy_input(project: &Project, output: &mut File) -> Result<()> {
     let mut input = File::open(&project.target.path)?;
     let permissions = input.metadata()?.permissions();
     let mut digest = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
+    let mut buffer = vec![0u8; 64 * 1024];
     loop {
         let count = input.read(&mut buffer)?;
         if count == 0 {

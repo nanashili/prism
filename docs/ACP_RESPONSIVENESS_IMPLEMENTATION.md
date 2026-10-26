@@ -1,7 +1,7 @@
 # ACP permission responsiveness
 
 Implemented 2026-10-19 in the existing Prism worktree, based on
-`docs/REFERENCE_TOOL_LATENCY.md`. The enclosing Reference source commit is
+the current ACP responsiveness implementation. The enclosing source commit is
 `85a9be336ecf442cd8a8aa27a8a98060cee0646a`; Prism is an existing untracked
 subtree in that checkout. The pre-change source snapshot is
 `/tmp/prism-responsiveness-20261019/source-before`.

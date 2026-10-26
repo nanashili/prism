@@ -1,4 +1,5 @@
 use super::{icons::Icon, theme::Palette};
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Align2, FontId, Frame, Rect, Response, Sense, Stroke};
 
 pub(super) fn menu(response: &Response, width: f32) -> egui::Popup<'_> {
@@ -29,7 +30,7 @@ pub(super) fn submenu(
     label: &str,
     content: impl FnOnce(&mut egui::Ui),
 ) {
-    let response = row(ui, Some(icon), label, "›", false);
+    let response = row(ui, Some(icon), label, "›", Selection::Unselected);
     egui::containers::menu::SubMenu::new().show(ui, &response, |ui| {
         ui.set_width(220.0);
         content(ui);
@@ -41,9 +42,11 @@ pub(super) fn row(
     icon: Option<Icon>,
     label: &str,
     hint: &str,
-    selected: bool,
+    selected: Selection,
 ) -> Response {
-    row_with_height(ui, icon, label, hint, selected, 30.0)
+    let selected = selected == Selection::Selected;
+
+    row_with_height(ui, icon, label, hint, Selection::from(selected), 30.0)
 }
 
 pub(super) fn row_with_height(
@@ -51,9 +54,11 @@ pub(super) fn row_with_height(
     icon: Option<Icon>,
     label: &str,
     hint: &str,
-    selected: bool,
+    selected: Selection,
     height: f32,
 ) -> Response {
+    let selected = selected == Selection::Selected;
+
     let p = Palette::for_context(ui.ctx());
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), height), Sense::click());

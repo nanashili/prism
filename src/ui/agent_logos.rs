@@ -1,9 +1,10 @@
 use super::{icons::Icon, theme::Palette};
+use crate::ui::presentation::PaletteTheme;
 use eframe::egui::{self, Color32, Rect};
 
 pub(super) fn paint(ui: &egui::Ui, id: &str, rect: Rect) {
     let dark = ui.visuals().dark_mode;
-    if let Some((uri, bytes)) = shipped(id, dark) {
+    if let Some((uri, bytes)) = shipped(id, PaletteTheme::from(dark)) {
         egui::Image::from_bytes(uri, bytes).paint_at(ui, rect);
     } else if let Some(bytes) = ui
         .ctx()
@@ -21,7 +22,9 @@ pub(super) fn paint(ui: &egui::Ui, id: &str, rect: Rect) {
     }
 }
 
-pub(super) fn shipped(id: &str, dark: bool) -> Option<(&'static str, &'static [u8])> {
+pub(super) fn shipped(id: &str, dark: PaletteTheme) -> Option<(&'static str, &'static [u8])> {
+    let dark = dark == PaletteTheme::Dark;
+
     macro_rules! logo {
         ($name:literal) => {
             Some((

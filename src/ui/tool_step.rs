@@ -4,6 +4,7 @@ use super::message::{
 };
 use super::{activity_view::duration, icons::Icon, theme::Palette};
 use crate::model::{Outcome, ToolStep};
+use crate::ui::presentation::Disclosure;
 use eframe::egui::{self, Align2, FontId, Rect, RichText, Sense};
 
 pub(super) fn show(ui: &mut egui::Ui, tool: &ToolStep, style: &ChatStyle) {
@@ -25,7 +26,7 @@ pub(super) fn show(ui: &mut egui::Ui, tool: &ToolStep, style: &ChatStyle) {
         tool.title.replace('_', " ")
     };
     let id = ui.id().with(&tool.id);
-    if disclosure(ui, id, Icon::Bolt, &label, &suffix, false) {
+    if disclosure(ui, id, Icon::Bolt, &label, &suffix, Disclosure::Closed) {
         style.block(ui, BlockKind::Tool, |ui| {
             for (name, text) in [("Input", &tool.input), ("Output", &tool.output)] {
                 if text.is_empty() {
@@ -57,8 +58,10 @@ pub(super) fn disclosure(
     icon: Icon,
     label: &str,
     suffix: &str,
-    default_open: bool,
+    default_open: Disclosure,
 ) -> bool {
+    let default_open = default_open == Disclosure::Open;
+
     let mut open = ui
         .data(|data| data.get_temp::<bool>(id))
         .unwrap_or(default_open);

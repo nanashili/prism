@@ -1,4 +1,5 @@
 use super::{title, whole_file};
+use crate::agent::PermissionDecision;
 use crate::error::Result;
 use serde_json::Value;
 
@@ -36,7 +37,7 @@ impl Policy {
             && let Some(project) = &self.project
             && crate::agent::remembered::allows(project, title(params))?
         {
-            return Ok(permission_policy::select(params, true));
+            return Ok(permission_policy::select(params, PermissionDecision::Allow));
         }
         Ok(permission_policy::response(params, &self.permissions))
     }

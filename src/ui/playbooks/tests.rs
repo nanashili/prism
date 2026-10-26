@@ -309,11 +309,7 @@ fn removing_a_download_checks_ownership_and_preserves_local_libraries() -> Resul
 }
 
 #[test]
-fn old_settings_keep_features_while_new_installations_start_setup() -> Result<()> {
-    let old: Settings = serde_json::from_str("{}")?;
-    assert!(old.research.setup_complete);
-    assert!(old.research.contains(Category::Graphics));
-    assert!(old.research.contains(Category::GameSecurity));
+fn saved_research_preferences_restore_enabled_playbooks() -> Result<()> {
     let mut new = Settings::default();
     assert!(!new.research.setup_complete);
     new.research = Research {

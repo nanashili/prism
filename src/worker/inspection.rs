@@ -20,7 +20,7 @@ impl State {
                 Err(error) => result["selection_error"] = error.to_string().into(),
             },
             None => {
-                result["selection_error"] = "This selection has no native memory address".into()
+                result["selection_error"] = "This selection has no native memory address".into();
             }
         }
         match self.read_view(View::References, address, 0) {

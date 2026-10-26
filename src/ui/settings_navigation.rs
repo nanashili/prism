@@ -1,6 +1,7 @@
 use super::app::Prism;
 use super::{icons::Icon, theme::Palette, widgets};
 use crate::model::Screen;
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Frame};
 
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
@@ -50,7 +51,10 @@ impl SettingsUi {
 }
 
 pub(super) const SETTINGS_GROUPS: &[&[SettingsPage]] = &{
-    use SettingsPage::*;
+    use SettingsPage::{
+        About, Agents, Appearance, Chat, Code, Debugging, Engines, General, Gpu, Keyboard,
+        Permissions, Privacy, Skills, Storage, Workspace,
+    };
     [
         &[General, Workspace, Appearance, Keyboard],
         &[Chat, Agents, Permissions, Privacy, Skills],
@@ -147,7 +151,7 @@ impl SettingsPage {
 impl Prism {
     pub(super) fn settings_navigation(&mut self, ui: &mut egui::Ui) {
         ui.add_space(46.0);
-        if widgets::row(ui, Icon::Back, "Back", false, 30.0).clicked() {
+        if widgets::row(ui, Icon::Back, "Back", Selection::Unselected, 30.0).clicked() {
             self.screen = if self.workspace.project.is_some() {
                 Screen::Workbench
             } else {
@@ -209,7 +213,7 @@ impl Prism {
                             ui,
                             page,
                             title,
-                            self.settings_ui.page == page,
+                            Selection::from(self.settings_ui.page == page),
                         )
                         .clicked()
                         {

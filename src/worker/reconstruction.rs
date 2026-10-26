@@ -1,12 +1,14 @@
 use super::State;
 use crate::error::{Result, failure};
 use crate::events::Event;
+use crate::reconstruction::DatabaseOpen;
 use crate::reconstruction::{self, Database, EvidenceItem};
 use serde_json::{Value, json};
 
 mod evidence;
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn reconstruct(&mut self, name: &str, args: &Value) -> Result<Value> {
         let project = self
             .project
@@ -40,7 +42,7 @@ impl State {
             result.clone()
         } else {
             let root = reconstruction::root(&project, args)?;
-            let database = Database::open(&root, false)?;
+            let database = Database::open(&root, DatabaseOpen::Existing)?;
             let generation = database.generation(args["generation"].as_i64())?;
             database.status(generation)?
         };
@@ -53,6 +55,7 @@ impl State {
         Ok(result)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn reconstruction_evidence(
         &mut self,
         project: &str,
@@ -60,7 +63,7 @@ impl State {
         args: &Value,
     ) -> Result<Value> {
         let root = reconstruction::root(project, args)?;
-        let mut database = Database::open(&root, false)?;
+        let mut database = Database::open(&root, DatabaseOpen::Existing)?;
         database.verify_project(project)?;
         let generation = database.generation(args["generation"].as_i64())?;
         let recorded: String = database.db.query_row(
@@ -94,8 +97,19 @@ impl State {
         }
         let next = offset + u64::try_from(page.items.len())?;
         let more = !database.evidence_units(generation, lease, next)?.is_empty();
+        let addresses: Vec<&str> = page
+            .items
+            .iter()
+            .filter_map(|item| item["address"].as_str())
+            .collect();
+        let types = if addresses.is_empty() {
+            None
+        } else {
+            self.store
+                .recovered_type_context(project, analyzer, &addresses)?
+        };
         Ok(
-            json!({"items":page.items,"offset":offset,"page_size":4,"next_offset":more.then_some(next)}),
+            json!({"items":page.items,"offset":offset,"page_size":4,"next_offset":more.then_some(next),"type_recovery":types}),
         )
     }
 }

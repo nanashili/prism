@@ -2,6 +2,7 @@ use super::catalog::{Entry, Launch};
 use crate::error::{Result, failure};
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
 pub(super) fn supported(entry: &Entry) -> bool {
@@ -13,7 +14,7 @@ pub(super) fn supported(entry: &Entry) -> bool {
 }
 
 pub(crate) fn resolve(entry: &Entry, cancelled: &AtomicBool) -> Result<Launch> {
-    if let Some(local) = native(entry) {
+    if let Some(local) = LocalAgents::discover().resolve(entry) {
         return Ok(local);
     }
     let dist = &entry.distribution;
@@ -47,41 +48,79 @@ pub(crate) fn resolve(entry: &Entry, cancelled: &AtomicBool) -> Result<Launch> {
     })
 }
 
-pub(crate) fn installed(entry: &Entry) -> bool {
-    if native(entry).is_some() {
-        return true;
-    }
-    let own = match entry.id.as_str() {
-        "claude-acp" => "claude",
-        "codex-acp" => "codex",
-        "gemini" => "gemini",
-        "opencode" => "opencode",
-        "goose" => "goose",
-        "aster" => "aster",
-        _ => "",
-    };
-    if !own.is_empty() && std::path::Path::new(&crate::executable_paths::find(own)).is_file() {
-        return true;
-    }
-    let build = &entry.distribution["binary"][super::catalog::platform()];
-    super::install::location(entry, build).is_ok_and(|path| path.is_file())
+pub(crate) struct LocalAgents {
+    paths: Vec<PathBuf>,
 }
 
-fn native(entry: &Entry) -> Option<Launch> {
-    let (command, args): (&str, &[&str]) = match entry.id.as_str() {
-        "claude-acp" => ("claude-agent-acp", &[]),
-        "codex-acp" => ("codex-acp", &[]),
-        "gemini" => ("gemini", &["--experimental-acp"]),
-        "opencode" => ("opencode", &["acp"]),
-        "aster" => ("aster", &["acp"]),
-        _ => return None,
-    };
-    let command = crate::executable_paths::find(command);
-    std::path::Path::new(&command).is_file().then(|| Launch {
-        command,
-        args: args.iter().map(|arg| (*arg).into()).collect(),
-        env: BTreeMap::new(),
-    })
+impl LocalAgents {
+    pub(crate) fn discover() -> Self {
+        Self {
+            paths: crate::executable_paths::search_path(),
+        }
+    }
+
+    pub(crate) fn installed(&self, entry: &Entry) -> bool {
+        if self.resolve(entry).is_some() {
+            return true;
+        }
+        let cli = match entry.id.as_str() {
+            "claude-acp" => "claude",
+            "codex-acp" => "codex",
+            _ => return false,
+        };
+        crate::executable_paths::locate(cli, &self.paths).is_some()
+    }
+
+    fn resolve(&self, entry: &Entry) -> Option<Launch> {
+        let distribution = &entry.distribution;
+        if let Some(command) = distribution["command"].as_str()
+            && let Some(launch) = self.command(command, distribution)
+        {
+            return Some(launch);
+        }
+
+        let package_command = match entry.id.as_str() {
+            "claude-acp" => Some("claude-agent-acp"),
+            "codex-acp" => Some("codex-acp"),
+            "gemini" => Some("gemini"),
+            "github-copilot-cli" => Some("copilot"),
+            _ => None,
+        };
+        if let Some(command) = package_command
+            && distribution["npx"]["package"].is_string()
+            && let Some(launch) = self.command(command, &distribution["npx"])
+        {
+            return Some(launch);
+        }
+
+        self.binary(entry)
+    }
+
+    fn binary(&self, entry: &Entry) -> Option<Launch> {
+        let build = &entry.distribution["binary"][super::catalog::platform()];
+        let command = Path::new(build["cmd"].as_str()?).file_name()?.to_str()?;
+        // Registry variants can share a binary name but require different versions.
+        if matches!(entry.id.as_str(), "cursor" | "opencode" | "goose")
+            && let Some(launch) = self.command(command, build)
+        {
+            return Some(launch);
+        }
+        let cached = super::install::location(entry, build).ok()?;
+        crate::executable_paths::is_executable(&cached).then(|| Launch {
+            command: cached.to_string_lossy().into_owned(),
+            args: strings(&build["args"]),
+            env: environment(&build["env"]),
+        })
+    }
+
+    fn command(&self, name: &str, configuration: &Value) -> Option<Launch> {
+        let command = crate::executable_paths::locate(name, &self.paths)?;
+        Some(Launch {
+            command: command.to_string_lossy().into_owned(),
+            args: strings(&configuration["args"]),
+            env: environment(&configuration["env"]),
+        })
+    }
 }
 
 fn strings(value: &Value) -> Vec<String> {
@@ -116,3 +155,6 @@ pub(crate) fn selected(id: &str, cancelled: &AtomicBool) -> Result<Entry> {
         .find(|entry| entry.id == id)
         .ok_or_else(|| failure("The selected agent is unavailable for this platform"))
 }
+
+#[cfg(all(test, unix))]
+mod tests;

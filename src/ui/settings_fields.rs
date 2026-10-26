@@ -1,30 +1,4 @@
-use eframe::egui::{self, RichText};
-
-fn field(ui: &mut egui::Ui, label: &str, value: &mut String) {
-    ui.label(RichText::new(label).small().weak());
-    ui.add(egui::TextEdit::singleline(value).desired_width(f32::INFINITY));
-}
-
-pub(super) fn agent_settings(ui: &mut egui::Ui, settings: &mut crate::settings::Settings) {
-    let before = (settings.agent.clone(), settings.agent_args.clone());
-    ui.label(RichText::new("Agent").strong());
-    field(ui, "ACP executable", &mut settings.agent);
-    field(
-        ui,
-        "Arguments (quoted arguments supported)",
-        &mut settings.agent_args,
-    );
-    if before != (settings.agent.clone(), settings.agent_args.clone()) {
-        settings.agent_id.clear();
-        settings.agent_name.clear();
-    }
-    ui.label(
-        RichText::new("Use an ACP adapter such as codex-acp. The Codex preset uses npx if no local adapter is found. Sign in through the agent's own CLI.")
-            .small()
-            .weak(),
-    );
-    ui.add_space(16.0);
-}
+use eframe::egui;
 
 pub(super) fn theme_cards(ui: &mut egui::Ui, appearance: &mut String) {
     let p = super::theme::Palette::for_context(ui.ctx());

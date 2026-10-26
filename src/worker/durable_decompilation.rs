@@ -20,6 +20,7 @@ impl State {
         Ok(context)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn durable_decompile_batch(&mut self, args: &Value) -> Result<Value> {
         let action = args["action"]
             .as_str()
@@ -118,12 +119,12 @@ impl State {
     }
 
     pub(super) fn release_decompilation_runner(&mut self, runner: ExportRunner) -> Result<()> {
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         let release = {
             let mut runner = runner;
             self.release_decompilation_batch(&mut runner)
         };
-        #[cfg(not(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra")))]
+        #[cfg(not(feature = "rea-rust-ghidra"))]
         let release: Result<()> = {
             drop(runner);
             Ok(())

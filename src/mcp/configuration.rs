@@ -2,6 +2,8 @@ use super::{Mode, support_dir};
 use serde_json::{Value, json};
 use std::path::Path;
 
+#[must_use]
+/// Builds an agent server configuration using the helper beside the desktop executable.
 pub fn configuration(desktop: &Path, mode: Mode) -> Value {
     let helper = desktop.with_file_name(if cfg!(windows) {
         "prism-mcp.exe"

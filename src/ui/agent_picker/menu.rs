@@ -1,5 +1,6 @@
 use super::providers::{self, Provider};
 use crate::settings::Settings;
+use crate::ui::presentation::{AgentMenuContext, Selection as RowSelection};
 use crate::ui::{agent_catalog::Catalog, agent_logos, popup, state::Chat, theme::Palette};
 use eframe::egui;
 
@@ -15,8 +16,10 @@ pub(super) fn show(
     settings: &Settings,
     chat: &Chat,
     selected: Option<&str>,
-    opening: bool,
+    opening: AgentMenuContext,
 ) -> Option<Selection> {
+    let opening = opening == AgentMenuContext::Opening;
+
     let search = popup::search(ui, &mut catalog.query, "Search models and providers".into());
     if opening {
         search.request_focus();
@@ -80,7 +83,7 @@ fn model_rows(
         } else {
             "Load models…"
         };
-        let picked = popup::row(ui, None, label, provider.name, false).clicked();
+        let picked = popup::row(ui, None, label, provider.name, RowSelection::Unselected).clicked();
         return (1, picked.then(|| selection(provider, None)));
     }
     let provider_matches = provider.title.to_lowercase().contains(query)
@@ -102,7 +105,7 @@ fn model_rows(
             None,
             &model.name,
             if current { "✓" } else { "" },
-            current,
+            RowSelection::from(current),
         );
         if response.on_hover_text(&model.description).clicked() {
             picked = Some(selection(provider, Some(model.value.clone())));

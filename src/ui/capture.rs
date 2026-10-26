@@ -85,7 +85,7 @@ fn save(path: &std::path::Path, image: &egui::ColorImage) -> Result<()> {
     let pixels: Vec<u8> = image
         .pixels
         .iter()
-        .flat_map(|pixel| pixel.to_srgba_unmultiplied())
+        .flat_map(eframe::egui::Color32::to_srgba_unmultiplied)
         .collect();
     crate::storage::atomic::write(path, |file| {
         image::codecs::png::PngEncoder::new(file).write_image(

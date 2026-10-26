@@ -1,5 +1,6 @@
 use super::{shimmer, visible};
 use crate::model::{Activity, Block, Outcome};
+use crate::ui::presentation::ActivityState;
 use crate::ui::{
     message::{
         self, BodyCache,
@@ -34,7 +35,7 @@ impl Page<'_> {
                 let active = self.running && index + 1 == self.activity.blocks.len();
                 let position = self.activity.dropped_blocks.saturating_add(index);
                 ui.push_id(position, |ui| {
-                    step_block(ui, block, self.text, active, style, cache)
+                    step_block(ui, block, self.text, active, style, cache);
                 });
             }
         });
@@ -61,14 +62,13 @@ impl Window {
         let latest = page.visible().count().saturating_sub(32);
         let cursor = ui.data(|data| data.get_temp::<usize>(id));
         let start = cursor
-            .map(|cursor| {
+            .map_or(latest, |cursor| {
                 page.visible()
                     .take_while(|(index, _)| {
                         page.activity.dropped_blocks.saturating_add(*index) < cursor
                     })
                     .count()
             })
-            .unwrap_or(latest)
             .min(latest);
         Self {
             id,
@@ -120,7 +120,9 @@ fn step_block(
         Block::Tool(tool) => tool_step::show(ui, tool, style),
         Block::Thought { text } => {
             style.block(ui, BlockKind::Thinking, |ui| {
-                shimmer::scope(ui, active, |ui| step_text(ui, text, style, cache));
+                shimmer::scope(ui, ActivityState::from(active), |ui| {
+                    step_text(ui, text, style, cache)
+                });
             });
         }
         Block::Text { start, end } => {

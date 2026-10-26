@@ -34,16 +34,18 @@ pub(super) fn get(db: &Connection, digest: &str) -> Result<Vec<u8>> {
         [digest],
         |row| Ok((row.get(0)?, row.get(1)?)),
     )?;
-    if size < 0 || size > FILE_LIMIT as i64 || compressed.len() > FILE_LIMIT + 4096 {
+    let size = usize::try_from(size)
+        .map_err(|error| failure(format!("Invalid reconstruction object size: {error}")))?;
+    if size > FILE_LIMIT || compressed.len() > FILE_LIMIT + 4096 {
         return Err(failure(
             "Stored reconstruction object exceeds its size limit",
         ));
     }
-    let mut bytes = Vec::with_capacity(size as usize);
+    let mut bytes = Vec::with_capacity(size);
     zstd::stream::read::Decoder::new(compressed.as_slice())?
         .take(FILE_LIMIT as u64 + 1)
         .read_to_end(&mut bytes)?;
-    if bytes.len() as i64 != size || self::digest(&bytes) != digest {
+    if bytes.len() != size || self::digest(&bytes) != digest {
         return Err(failure(
             "Stored reconstruction object failed its integrity check",
         ));

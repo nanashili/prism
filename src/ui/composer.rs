@@ -1,4 +1,5 @@
 use super::app::Prism;
+use crate::ui::presentation::Presence;
 mod completion;
 mod input;
 mod layout;
@@ -23,8 +24,8 @@ impl Prism {
         let layout = layout::allocate(
             ui,
             &self.chat.draft,
-            show_context,
-            !self.chat.attachments.is_empty(),
+            Presence::from(show_context),
+            Presence::from(!self.chat.attachments.is_empty()),
         );
         let rect = layout.bounds;
         ui.painter().rect(

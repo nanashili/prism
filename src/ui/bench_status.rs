@@ -1,6 +1,7 @@
 use super::app::Prism;
 use super::{icons::Icon, popup, theme::Palette, widgets};
 use crate::model::View;
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Frame, Stroke};
 
 impl Prism {
@@ -50,12 +51,27 @@ impl Prism {
         popup::menu(&menu, 220.0)
             .align(egui::RectAlign::TOP_END)
             .show(|ui| {
-                if popup::row(ui, Some(Icon::Note), "Notes and names", "", false).clicked() {
+                if popup::row(
+                    ui,
+                    Some(Icon::Note),
+                    "Notes and names",
+                    "",
+                    Selection::Unselected,
+                )
+                .clicked()
+                {
                     self.select_view(View::Notes);
                     ui.close();
                 }
                 if self.pending > 0
-                    && popup::row(ui, Some(Icon::Stop), "Cancel operation", "", false).clicked()
+                    && popup::row(
+                        ui,
+                        Some(Icon::Stop),
+                        "Cancel operation",
+                        "",
+                        Selection::Unselected,
+                    )
+                    .clicked()
                     && let Some(worker) = &self.worker
                 {
                     worker.cancel();

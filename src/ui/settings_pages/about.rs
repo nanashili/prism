@@ -22,9 +22,10 @@ pub(super) fn groups() -> Vec<Group<'static>> {
             settings_file(),
         ]),
         Group::new("Made with", vec![
-            Row::new("REA", "Runs Prism's Ghidra analysis and connects to optional external engines.")
+            Row::new("REA (nanashili/rea-rust)", "Native REA engine used by Prism for Rust Ghidra analysis and optional external engines.")
                 .image(egui::include_image!("../../../resources/upstream/engines/rea.svg"))
-                .button("Website", Command::Open("https://github.com/morluto/rea")),
+                .button("Repository", Command::Open("https://github.com/nanashili/rea-rust"))
+                .button("Install docs", Command::Open("https://github.com/nanashili/rea-rust#install")),
             Row::new("Rizin", "Fast reverse engineering framework.")
                 .image(egui::include_image!("../../../resources/upstream/engines/rizin.svg"))
                 .button("Website", Command::Open("https://rizin.re")),

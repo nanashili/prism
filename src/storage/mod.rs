@@ -7,17 +7,26 @@ pub(crate) use chat_list::StoredChat;
 pub(crate) use decompilation::{DecompilationJob, DecompilationJobSpec};
 mod chat_models;
 pub(crate) use chat_models::ChatModels;
+mod analysis_repair;
 mod database;
 mod database_migrations;
+mod execution;
+pub(crate) mod function_search;
 mod functions;
 pub(crate) use functions::FunctionImport;
 mod history;
+mod investigation;
 mod message_page;
+pub(crate) mod verification;
 pub(crate) use message_page::{MessagePage, MessageWindow};
 pub(crate) mod navigation;
+mod profile_lock;
+pub(crate) use profile_lock::lock_profile;
 mod reconstruction;
 pub(crate) mod resources;
-mod upstream;
+mod type_recovery;
 pub(crate) mod usage;
 
 pub(crate) use database::Store;
+
+pub(crate) use chat_list::{ChatArchive, ChatPin};

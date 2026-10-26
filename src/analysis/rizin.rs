@@ -14,10 +14,15 @@ pub(super) struct Rizin {
 }
 
 impl Rizin {
+    pub fn close(mut self) -> Result<()> {
+        self.rpc.close()
+    }
+
     pub fn is_reusable(&self) -> bool {
         self.rpc.is_reusable()
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn open(settings: &Settings, path: &Path, cancelled: Arc<AtomicBool>) -> Result<Self> {
         let mut command = Command::new(&settings.rizin);
         command
@@ -42,10 +47,12 @@ impl Rizin {
         })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn command(&mut self, command: &str) -> Result<Value> {
         self.rpc.exchange(Some(command), self.timeout)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn analyze(&mut self) -> Result<()> {
         if !self.analyzed {
             self.command("aa")?;

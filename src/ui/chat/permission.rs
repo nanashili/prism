@@ -16,7 +16,7 @@ impl Prism {
             return;
         };
         let choice = show(ui, &permission.request);
-        if let Some(choice) = choice
+        if let PermissionChoice::Submit(choice) = choice
             && let Some(permission) = self.chat.permission.take()
             && permission.answer.send(choice).is_err()
         {
@@ -25,7 +25,12 @@ impl Prism {
     }
 }
 
-fn show(ui: &mut egui::Ui, request: &Approval) -> Option<Option<String>> {
+enum PermissionChoice {
+    Pending,
+    Submit(Option<String>),
+}
+
+fn show(ui: &mut egui::Ui, request: &Approval) -> PermissionChoice {
     let p = Palette::for_context(ui.ctx());
     Frame::NONE
         .fill(p.raised)
@@ -67,9 +72,9 @@ fn show(ui: &mut egui::Ui, request: &Approval) -> Option<Option<String>> {
         .inner
 }
 
-fn choices(ui: &mut egui::Ui, request: &Approval) -> Option<Option<String>> {
+fn choices(ui: &mut egui::Ui, request: &Approval) -> PermissionChoice {
     let p = Palette::for_context(ui.ctx());
-    let mut answer = None;
+    let mut answer = PermissionChoice::Pending;
     ui.horizontal_wrapped(|ui| {
         let first_allow = request.options.iter().position(|option| option.allows);
         for (index, choice) in request.options.iter().enumerate() {
@@ -89,11 +94,11 @@ fn choices(ui: &mut egui::Ui, request: &Approval) -> Option<Option<String>> {
                 .on_hover_text(&choice.label)
                 .clicked()
             {
-                answer = Some(Some(choice.id.clone()));
+                answer = PermissionChoice::Submit(Some(choice.id.clone()));
             }
         }
         if ui.button("Skip").clicked() {
-            answer = Some(
+            answer = PermissionChoice::Submit(
                 request
                     .options
                     .iter()

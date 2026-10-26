@@ -5,10 +5,11 @@ use std::io::Read;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn strings(path: &Path, cancelled: &AtomicBool) -> Result<String> {
     use std::fmt::Write;
     let mut file = File::open(path)?;
-    let mut buffer = [0u8; 64 * 1024];
+    let mut buffer = vec![0u8; 64 * 1024];
     let mut found = String::new();
     let mut current = String::new();
     let mut offset = 0u64;
@@ -69,7 +70,7 @@ pub(crate) fn model(path: &Path) -> Result<String> {
                 "The tensor metadata exceeds the 1 MiB display limit",
             ));
         }
-        let data = files::bytes(path, 8, length as usize)?;
+        let data = files::bytes(path, 8, usize::try_from(length)?)?;
         let metadata: serde_json::Value = serde_json::from_slice(&data)?;
         return Ok(serde_json::to_string_pretty(&metadata)?);
     }
@@ -79,13 +80,16 @@ pub(crate) fn model(path: &Path) -> Result<String> {
     ))
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn resource_list(path: &Path, cancelled: &AtomicBool) -> Result<String> {
     let root = path
         .parent()
         .and_then(Path::parent)
         .filter(|root| root.file_name().is_some_and(|name| name == "Contents"))
-        .map(|root| root.join("Resources"))
-        .unwrap_or_else(|| path.parent().unwrap_or(path).to_path_buf());
+        .map_or_else(
+            || path.parent().unwrap_or(path).to_path_buf(),
+            |root| root.join("Resources"),
+        );
     let mut pending = vec![root.clone()];
     let mut result = String::new();
     let mut count = 0;

@@ -20,6 +20,7 @@ pub(super) struct Permit {
 }
 
 impl Admission {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn acquire(&self, class: CallClass, bytes: usize) -> Result<Permit> {
         let mut classes = self
             .usage

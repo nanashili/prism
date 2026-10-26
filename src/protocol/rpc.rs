@@ -2,17 +2,15 @@ use super::{Framing, process};
 use crate::error::{Result, failure};
 use serde_json::{Value, json};
 use std::io::BufReader;
-use std::process::{Child, ChildStdin, Command};
+use std::process::{ChildStdin, Command};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, mpsc};
-use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 pub(crate) struct Rpc {
-    child: Child,
+    process: process::Managed,
     input: ChildStdin,
     incoming: Option<mpsc::Receiver<Result<Value>>>,
-    readers: Vec<JoinHandle<()>>,
     framing: Framing,
     next: u64,
     memory_limit: Option<u64>,
@@ -27,37 +25,41 @@ impl Rpc {
         framing: Framing,
         cancelled: Arc<AtomicBool>,
     ) -> Result<Self> {
-        process::prepare(command);
-        let mut child = command.spawn()?;
+        let mut process = process::Managed::spawn(command)?;
+        let child = process.child()?;
         let input = child.stdin.take().ok_or("Missing server input")?;
         let output = child.stdout.take().ok_or("Missing server output")?;
         let diagnostics = child.stderr.take().ok_or("Missing server diagnostics")?;
         let (sender, incoming) = mpsc::sync_channel(16);
-        let reader = std::thread::spawn(move || {
-            let mut output = BufReader::new(output);
-            loop {
-                let message = match framing.read(&mut output) {
-                    Ok(Some(value)) => Ok(value),
-                    Ok(None) => break,
-                    Err(error) => Err(error),
-                };
-                let failed = message.is_err();
-                if sender.send(message).is_err() || failed {
-                    break;
+        let reader = std::thread::Builder::new()
+            .name("prism-rpc-output".into())
+            .spawn(move || {
+                let mut output = BufReader::new(output);
+                loop {
+                    let message = match framing.read(&mut output) {
+                        Ok(Some(value)) => Ok(value),
+                        Ok(None) => break,
+                        Err(error) => Err(error),
+                    };
+                    let failed = message.is_err();
+                    if sender.send(message).is_err() || failed {
+                        break;
+                    }
                 }
-            }
-        });
-        let errors =
-            std::thread::spawn(move || match process::read_capped(diagnostics, 16 * 1024) {
+            })?;
+        process.track_reader(reader);
+        let errors = std::thread::Builder::new()
+            .name("prism-rpc-diagnostics".into())
+            .spawn(move || match process::read_capped(diagnostics, 16 * 1024) {
                 Ok(text) if !text.trim().is_empty() => eprintln!("server: {text}"),
                 Err(error) => eprintln!("Cannot read server diagnostics: {error}"),
                 _ => {}
-            });
+            })?;
+        process.track_reader(errors);
         Ok(Self {
-            child,
+            process,
             input,
             incoming: Some(incoming),
-            readers: vec![reader, errors],
             framing,
             next: 0,
             memory_limit: None,
@@ -67,10 +69,16 @@ impl Rpc {
         })
     }
 
+    pub fn close(&mut self) -> Result<()> {
+        self.incoming.take();
+        self.process.close()
+    }
+
     pub fn notify(&mut self, method: &str, params: Value) -> Result<()> {
         self.send(&json!({"jsonrpc":"2.0","method":method,"params":params}))
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn send(&mut self, message: &Value) -> Result<()> {
         let result = self.framing.write(&mut self.input, message);
         if result.is_err() {
@@ -90,6 +98,7 @@ impl Rpc {
         self.wait(id, method, timeout, event)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn begin_call(&mut self, method: &str, params: Value) -> Result<u64> {
         if !self.synchronized {
             return Err(failure("The server connection needs to be reopened"));
@@ -104,7 +113,10 @@ impl Rpc {
     }
 
     pub fn begin(&mut self, method: &str, params: Value) -> Result<u64> {
-        self.next += 1;
+        self.next = self
+            .next
+            .checked_add(1)
+            .ok_or("The server request ID space is exhausted")?;
         let id = self.next;
         let payload = match self.framing {
             Framing::Zero => return Err(failure("Use the native command exchange for Rizin")),
@@ -121,7 +133,8 @@ impl Rpc {
 
     pub(super) fn check_memory(&self) -> Result<()> {
         if let Some(limit) = self.memory_limit
-            && let Some(bytes) = super::memory::resident(self.child.id())?
+            && let Some(id) = self.process.id()
+            && let Some(bytes) = super::memory::resident(id)?
             && bytes > limit
         {
             return Err(failure(format!(
@@ -156,6 +169,7 @@ impl Rpc {
         }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn poll(&self, timeout: Duration) -> Result<Option<Value>> {
         let incoming = self.incoming.as_ref().ok_or("The server is closed")?;
         match incoming.recv_timeout(timeout) {
@@ -174,14 +188,8 @@ impl Rpc {
 
 impl Drop for Rpc {
     fn drop(&mut self) {
+        // Closing the receiver releases a reader waiting to deliver its last
+        // response; Managed transfers process waiting to the cleanup worker.
         self.incoming.take();
-        if let Err(error) = process::terminate(&mut self.child) {
-            eprintln!("Failed to stop server process {}: {error}", self.child.id());
-        }
-        for reader in self.readers.drain(..) {
-            if reader.join().is_err() {
-                eprintln!("A server output reader failed during shutdown");
-            }
-        }
     }
 }

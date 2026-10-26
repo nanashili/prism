@@ -1,11 +1,12 @@
 use super::app::Prism;
 use crate::model::{Screen, View};
+use crate::ui::presentation::{HistoryDirection, OpenTarget, SaveDestination};
 
 impl Prism {
     pub(super) fn run_shortcut(&mut self, id: &str) {
         match id {
-            "open" => self.choose_open(false),
-            "save" => self.save_document(false),
+            "open" => self.choose_open(OpenTarget::File),
+            "save" => self.save_document(SaveDestination::Current),
             "thread" => self.new_chat(),
             "palette" => self.palette = !self.palette,
             "settings" => self.screen = Screen::Settings,
@@ -16,7 +17,7 @@ impl Prism {
                 }
             }
             _ if self.screen == Screen::Workbench && self.workspace.project.is_some() => {
-                self.workbench_shortcut(id)
+                self.workbench_shortcut(id);
             }
             _ => {}
         }
@@ -25,8 +26,8 @@ impl Prism {
     fn workbench_shortcut(&mut self, id: &str) {
         match id {
             "undo" => self.undo_edit(),
-            "back" => self.navigate_history(false),
-            "forward" => self.navigate_history(true),
+            "back" => self.navigate_history(HistoryDirection::Backward),
+            "forward" => self.navigate_history(HistoryDirection::Forward),
             "rename" | "comment" => self.select_view(View::Notes),
             "xrefs" => self.select_view(View::References),
             "graph" => self.select_view(View::Graph),

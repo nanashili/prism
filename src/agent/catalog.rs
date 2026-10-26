@@ -97,8 +97,19 @@ pub(crate) fn fallback() -> Vec<Entry> {
         (
             "gemini",
             "Gemini",
-            json!({"command":"gemini", "args":["--experimental-acp"]}),
+            json!({"npx":{"package":"@google/gemini-cli", "args":["--acp"]}}),
         ),
+        (
+            "github-copilot-cli",
+            "GitHub Copilot",
+            json!({"npx":{"package":"@github/copilot", "args":["--acp"]}}),
+        ),
+        (
+            "cursor",
+            "Cursor",
+            json!({"command":"cursor-agent", "args":["acp"]}),
+        ),
+        ("goose", "Goose", json!({"command":"goose", "args":["acp"]})),
         (
             "opencode",
             "OpenCode",

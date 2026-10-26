@@ -30,7 +30,26 @@ pub(crate) struct Usage {
 
 impl Usage {
     pub fn total(&self) -> u64 {
-        self.bytes.iter().sum()
+        self.bytes
+            .iter()
+            .fold(0, |total, current| total.saturating_add(*current))
+    }
+
+    fn add_file_bytes(&mut self, category: usize, bytes: u64) -> io::Result<()> {
+        let category_total = self.bytes[category]
+            .checked_add(bytes)
+            .ok_or_else(|| io::Error::other("File sizes exceed the supported range"))?;
+        let total = self
+            .bytes
+            .iter()
+            .try_fold(0u64, |total, current| total.checked_add(*current))
+            .and_then(|total| total.checked_add(bytes))
+            .ok_or_else(|| io::Error::other("File sizes exceed the supported range"))?;
+
+        self.bytes[category] = category_total;
+
+        debug_assert_eq!(self.total(), total);
+        Ok(())
     }
 
     fn issue(&mut self, message: impl Into<String>) {
@@ -41,6 +60,7 @@ impl Usage {
 }
 
 /// Measures logical file sizes without reading contents or following symbolic links.
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn measure(root: &Path, cancelled: &AtomicBool) -> io::Result<Usage> {
     let mut folders = vec![(fs::read_dir(root)?, None)];
     let mut usage = Usage::default();
@@ -95,11 +115,7 @@ fn count_entry(
             let metadata = entry.metadata()?;
             if metadata.is_file() {
                 let bytes = metadata.len();
-                usage
-                    .total()
-                    .checked_add(bytes)
-                    .ok_or_else(|| io::Error::other("File sizes exceed the supported range"))?;
-                usage.bytes[category] += bytes;
+                usage.add_file_bytes(category, bytes)?;
             }
         } else if kind.is_dir() {
             if folders.len() >= 64 {
@@ -151,5 +167,34 @@ pub(crate) fn format_bytes(bytes: u64) -> String {
         format!("{bytes} B")
     } else {
         format!("{value:.1} {unit}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn adding_file_bytes_is_atomic_when_the_total_would_overflow() {
+        let mut usage = Usage {
+            bytes: [u64::MAX, 0, 0, 0, 0, 0],
+            incomplete: None,
+        };
+
+        let result = usage.add_file_bytes(0, 1);
+
+        assert!(result.is_err());
+        assert_eq!(usage.bytes[0], u64::MAX);
+
+        let mut usage = Usage {
+            bytes: [u64::MAX, 0, 0, 0, 0, 0],
+            incomplete: None,
+        };
+
+        let result = usage.add_file_bytes(1, 1);
+
+        assert!(result.is_err());
+        assert_eq!(usage.bytes[0], u64::MAX);
+        assert_eq!(usage.bytes[1], 0);
     }
 }

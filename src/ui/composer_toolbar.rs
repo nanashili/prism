@@ -6,6 +6,9 @@ pub(super) const HEIGHT: f32 = 30.0;
 
 impl Prism {
     pub(super) fn composer_controls(&mut self, ui: &mut egui::Ui) -> bool {
+        if self.screen == crate::model::Screen::Setup {
+            return self.setup_composer_controls(ui);
+        }
         let clicked = self.composer_toolbar_row(ui);
 
         if clicked

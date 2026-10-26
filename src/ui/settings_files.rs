@@ -17,8 +17,32 @@ impl Prism {
             if !path.exists() {
                 return Err("The selected path no longer exists".into());
             }
-            *key.value(&mut self.settings) = path.to_string_lossy().into_owned();
+            self.apply_settings_path(key, &path)?;
         }
+        Ok(())
+    }
+
+    fn apply_settings_path(&mut self, key: Path, path: &FilePath) -> Result<()> {
+        let mut selected = self.settings.clone();
+        *key.value(&mut selected) = path.to_string_lossy().into_owned();
+
+        match key {
+            Path::Rea => {
+                selected.tools.rust_ghidra_worker.clear();
+                #[cfg(feature = "rea-rust-ghidra")]
+                {
+                    selected.provider = "ghidra-rust-rea".into();
+                }
+                crate::analysis::Rea::validate_installation(&selected)?;
+            }
+            #[cfg(feature = "rea-rust-ghidra")]
+            Path::RustGhidraWorker => {
+                crate::analysis::Rea::validate_installation(&selected)?;
+            }
+            _ => {}
+        }
+
+        self.settings = selected;
         Ok(())
     }
 
@@ -28,13 +52,16 @@ impl Prism {
         let (command, arguments) = words
             .split_first()
             .ok_or("Enter an ACP agent command first")?;
+        if command.trim().is_empty() {
+            return Err("Enter an agent executable before its arguments".into());
+        }
+        let arguments = shlex::try_join(arguments.iter().map(String::as_str))?;
+        self.disconnect_chat_agent()?;
+
         self.settings.agent = command.clone();
-        self.settings.agent_args = shlex::try_join(arguments.iter().map(String::as_str))?;
+        self.settings.agent_args = arguments;
         self.settings.agent_id.clear();
         self.settings.agent_name.clear();
-        self.chat.options = serde_json::Value::Null;
-        self.chat.picks.clear();
-        self.chat.composer_revision += 1;
         Ok(())
     }
 

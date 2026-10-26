@@ -1,4 +1,5 @@
 use super::{card, state::Center};
+use crate::ui::presentation::{ChatNavigation, NoticeContext};
 use crate::ui::{icons::Icon, popup, theme::Palette, widgets};
 use eframe::egui::{self, Align2, FontId, Rect, Sense, Stroke};
 
@@ -79,7 +80,12 @@ impl Center {
             .show(ui, |ui| {
                 for entry in self.entries.iter_mut().filter(|entry| entry.toast).take(3) {
                     ui.push_id(entry.id, |ui| {
-                        if card::show(ui, entry, entry.chat.is_some(), false) {
+                        if card::show(
+                            ui,
+                            entry,
+                            ChatNavigation::from(entry.chat.is_some()),
+                            NoticeContext::Toast,
+                        ) {
                             open_chat = entry.chat;
                         }
                     });
@@ -132,7 +138,12 @@ impl Center {
                 .show(ui, |ui| {
                     for entry in &mut self.entries {
                         ui.push_id((entry.id, "history"), |ui| {
-                            if card::show(ui, entry, entry.chat.is_some(), true) {
+                            if card::show(
+                                ui,
+                                entry,
+                                ChatNavigation::from(entry.chat.is_some()),
+                                NoticeContext::History,
+                            ) {
                                 open_chat = entry.chat;
                             }
                         });

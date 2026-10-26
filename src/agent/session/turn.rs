@@ -1,4 +1,5 @@
 use super::{Session, control};
+use crate::agent::ImageSupport;
 use crate::agent::Prompt;
 use crate::error::{Result, failure};
 use crate::events::Sink;
@@ -10,6 +11,7 @@ use std::sync::{
 use std::time::{Duration, Instant};
 
 impl Session {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn prompt(
         &mut self,
         prompt: &Prompt,
@@ -30,7 +32,8 @@ impl Session {
         cancelled: &AtomicBool,
         controls: &Receiver<control::Control>,
     ) -> Result<()> {
-        let content = crate::agent::prompt_content::build(prompt, history, self.images)?;
+        let content =
+            crate::agent::prompt_content::build(prompt, history, ImageSupport::from(self.images))?;
         if cancelled.load(Ordering::Relaxed) {
             return Err(failure("Cancelled"));
         }

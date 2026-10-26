@@ -20,13 +20,17 @@ pub(super) fn session(prompt: &Prompt) -> Value {
     if !selected(prompt) {
         return json!({"cwd":prompt.cwd,"mcpServers":prompt.servers});
     }
-    let instructions = format!(
-        "{}\n\nPrevious conversation:\n{}",
-        prompt.context, prompt.history,
-    );
+    let instructions = custom_instructions(prompt);
     json!({"cwd":prompt.cwd,"mcpServers":[],"_meta":{"jetbrains":{"air":{
         "version":1,"customInstructions":instructions
     }}}})
+}
+
+fn custom_instructions(prompt: &Prompt) -> String {
+    format!(
+        "{}\n{}\n\nPrevious conversation:\n{}",
+        prompt.context.static_instructions, prompt.context.dynamic_context, prompt.history,
+    )
 }
 
 /// Preserve Codex's configured servers while supplying Prism's native timeouts.
@@ -85,4 +89,45 @@ fn server_config(server: &Value, timeout: u64) -> Result<Value> {
         config["tool_timeout_sec"] = timeout.saturating_add(60).into();
     }
     Ok(config)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::session;
+    use crate::agent::{Prompt, PromptContext};
+    use crate::settings::Settings;
+    use std::path::PathBuf;
+
+    #[test]
+    fn session_new_delivers_static_and_dynamic_context_once() {
+        let settings = Settings {
+            agent: "codex-acp".into(),
+            ..Settings::default()
+        };
+        let prompt = Prompt {
+            chat: 1,
+            project: None,
+            file: None,
+            text: "question".into(),
+            attachments: Vec::new(),
+            context: PromptContext {
+                static_instructions: "static".into(),
+                dynamic_context: "dynamic".into(),
+            },
+            history: "history".into(),
+            cwd: PathBuf::new(),
+            settings,
+            servers: Vec::new(),
+            picks: Vec::new(),
+        };
+
+        let params = session(&prompt);
+        let instructions = params["_meta"]["jetbrains"]["air"]["customInstructions"]
+            .as_str()
+            .expect("Codex session parameters include custom instructions");
+
+        assert_eq!(instructions.matches("static").count(), 1);
+        assert_eq!(instructions.matches("dynamic").count(), 1);
+        assert_eq!(instructions.matches("history").count(), 1);
+    }
 }

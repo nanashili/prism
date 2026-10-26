@@ -1,12 +1,13 @@
 use crate::model::AgentUpdate;
 use crate::ui::app::Prism;
 use crate::ui::notifications::Level;
+use crate::ui::presentation::SessionAge;
 
 impl Prism {
     pub(in crate::ui) fn receive_agent_update(&mut self, update: AgentUpdate) {
         match update {
             AgentUpdate::OptionRejected { id, value, reason } => {
-                self.reject_option(&id, &value, &reason)
+                self.reject_option(&id, &value, &reason);
             }
             AgentUpdate::Commands(commands) => self.chat.commands = commands,
             AgentUpdate::SessionClosed => self.chat.connected = false,
@@ -37,7 +38,7 @@ impl Prism {
                 menu.id.clone()
             },
             value,
-            legacy: menu.legacy,
+            modes_api: menu.modes_api,
         };
         self.apply_agent_pick(pick);
     }
@@ -82,7 +83,7 @@ impl Prism {
             self.agent_catalog.models_revision += 1;
         }
         let menus = crate::agent::options::menus(&self.chat.options);
-        if let Err(error) = self.remember_confirmed_model(&menus, new_session) {
+        if let Err(error) = self.remember_confirmed_model(&menus, SessionAge::from(new_session)) {
             self.report_error(error);
         }
         self.chat.picks.retain(|pick| {

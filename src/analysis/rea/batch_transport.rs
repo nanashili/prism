@@ -41,6 +41,7 @@ impl Rea {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn begin_tool(&mut self, name: &str, arguments: Value) -> Result<PendingCall> {
         let id = self
             .rpc
@@ -51,6 +52,7 @@ impl Rea {
         })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn poll_call(&mut self, call: &PendingCall) -> Result<Option<Value>> {
         if self.rpc.is_cancelled() {
             return Err(failure("Cancelled"));

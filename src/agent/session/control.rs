@@ -103,7 +103,7 @@ impl Session {
         match crate::protocol::response_result(message.take()) {
             Ok(mut response) => {
                 if let Control::Option(pick) = pending.control {
-                    if pick.legacy {
+                    if pick.modes_api {
                         response = json!({"modes":{"currentModeId":pick.value}});
                     }
                     self.updates.publish_options(response, sink)?;
@@ -128,7 +128,7 @@ impl Session {
 }
 
 pub(super) fn option_request(id: &str, pick: &Pick) -> (&'static str, Value) {
-    if pick.legacy {
+    if pick.modes_api {
         (
             "session/set_mode",
             json!({"sessionId":id,"modeId":pick.value}),

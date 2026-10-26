@@ -105,7 +105,7 @@ fn plain_text_error(blocks: Option<&[Value]>) -> bool {
     })
 }
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 pub(super) fn normalized(mut value: Value) -> Value {
     match value.get_mut("normalized_result") {
         Some(result) => result.take(),

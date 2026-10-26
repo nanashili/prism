@@ -3,7 +3,7 @@ use crate::storage::Store;
 use rusqlite::{Connection, OptionalExtension, params};
 use sha2::{Digest, Sha256};
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod window;
 
 impl Store {

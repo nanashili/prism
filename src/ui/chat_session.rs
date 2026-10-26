@@ -1,4 +1,5 @@
 use super::app::{Chat, Prism};
+use crate::ui::presentation::{ChatOrigin, TurnEnd};
 
 impl Prism {
     pub(super) fn append_agent_text(&mut self, text: String) {
@@ -25,7 +26,9 @@ impl Prism {
             }
         }
     }
-    pub(super) fn finish_agent(&mut self, result: crate::error::Result<()>, stopped: bool) {
+    pub(super) fn finish_agent(&mut self, result: crate::error::Result<()>, stopped: TurnEnd) {
+        let stopped = stopped == TurnEnd::Stopped;
+
         use crate::model::Outcome;
         self.chat.busy = false;
         self.chat.permission = None;
@@ -77,8 +80,10 @@ impl Prism {
     pub(super) fn restore_document_chat(
         &mut self,
         project: &crate::model::Project,
-        document: bool,
+        document: ChatOrigin,
     ) {
+        let document = document == ChatOrigin::Document;
+
         if let Some(id) = self.chat.id {
             match self.store.chat_project(id) {
                 Ok(Some(key)) if key == project.target.sha256 => return,
@@ -111,7 +116,7 @@ impl Prism {
                     self.chat.trim_history();
                 }
                 Err(error) => {
-                    self.error = Some(format!("Saved chat could not be restored: {error}"))
+                    self.error = Some(format!("Saved chat could not be restored: {error}"));
                 }
             }
         }
@@ -135,43 +140,54 @@ impl Prism {
         Ok(())
     }
 
-    pub(super) fn prompt_context(&self) -> String {
-        let mut text = String::from("You are working in Prism, a reverse engineering workbench.\n");
-        text.push_str("Use the prism MCP server to control this window and prism-analysis for decompile_batch and other analysis. Discover the selected engine's evidence methods with analysis_tools, then use analysis_call with the advertised schema. Reconstruction tools are on prism. Do not assume other analysis servers are available.\n");
-        text.push_str(prism::mcp::BATCH_INSTRUCTIONS);
-        text.push('\n');
-        text.push_str(prism::mcp::RESPONSE_INSTRUCTIONS);
-        text.push('\n');
-        if self.settings.conversation.prism_tools {
-            text.push_str("When you need a choice, clarification or other user input, call request_user_input on prism. Provide concise options or omit them for a free-text question. Wait for its response; skipped or dismissed means no answer and never approval.\n");
+    pub(super) fn prompt_context(&self) -> crate::agent::PromptContext {
+        let mut static_instructions =
+            String::from("You are working in Prism, a reverse engineering workbench.\n");
+        static_instructions.push_str("Use the prism MCP server to control this window and prism-analysis for decompile_batch and other analysis. For unfamiliar analysis calls, first request a compact summary with analysis_tools, then request detail=full with names:[...] before invoking analysis_call with the advertised schema. Reconstruction tools are on prism. Do not assume other analysis servers are available.\n");
+        static_instructions.push_str(prism::mcp::BATCH_INSTRUCTIONS);
+        static_instructions.push('\n');
+        static_instructions.push_str(prism::mcp::INVESTIGATION_INSTRUCTIONS);
+        static_instructions.push('\n');
+        static_instructions.push_str(prism::mcp::RESPONSE_INSTRUCTIONS);
+        static_instructions.push('\n');
+
+        let mut dynamic_context = String::new();
+        if let Some(graph) = &self.investigation.graph {
+            dynamic_context.push_str(&format!("Saved Prism investigation: {}. Read its status to recover the graph before continuing its objective.\n", graph.id));
         }
-        text.push_str("Selected analysis provider: ");
-        text.push_str(&self.settings.provider);
-        text.push('\n');
+        if self.settings.conversation.prism_tools {
+            dynamic_context.push_str("When you need a choice, clarification or other user input, call request_user_input on prism. Provide concise options or omit them for a free-text question. Wait for its response; skipped or dismissed means no answer and never approval.\n");
+        }
+        dynamic_context.push_str("Selected analysis provider: ");
+        dynamic_context.push_str(&self.settings.provider);
+        dynamic_context.push('\n');
         if let Some(project) = &self.workspace.project {
-            text.push_str(&format!(
+            dynamic_context.push_str(&format!(
                 "Opened file: {}\nSHA-256: {}\nSelected function: {}\n",
                 project.target.path.display(),
                 project.target.sha256,
                 self.workspace.selected
             ));
             if let Some(name) = project.renamed.get(&self.workspace.selected) {
-                text.push_str("Local function name: ");
-                text.push_str(name);
-                text.push('\n');
+                dynamic_context.push_str("Local function name: ");
+                dynamic_context.push_str(name);
+                dynamic_context.push('\n');
             }
             if let Some(note) = project.notes.get(&self.workspace.selected) {
-                text.push_str("Function note:\n");
-                text.extend(note.chars().take(4000));
-                text.push('\n');
+                dynamic_context.push_str("Function note:\n");
+                dynamic_context.extend(note.chars().take(4000));
+                dynamic_context.push('\n');
             }
         }
         if !self.workspace.text.is_empty() {
-            text.push_str("Visible code or data:\n");
-            text.extend(self.workspace.text.chars().take(16_000));
-            text.push('\n');
+            dynamic_context.push_str("Visible code or data:\n");
+            dynamic_context.extend(self.workspace.text.chars().take(16_000));
+            dynamic_context.push('\n');
         }
-        text
+        crate::agent::PromptContext {
+            static_instructions,
+            dynamic_context,
+        }
     }
 
     pub(super) fn prompt_history(&self) -> String {

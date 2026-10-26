@@ -1,3 +1,5 @@
+//! Embeds the desktop resources required by the Windows application bundle.
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=resources/windows/prism.rc");

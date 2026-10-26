@@ -2,6 +2,7 @@ use super::app::Prism;
 use super::{icons::Icon, popup, settings_navigation::SettingsPage, theme::Palette, widgets};
 use crate::model::Screen;
 use crate::settings::permissions::Level;
+use crate::ui::presentation::{Border, Caret, Selection};
 use eframe::egui::{self, Align2, FontId, Rect, Sense};
 
 impl Prism {
@@ -10,7 +11,8 @@ impl Prism {
         let (word, description) = run_code(level);
         let response = ui
             .add_enabled_ui(!self.chat.busy, |ui| {
-                widgets::chip(ui, Some(Icon::Ask), word, false, true).on_hover_text(description)
+                widgets::chip(ui, Some(Icon::Ask), word, Border::Hidden, Caret::Visible)
+                    .on_hover_text(description)
             })
             .inner;
         popup::menu(&response, 240.0)
@@ -26,7 +28,15 @@ impl Prism {
                     }
                 }
                 ui.add_space(4.0);
-                if popup::row_with_height(ui, None, "All permissions…", "", false, 32.0).clicked()
+                if popup::row_with_height(
+                    ui,
+                    None,
+                    "All permissions…",
+                    "",
+                    Selection::Unselected,
+                    32.0,
+                )
+                .clicked()
                 {
                     self.settings_ui.select(SettingsPage::Permissions);
                     self.screen = Screen::Settings;

@@ -1,8 +1,10 @@
 use super::{Configuration, database::Database};
 use crate::error::Result;
+use crate::reconstruction::{DatabaseOpen, GenerationStart};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn call(
     store: &crate::storage::Store,
     project: &str,
@@ -11,7 +13,7 @@ pub(crate) fn call(
     args: &Value,
 ) -> Result<Value> {
     let root = root(project, args)?;
-    let mut database = Database::open(&root, name == "reconstruction_start")?;
+    let mut database = Database::open(&root, DatabaseOpen::from(name == "reconstruction_start"))?;
     database.verify_project(project)?;
     if name == "reconstruction_start" {
         let config = Configuration {
@@ -29,7 +31,7 @@ pub(crate) fn call(
             store,
             project,
             &config,
-            args["new_generation"].as_bool().unwrap_or(false),
+            GenerationStart::from(args["new_generation"].as_bool().unwrap_or(false)),
         )?;
         remember(project, &database.root)?;
         return database.status(generation);

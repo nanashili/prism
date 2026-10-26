@@ -9,7 +9,7 @@ pub(super) fn definition() -> Value {
                 "Always use this batch command for decompilation. Select only addresses already in the saved analysis using list_functions. ",
                 "Unknown addresses fail; this command never discovers functions. Do not run analyze or discover_functions to expand a decompilation request. ",
                 "Prefer action=start with addresses for a focused selection, or filter/all inventory for a module or project. This freezes the saved selection and runs a durable background job. ",
-                "Ghidra (Java through REA) and Ghidra (Rust through REA) require this durable path, including one-item selections; they reuse a session prepared by explicitly opening the project. Other engines also support legacy procedures (1–64 addresses) with next_offset. ",
+                "Ghidra (Rust through REA) requires this durable path, including one-item selections; it reuses a session prepared by explicitly opening the project. Other engines also support procedures (1–64 addresses) with next_offset. ",
                 "An explicit durable selection accepts 1 to {durable_address_limit} indexed addresses within the 8 MiB request limit. ",
                 "Prefer filter or omit addresses/filter for a whole project or larger selection. Keep the returned job id. ",
                 "Use list after restart, then status, resume, results, pause or cancel. ",

@@ -1,3 +1,4 @@
+use crate::ui::presentation::TypingState;
 use eframe::egui::{self, Key, Modifiers};
 
 pub(super) fn parse(combo: &str) -> Option<(Modifiers, Key)> {
@@ -113,7 +114,9 @@ pub(super) fn caps(combo: &str) -> Vec<String> {
     caps
 }
 
-pub(super) fn pressed(context: &egui::Context, combo: &str, typing: bool) -> bool {
+pub(super) fn pressed(context: &egui::Context, combo: &str, typing: TypingState) -> bool {
+    let typing = typing == TypingState::Typing;
+
     let Some((modifiers, key)) = parse(combo) else {
         return false;
     };

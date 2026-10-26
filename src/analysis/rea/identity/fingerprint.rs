@@ -6,7 +6,10 @@ use std::io::Read;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
-pub(super) fn fingerprint(path: &Path, include_digest: bool) -> Result<Value> {
+#[cfg_attr(feature = "profiling", hotpath::measure)]
+pub(super) fn fingerprint(path: &Path, include_digest: FingerprintDetail) -> Result<Value> {
+    let include_digest = include_digest == FingerprintDetail::Digest;
+
     let path = path.canonicalize()?;
     let metadata = path.metadata()?;
     let modified = metadata
@@ -30,4 +33,16 @@ pub(super) fn fingerprint(path: &Path, include_digest: bool) -> Result<Value> {
         None
     };
     Ok(json!({"path":path,"size":metadata.len(),"modified_ns":modified,"sha256":digest}))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FingerprintDetail {
+    Digest,
+    Metadata,
+}
+
+impl From<bool> for FingerprintDetail {
+    fn from(value: bool) -> Self {
+        if value { Self::Digest } else { Self::Metadata }
+    }
 }

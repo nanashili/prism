@@ -12,13 +12,15 @@ pub(crate) mod skill_library;
 mod tools;
 mod views;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) use analysis_backend::AnalysisBackend;
 pub(crate) use tools::Tools;
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub(crate) struct Settings {
-    #[serde(default = "research::Research::legacy")]
     pub research: research::Research,
     pub desktop: desktop::Desktop,
     pub conversation: conversation::Conversation,
@@ -69,8 +71,7 @@ impl Default for Settings {
             transparency: if cfg!(target_os = "linux") { 0.0 } else { 30.0 },
             ui_scale: 1.0,
             provider: AnalysisBackend::default_provider().into(),
-            rea: std::env::var("PRISM_REA")
-                .unwrap_or_else(|_| crate::executable_paths::find("rea")),
+            rea: std::env::var("PRISM_REA").unwrap_or_else(|_| "rea".into()),
             rizin: std::env::var("REA_RIZIN_COMMAND")
                 .unwrap_or_else(|_| crate::executable_paths::find("rizin")),
             agent,
@@ -104,19 +105,12 @@ impl Settings {
         let path = support_dir().join("settings.json");
         match std::fs::read(path) {
             Ok(bytes) => {
-                let mut settings: Self = serde_json::from_slice(&bytes)?;
-                settings.migrate_legacy_values();
+                let settings: Self = serde_json::from_slice(&bytes)?;
                 settings.validate()?;
                 Ok(settings)
             }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Self::default()),
             Err(error) => Err(error.into()),
-        }
-    }
-
-    fn migrate_legacy_values(&mut self) {
-        if self.provider == "ghidra" {
-            self.provider = AnalysisBackend::default_provider().into();
         }
     }
 
@@ -130,10 +124,10 @@ impl Settings {
 
     pub fn same_analysis_backend(&self, other: &Self) -> bool {
         let backend = self.analysis_backend();
-        let same_external_tools = backend == AnalysisBackend::RustGhidraRea
-            || (self.rea == other.rea && self.rizin == other.rizin && self.jadx == other.jadx);
         self.provider == other.provider
-            && same_external_tools
+            && self.rea == other.rea
+            && self.rizin == other.rizin
+            && self.jadx == other.jadx
             && self.analysis_memory_mib == other.analysis_memory_mib
             && self.timeout_seconds == other.timeout_seconds
             && self.tools.same_analysis(&other.tools, backend)

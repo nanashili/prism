@@ -1,6 +1,7 @@
 use super::{model_label, reasoning, selected_label};
 use crate::agent::options::{Choice, OptionMenu};
 use crate::ui::icons::Icon;
+use crate::ui::presentation::{Border, Caret, Presence, Selection};
 use crate::ui::{agent_option_rows::ChoiceRow, app::Prism, popup, settings_controls, widgets};
 use eframe::egui;
 
@@ -19,13 +20,13 @@ impl Prism {
             .as_ref()
             .filter(|usage| usage.size > 0)
             .map_or(0.0, |_| 24.0 + ui.spacing().item_spacing.x);
-        let width = widgets::chip_width(ui, &label, false, true)
+        let width = widgets::chip_width(ui, &label, Presence::Absent, Caret::Visible)
             .min((ui.available_width() - usage_width).max(0.0));
         let response = ui
             .allocate_ui_with_layout(
                 egui::vec2(width, super::super::composer_toolbar::HEIGHT),
                 egui::Layout::right_to_left(egui::Align::Center),
-                |ui| widgets::chip(ui, None, &label, false, true),
+                |ui| widgets::chip(ui, None, &label, Border::Hidden, Caret::Visible),
             )
             .inner;
         let view = response.id.with("model-selector-page");
@@ -85,7 +86,15 @@ impl Prism {
 
         ui.add_space(4.0);
         ui.separator();
-        if popup::row(ui, Some(Icon::App), "Agents and models…", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::App),
+            "Agents and models…",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             ui.ctx()
                 .data_mut(|data| data.insert_temp(view, Page::Agents));
         }
@@ -184,14 +193,14 @@ fn model_row(ui: &mut egui::Ui, choice: &Choice, selected: bool) -> egui::Respon
             icon: None,
             warning: false,
         }
-        .show(ui, selected);
+        .show(ui, Selection::from(selected));
     }
     popup::row(
         ui,
         None,
         &choice.name,
         if selected { "✓" } else { "" },
-        selected,
+        Selection::from(selected),
     )
     .on_hover_text(&choice.description)
 }

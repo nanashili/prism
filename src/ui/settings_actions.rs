@@ -2,6 +2,7 @@ use super::{
     app::Prism, notifications::Level, settings_navigation::SettingsPage,
     settings_pages::model::Command,
 };
+use crate::storage::ChatArchive;
 use crate::{error::Result, model::Screen, settings::Settings};
 use eframe::egui;
 
@@ -59,7 +60,9 @@ impl Prism {
             }
             Command::ReviewChats(archived) => {
                 self.settings_ui.select(SettingsPage::Storage);
-                self.settings_ui.storage.review_chats(archived);
+                self.settings_ui
+                    .storage
+                    .review_chats(ChatArchive::from(archived));
             }
             Command::StorageOverview => {
                 self.settings_ui.select(SettingsPage::Storage);
@@ -71,7 +74,7 @@ impl Prism {
                 self.settings_ui.storage.invalidate();
             }
             Command::RestoreStoredChat(id) => {
-                self.store.archive_chat(id, false)?;
+                self.store.archive_chat(id, ChatArchive::Current)?;
                 self.settings_ui.storage.invalidate();
                 self.refresh_chats()?;
                 return Ok(Some("Chat restored"));
@@ -94,7 +97,7 @@ impl Prism {
             Command::ResetPath(key) => key.value(&mut self.settings).clear(),
             Command::Agent(id, name) => self.pick_agent(context, id, name),
             Command::BrowseAgents => {
-                self.settings_ui.browsing_agents = !self.settings_ui.browsing_agents
+                self.settings_ui.browsing_agents = !self.settings_ui.browsing_agents;
             }
             Command::AgentVisibility(id) => {
                 let hidden = &mut self.settings.conversation.hidden_agents;

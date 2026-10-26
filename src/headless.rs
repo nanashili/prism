@@ -9,10 +9,10 @@ use std::sync::mpsc::Receiver;
 use std::thread::JoinHandle;
 
 pub(crate) fn run(path: PathBuf) -> Result<()> {
-    let _data_lock = crate::migration::lock_data(&crate::settings::support_dir())?;
+    let _profile_lock = crate::storage::lock_profile(&crate::settings::support_dir())?;
     let settings = Settings::load()?;
     let (sink, events) = Sink::channel(&eframe::egui::Context::default());
-    let worker = Worker::start(settings, sink.clone());
+    let mut worker = Worker::start(settings, sink.clone());
     worker.submit(Job::Open(path))?;
     let events = wait_for_open(events)?;
 
@@ -24,19 +24,16 @@ pub(crate) fn run(path: PathBuf) -> Result<()> {
         OsString::from(token),
     ];
     let drain = drain_events(events)?;
-    let result = prism::mcp::run_cli(arguments.into_iter());
+    let result = prism::mcp::run_cli(arguments.into_iter()).map_err(Into::into);
 
-    drop(bridge);
-    drop(worker);
+    worker.stop();
+    let result = crate::error::finish(result, bridge.close(), "Closing the headless bridge");
+    let result = crate::error::finish(result, worker.close(), "Closing the headless worker");
     drop(sink);
     let drain_result = drain
         .join()
         .map_err(|_| failure("The headless event drain stopped unexpectedly"));
-    match (result, drain_result) {
-        (Err(error), Err(cleanup)) => Err(failure(format!("{error}; event drain: {cleanup}"))),
-        (Err(error), Ok(())) | (Ok(()), Err(error)) => Err(error),
-        (Ok(()), Ok(())) => Ok(()),
-    }
+    crate::error::finish(result, drain_result, "Closing the headless event drain")
 }
 
 fn wait_for_open(events: Receiver<Event>) -> Result<Receiver<Event>> {

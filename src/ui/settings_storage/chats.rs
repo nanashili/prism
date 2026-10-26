@@ -1,4 +1,5 @@
 use super::super::{settings_navigation::SettingsPage, settings_pages, theme::Palette};
+use crate::storage::ChatArchive;
 use crate::storage::{Store, StoredChat};
 use eframe::egui::{self, RichText};
 use settings_pages::model::{Command, Group, Row};
@@ -14,7 +15,9 @@ pub(super) struct Review {
 }
 
 impl Review {
-    pub fn new(archived: bool) -> Self {
+    pub fn new(archived: ChatArchive) -> Self {
+        let archived = archived == ChatArchive::Archived;
+
         Self {
             archived,
             filter: String::new(),
@@ -105,7 +108,7 @@ impl Review {
         self.rows.clear();
         self.has_more = false;
         self.error = None;
-        match store.stored_chats(&self.filter, self.archived, self.offset) {
+        match store.stored_chats(&self.filter, ChatArchive::from(self.archived), self.offset) {
             Ok(mut rows) => {
                 self.has_more = rows.len() > 50;
                 rows.truncate(50);

@@ -1,9 +1,23 @@
 use super::{key_combo, keyboard_edit::Editor, shortcut_catalog as catalog, theme::Palette};
 use crate::settings::Settings;
+use crate::ui::presentation::RowPosition;
 use eframe::egui::{self, Align2, FontId, Key, Modifiers, Rect, RichText, Sense};
 
 mod icons;
 mod layout;
+
+const KEY_UNIT: f32 = 60.0;
+const KEY_GAP: f32 = 6.0;
+const KEYBOARD_WIDTH: f32 = 15.0 * KEY_UNIT - KEY_GAP;
+const FRAME_PADDING: i8 = 12;
+
+pub(super) const PREFERRED_WIDTH: f32 = KEYBOARD_WIDTH + 2.0 * FRAME_PADDING as f32;
+
+#[derive(Clone, Copy)]
+struct KeyGeometry {
+    rect: Rect,
+    scale: f32,
+}
 
 #[derive(Clone, Copy)]
 enum Modifier {
@@ -95,7 +109,7 @@ pub(super) fn show(ui: &mut egui::Ui, settings: &mut Settings, editor: &mut Edit
         .fill(p.fill)
         .stroke((1.0, p.line3))
         .corner_radius(14)
-        .inner_margin(12)
+        .inner_margin(FRAME_PADDING)
         .show(ui, |ui| {
             keyboard(ui, &bindings, &mut editor.keyboard);
         });
@@ -113,29 +127,38 @@ pub(super) fn show(ui: &mut egui::Ui, settings: &mut Settings, editor: &mut Edit
 
 fn keyboard(ui: &mut egui::Ui, bindings: &[Binding<'_>], state: &mut State) {
     ui.spacing_mut().item_spacing.y = 0.0;
-    let gap = 6.0;
-    let unit = (ui.available_width() + gap) / 15.0;
+    if ui.available_width() <= 0.0 {
+        return;
+    }
+
+    let scale = (ui.available_width() / KEYBOARD_WIDTH).clamp(0.0, 1.0);
+    let gap = KEY_GAP * scale;
+    let unit = KEY_UNIT * scale;
+    let width = KEYBOARD_WIDTH * scale;
     let rows = layout::rows(layout::Platform::current());
+
     for (index, row) in rows.iter().enumerate() {
         let height = match index {
             0 => 44.0,
             5 => 50.0,
             _ => 54.0,
-        };
-        let (bounds, _) =
-            ui.allocate_exact_size(egui::vec2(ui.available_width(), height), Sense::hover());
+        } * scale;
+        let (bounds, _) = ui.allocate_exact_size(egui::vec2(width, height), Sense::hover());
         let mut left = bounds.left();
+
         for (column, &keycap) in row.iter().enumerate() {
             let width = keycap.width * unit - gap;
             let rect =
                 Rect::from_min_size(egui::pos2(left, bounds.top()), egui::vec2(width, height));
+            let geometry = KeyGeometry { rect, scale };
             let id = ui.id().with(("physical-key", index, column));
             match keycap.kind {
-                layout::Kind::Arrows => arrows(ui, rect, id, bindings, state),
-                _ => key(ui, rect, id, keycap, bindings, state),
+                layout::Kind::Arrows => arrows(ui, geometry, id, bindings, state),
+                _ => key(ui, geometry, id, keycap, bindings, state),
             }
             left += width + gap;
         }
+
         if index + 1 < rows.len() {
             ui.add_space(gap);
         }
@@ -144,12 +167,13 @@ fn keyboard(ui: &mut egui::Ui, bindings: &[Binding<'_>], state: &mut State) {
 
 fn key(
     ui: &mut egui::Ui,
-    rect: Rect,
+    geometry: KeyGeometry,
     id: egui::Id,
     cap: layout::Keycap,
     bindings: &[Binding<'_>],
     state: &mut State,
 ) {
+    let rect = geometry.rect;
     let matches: Vec<_> = bindings
         .iter()
         .filter(|binding| {
@@ -187,8 +211,8 @@ fn key(
             &description,
         ),
     });
-    paint_key(ui, rect, &response, active, !matches.is_empty());
-    paint_labels(ui, rect, cap, &matches, active);
+    paint_key(ui, geometry, &response, active, !matches.is_empty());
+    paint_labels(ui, geometry, cap, &matches, active);
 
     if response.clicked() {
         match cap.kind {
@@ -202,9 +226,17 @@ fn key(
     }
 }
 
-fn paint_key(ui: &egui::Ui, rect: Rect, response: &egui::Response, active: bool, bound: bool) {
+fn paint_key(
+    ui: &egui::Ui,
+    geometry: KeyGeometry,
+    response: &egui::Response,
+    active: bool,
+    bound: bool,
+) {
     let p = Palette::for_context(ui.ctx());
-    let face = rect.shrink2(egui::vec2(0.0, 1.0));
+    let KeyGeometry { rect, scale } = geometry;
+    let face = rect.shrink2(egui::vec2(0.0, scale));
+    let radius = 6.0 * scale;
     let fill = if active || response.hovered() {
         p.sel
     } else if bound {
@@ -218,9 +250,14 @@ fn paint_key(ui: &egui::Ui, rect: Rect, response: &egui::Response, active: bool,
         p.line3
     };
     ui.painter()
-        .rect_filled(rect.translate(egui::vec2(0.0, 1.0)), 6, p.deep);
-    ui.painter()
-        .rect(face, 6, fill, (1.0, outline), egui::StrokeKind::Inside);
+        .rect_filled(rect.translate(egui::vec2(0.0, scale)), radius, p.deep);
+    ui.painter().rect(
+        face,
+        radius,
+        fill,
+        (scale, outline),
+        egui::StrokeKind::Inside,
+    );
 }
 
 fn key_description(cap: layout::Keycap, bindings: &[&Binding<'_>]) -> String {
@@ -240,7 +277,7 @@ fn key_description(cap: layout::Keycap, bindings: &[&Binding<'_>]) -> String {
 
 fn paint_labels(
     ui: &egui::Ui,
-    rect: Rect,
+    geometry: KeyGeometry,
     cap: layout::Keycap,
     bindings: &[&Binding<'_>],
     active: bool,
@@ -248,8 +285,8 @@ fn paint_labels(
     let p = Palette::for_context(ui.ctx());
     let bound = !bindings.is_empty();
     let color = if active || bound { p.text } else { p.text3 };
-    paint_legend(ui, rect, cap, color, bound);
-    if rect.height() < 40.0 {
+    paint_legend(ui, geometry, cap, color, bound);
+    if geometry.rect.height() < 40.0 * geometry.scale {
         return;
     }
 
@@ -264,72 +301,79 @@ fn paint_labels(
     } else {
         caption.to_owned()
     };
-    paint_caption(ui, rect, title, if bound { p.accent } else { p.muted });
+    paint_caption(ui, geometry, title, if bound { p.accent } else { p.muted });
 }
 
-fn paint_legend(ui: &egui::Ui, rect: Rect, cap: layout::Keycap, color: egui::Color32, bound: bool) {
+fn paint_legend(
+    ui: &egui::Ui,
+    geometry: KeyGeometry,
+    cap: layout::Keycap,
+    color: egui::Color32,
+    bound: bool,
+) {
+    let KeyGeometry { rect, scale } = geometry;
     let platform = layout::Platform::current();
     let painter = ui.painter().with_clip_rect(rect.intersect(ui.clip_rect()));
     if let layout::Kind::Key(key) = cap.kind
         && let Some(icon) = icons::function_key(key, platform)
     {
         painter.text(
-            rect.right_top() + egui::vec2(-4.0, 3.0),
+            rect.right_top() + egui::vec2(-4.0, 3.0) * scale,
             Align2::RIGHT_TOP,
             cap.label,
-            FontId::proportional(7.5),
+            FontId::proportional(7.5 * scale),
             color,
         );
-        let center = egui::pos2(
-            rect.center().x,
-            rect.top() + if bound { 13.0 } else { 23.0 },
-        );
+        let top_offset = if bound { 13.0 } else { 23.0 };
+        let center = egui::pos2(rect.center().x, rect.top() + top_offset * scale);
         icon.paint(
             ui,
-            Rect::from_center_size(center, egui::vec2(17.0, 17.0)),
+            Rect::from_center_size(center, egui::vec2(17.0, 17.0) * scale),
             color,
         );
         return;
     }
 
     let (legend, caption) = layout::legend(cap, platform);
-    let compact = rect.height() < 40.0;
-    let position = if compact || (rect.height() < 50.0 && !bound) {
+    let compact = rect.height() < 40.0 * scale;
+    let position = if compact || (rect.height() < 50.0 * scale && !bound) {
         rect.center()
     } else {
-        egui::pos2(rect.center().x, rect.top() + 18.0)
+        egui::pos2(rect.center().x, rect.top() + 18.0 * scale)
     };
     if let Some(icon) = icons::symbol(cap, platform) {
         icon.paint(
             ui,
-            Rect::from_center_size(position, egui::vec2(19.0, 19.0)),
+            Rect::from_center_size(position, egui::vec2(19.0, 19.0) * scale),
             color,
         );
     } else {
+        let font_size = if caption.is_empty() { 13.0 } else { 17.0 };
         painter.text(
             position,
             Align2::CENTER_CENTER,
             legend,
-            FontId::proportional(if caption.is_empty() { 13.0 } else { 17.0 }),
+            FontId::proportional(font_size * scale),
             color,
         );
     }
 }
 
-fn paint_caption(ui: &egui::Ui, rect: Rect, title: String, color: egui::Color32) {
+fn paint_caption(ui: &egui::Ui, geometry: KeyGeometry, title: String, color: egui::Color32) {
+    let KeyGeometry { rect, scale } = geometry;
     let painter = ui.painter().with_clip_rect(rect.intersect(ui.clip_rect()));
     let mut job = egui::text::LayoutJob::simple(
         title,
-        FontId::proportional(10.5),
+        FontId::proportional(10.5 * scale),
         color,
-        (rect.width() - 8.0).max(1.0),
+        (rect.width() - 8.0 * scale).max(1.0),
     );
     job.wrap.max_rows = 1;
     let galley = painter.layout_job(job);
     painter.galley(
         egui::pos2(
             rect.center().x - galley.size().x * 0.5,
-            rect.bottom() - 18.0,
+            rect.bottom() - 18.0 * scale,
         ),
         galley,
         color,
@@ -360,25 +404,30 @@ fn short_label<'a>(id: &str, label: &'a str) -> &'a str {
 
 fn arrows(
     ui: &mut egui::Ui,
-    rect: Rect,
+    geometry: KeyGeometry,
     id: egui::Id,
     bindings: &[Binding<'_>],
     state: &mut State,
 ) {
-    let width = (rect.width() - 6.0) / 3.0;
-    let half_height = (rect.height() - 3.0) * 0.5;
+    let KeyGeometry { rect, scale } = geometry;
+    let gap = 3.0 * scale;
+    let width = (rect.width() - 2.0 * gap) / 3.0;
+    let half_height = (rect.height() - gap) * 0.5;
     let keys = [
-        (Key::ArrowLeft, "←", 0.0, half_height + 3.0),
-        (Key::ArrowUp, "↑", width + 3.0, 0.0),
-        (Key::ArrowDown, "↓", width + 3.0, half_height + 3.0),
-        (Key::ArrowRight, "→", (width + 3.0) * 2.0, half_height + 3.0),
+        (Key::ArrowLeft, "←", 0.0, half_height + gap),
+        (Key::ArrowUp, "↑", width + gap, 0.0),
+        (Key::ArrowDown, "↓", width + gap, half_height + gap),
+        (Key::ArrowRight, "→", (width + gap) * 2.0, half_height + gap),
     ];
     for (code, label, x, y) in keys {
         let bounds =
             Rect::from_min_size(rect.min + egui::vec2(x, y), egui::vec2(width, half_height));
         key(
             ui,
-            bounds,
+            KeyGeometry {
+                rect: bounds,
+                scale,
+            },
             id.with(code),
             layout::Keycap {
                 label,
@@ -416,7 +465,7 @@ fn selected_shortcuts(ui: &mut egui::Ui, settings: &mut Settings, editor: &mut E
         .corner_radius(10)
         .show(ui, |ui| {
             for (index, command) in commands.into_iter().enumerate() {
-                super::keyboard::row(ui, settings, editor, command, index == 0);
+                super::keyboard::row(ui, settings, editor, command, RowPosition::from(index == 0));
             }
         });
 }

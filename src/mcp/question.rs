@@ -1,28 +1,40 @@
+//! Questions sent through the desktop bridge and the user responses returned to agents.
+
+use crate::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
+/// MCP tool name used to display a question card.
 pub const TOOL: &str = "request_user_input";
+/// Maximum number of Unicode characters retained in a free-text answer.
 pub const MAX_ANSWER_CHARS: usize = 4000;
 
-#[derive(Deserialize)]
+/// Validated question content displayed in the desktop question card.
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Question {
     #[serde(default = "default_title")]
+    /// Short heading, defaulting to Question when omitted from input.
     pub title: String,
+    /// Prompt shown above the response controls.
     pub question: String,
     #[serde(default)]
+    /// Ordered choices; an empty list permits a free-text response.
     pub options: Vec<String>,
 }
 
 impl Question {
-    pub fn parse(arguments: Value) -> Result<Self, String> {
-        let question: Self =
-            serde_json::from_value(arguments).map_err(|error| error.to_string())?;
+    /// Deserializes and validates a question before it reaches the desktop.
+    ///
+    /// # Errors
+    /// Returns an error for unknown fields, invalid lengths, or duplicate choices.
+    pub fn parse(arguments: Value) -> Result<Self, Error> {
+        let question: Self = serde_json::from_value(arguments)?;
         question.validate()?;
         Ok(question)
     }
 
-    fn validate(&self) -> Result<(), String> {
+    fn validate(&self) -> Result<(), Error> {
         for (label, text, limit) in [
             ("Title", self.title.as_str(), 80),
             ("Question", self.question.as_str(), 2000),
@@ -45,15 +57,21 @@ impl Question {
     }
 }
 
-#[derive(Serialize)]
+/// User response to a question, including explicit skip and dismissal outcomes.
+#[derive(Debug, Serialize)]
+#[non_exhaustive]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum Answer {
+    /// The user submitted text or selected a numbered option.
     Answered {
+        /// Text returned to the waiting agent.
         answer: String,
         /// One-based choice number. None means the user wrote a custom reply.
         selected_option: Option<usize>,
     },
+    /// The user chose to skip the question.
     Skipped,
+    /// The card closed without an answer.
     Dismissed,
 }
 
@@ -74,9 +92,9 @@ fn default_title() -> String {
     "Question".into()
 }
 
-fn validate_text(label: &str, text: &str, limit: usize) -> Result<(), String> {
+fn validate_text(label: &str, text: &str, limit: usize) -> Result<(), Error> {
     if text.trim().is_empty() || text.chars().count() > limit {
-        return Err(format!("{label} must contain 1 to {limit} characters"));
+        return Err(format!("{label} must contain 1 to {limit} characters").into());
     }
     Ok(())
 }

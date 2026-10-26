@@ -44,6 +44,21 @@ impl Prism {
                 let view = args["view"].as_str().ok_or("Unsupported view")?;
                 self.select_view(parse_view(view)?);
             }
+            "transfer_version_annotations" => {
+                let report = self
+                    .workspace
+                    .comparison
+                    .as_ref()
+                    .ok_or("Run compare_versions first")?;
+                if args["source_sha256"].as_str() != Some(report.source_sha256.as_str())
+                    || args["target_sha256"].as_str() != Some(report.target_sha256.as_str())
+                {
+                    return Err(failure("The reviewed comparison identities changed"));
+                }
+                let pairs: Vec<crate::comparison::Selection> =
+                    serde_json::from_value(args["pairs"].clone())?;
+                self.transfer_version_annotations(&pairs)?;
+            }
             "rename_function" | "add_note" | "bookmark" => {
                 self.apply_annotation_tool(tool, args)?;
             }

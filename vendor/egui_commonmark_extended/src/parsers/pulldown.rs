@@ -4,6 +4,11 @@ use std::hash::{Hash, Hasher};
 use std::iter::Peekable;
 use std::ops::Range;
 
+use crate::{
+    options::{ListSpacing, MathSupport},
+    Frontmatter, RenderScope, TableLayout,
+};
+
 use crate::{CommonMarkCache, CommonMarkOptions};
 
 use egui::{self, Id, Pos2, TextStyle, Ui};
@@ -13,8 +18,11 @@ use egui_commonmark_backend_extended::elements::{
     blockquote, footnote, footnote_start, heading_end_spacing, heading_start_spacing, newline,
     paragraph_end_spacing, rule, soft_break, ImmutableCheckbox,
 };
-use egui_commonmark_backend_extended::misc::*;
-use egui_commonmark_backend_extended::pulldown::*;
+use egui_commonmark_backend_extended::misc::{scroll_cache, CodeBlock, Image, Link, Style};
+use egui_commonmark_backend_extended::pulldown::{
+    delayed_events, delayed_events_list_item, parse_alerts, parse_table, ContentGeometry,
+    EventIteratorItem, Table,
+};
 use pulldown_cmark::{CowStr, HeadingLevel};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -225,7 +233,8 @@ fn parse_frontmatter_pairs(raw: &str) -> Vec<(String, String)> {
 
         // A continuation line is indented, or is a sequence item, or has no
         // colon at all. Only an unindented `key:` starts a new row.
-        let is_continuation = line.starts_with(char::is_whitespace) || line.trim_start().starts_with('-');
+        let is_continuation =
+            line.starts_with(char::is_whitespace) || line.trim_start().starts_with('-');
         let split = if is_continuation {
             None
         } else {
@@ -257,12 +266,7 @@ fn parse_frontmatter_pairs(raw: &str) -> Vec<(String, String)> {
 }
 
 /// Paint a frontmatter block as a two-column key/value table.
-fn render_frontmatter_table(
-    ui: &mut Ui,
-    raw: &str,
-    options: &CommonMarkOptions,
-    max_width: f32,
-) {
+fn render_frontmatter_table(ui: &mut Ui, raw: &str, options: &CommonMarkOptions, max_width: f32) {
     let pairs = parse_frontmatter_pairs(raw);
     if pairs.is_empty() {
         return;
@@ -517,8 +521,8 @@ fn table_cell_height(
         // labels. Without cached formula widths we cannot know whether each
         // formula shares a row, so reserve their heights cumulatively whenever
         // other visible content (or another formula) can force a row break.
-        height += inline_math_height
-            + (ui.spacing().item_spacing.y + 1.0) * inline_math_count as f32;
+        height +=
+            inline_math_height + (ui.spacing().item_spacing.y + 1.0) * inline_math_count as f32;
     }
 
     height
@@ -545,7 +549,10 @@ fn markdown_cell_text(cell: &[(pulldown_cmark::Event, Range<usize>)]) -> String 
     text
 }
 
-fn markdown_table_digest(rows: &[Vec<Vec<(pulldown_cmark::Event, Range<usize>)>>]) -> u64 {
+type MarkdownCell<'source> = Vec<(pulldown_cmark::Event<'source>, Range<usize>)>;
+type MarkdownRow<'source> = Vec<MarkdownCell<'source>>;
+
+fn markdown_table_digest(rows: &[MarkdownRow<'_>]) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     for row in rows {
         row.len().hash(&mut hasher);
@@ -619,9 +626,7 @@ fn wrapped_text_height(ui: &Ui, text: &str, column_width: f32, line_height: f32)
 
 pub(crate) fn body_line_height(ui: &Ui, options: &CommonMarkOptions) -> f32 {
     let font = egui::TextStyle::Body.resolve(ui.style());
-    let natural = ui
-        .text_style_height(&egui::TextStyle::Body)
-        .max(font.size);
+    let natural = ui.text_style_height(&egui::TextStyle::Body).max(font.size);
     options
         .typography
         .resolve_line_height(font.size)
@@ -642,14 +647,14 @@ fn fit_column_widths(desired: &[f32], available: f32, minimums: &[f32]) -> Vec<f
     assert_eq!(desired.len(), minimums.len());
     let minimums: Vec<f64> = minimums
         .iter()
-        .map(|width| width.max(40.0) as f64)
+        .map(|width| f64::from(width.max(40.0)))
         .collect();
     let desired: Vec<f64> = desired
         .iter()
         .zip(&minimums)
-        .map(|(width, minimum)| (*width as f64).max(*minimum))
+        .map(|(width, minimum)| f64::from(*width).max(*minimum))
         .collect();
-    let available = available as f64;
+    let available = f64::from(available);
     let desired_total = desired.iter().sum::<f64>();
     if desired_total <= available {
         return desired.into_iter().map(|width| width as f32).collect();
@@ -725,9 +730,7 @@ fn table_height_score(
     let mut cell_total = 0.0;
     for (column, &width) in widths.iter().enumerate() {
         let measurement_key = (column, width.to_bits());
-        if !measurements.contains_key(&measurement_key)
-            && measurements.len() >= measurement_limit
-        {
+        if !measurements.contains_key(&measurement_key) && measurements.len() >= measurement_limit {
             return None;
         }
         let heights = measurements
@@ -828,8 +831,7 @@ fn optimize_fitted_widths_with_cache(
         baseline[donor] > minimums[donor] + 0.01
             && (0..baseline.len()).any(|receiver| {
                 receiver != donor
-                    && baseline[receiver] + 0.01
-                        < desired[receiver].max(minimums[receiver])
+                    && baseline[receiver] + 0.01 < desired[receiver].max(minimums[receiver])
             })
     });
     if !can_transfer {
@@ -899,12 +901,11 @@ fn optimize_fitted_widths_with_cache(
                     if !better_table_height(candidate, score) {
                         continue;
                     }
-                    let replace =
-                        best.is_none_or(|(best_score, best_donor, best_receiver, _)| {
-                            better_table_height(candidate, best_score)
-                                || (!better_table_height(best_score, candidate)
-                                    && (donor, receiver) < (best_donor, best_receiver))
-                        });
+                    let replace = best.is_none_or(|(best_score, best_donor, best_receiver, _)| {
+                        better_table_height(candidate, best_score)
+                            || (!better_table_height(best_score, candidate)
+                                && (donor, receiver) < (best_donor, best_receiver))
+                    });
                     if replace {
                         best = Some((candidate, donor, receiver, transfer));
                     }
@@ -1003,13 +1004,7 @@ fn optimize_table_widths(
         .map(|(wanted, minimum)| wanted.max(*minimum).max(40.0))
         .sum::<f32>();
     if !table_floors_overflow(minimum_total, visible_column_budget) || row_count == 0 {
-        return optimize_fitted_widths(
-            baseline,
-            desired,
-            minimums,
-            row_count,
-            measure_column,
-        );
+        return optimize_fitted_widths(baseline, desired, minimums, row_count, measure_column);
     }
 
     let mut measurements = HashMap::new();
@@ -1043,9 +1038,7 @@ fn optimize_table_widths(
         scored.push((added, widths, score));
     }
 
-    select_overflow_knee(&scored)
-        .map(|candidate| candidate.1.clone())
-        .unwrap_or_else(|| baseline.to_vec())
+    select_overflow_knee(&scored).map_or_else(|| baseline.to_vec(), |candidate| candidate.1.clone())
 }
 
 fn table_layout_key(
@@ -1085,15 +1078,20 @@ fn table_layout_key(
     hasher.finish()
 }
 
+#[derive(Clone, Copy)]
+struct TableMeasurements<'table> {
+    baseline: &'table [f32],
+    desired: &'table [f32],
+    minimums: &'table [f32],
+    visible_column_budget: f32,
+    row_count: usize,
+}
+
 fn cached_height_aware_widths(
     ui: &Ui,
     table_id: Id,
     key: u64,
-    baseline: &[f32],
-    desired: &[f32],
-    minimums: &[f32],
-    visible_column_budget: f32,
-    row_count: usize,
+    measurements: TableMeasurements<'_>,
     measure_column: impl FnMut(usize, f32) -> Vec<f32>,
 ) -> (Vec<f32>, bool) {
     let cache_id = table_id.with("_height_aware_widths");
@@ -1106,11 +1104,11 @@ fn cached_height_aware_widths(
     let had_previous_layout = previous.is_some();
 
     let widths = optimize_table_widths(
-        baseline,
-        desired,
-        minimums,
-        visible_column_budget,
-        row_count,
+        measurements.baseline,
+        measurements.desired,
+        measurements.minimums,
+        measurements.visible_column_budget,
+        measurements.row_count,
         measure_column,
     );
     ui.data_mut(|data| {
@@ -1257,7 +1255,10 @@ events={events}{}",
 /// expensive on a long document, so it is dumped only when the selection looks
 /// degenerate — an empty range, or one that stops at the first split point
 /// while more of the document lies inside the viewport.
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "diagnostics mirror viewport and event coordinates from the renderer without changing layout"
+)]
 fn diag_report_split(
     split_points: &[(usize, Pos2, Pos2)],
     above: usize,
@@ -1285,11 +1286,14 @@ sp={}{}",
 
     // A range that selects nothing, or that stops at the very first boundary
     // while the viewport plainly reaches further, is the shape #167 produced.
-    let degenerate = first_event_index >= last_event_index
-        || (below <= 1 && split_points.len() > 2);
+    let degenerate =
+        first_event_index >= last_event_index || (below <= 1 && split_points.len() > 2);
     if degenerate {
         for (i, (event_index, start, end)) in split_points.iter().enumerate() {
-            eprintln!("  sp[{i}] ev={event_index} start.y={:.1} end.y={:.1}", start.y, end.y);
+            eprintln!(
+                "  sp[{i}] ev={event_index} start.y={:.1} end.y={:.1}",
+                start.y, end.y
+            );
         }
     }
 }
@@ -1383,7 +1387,7 @@ pub struct CommonMarkViewerInternal {
     line: Newline,
     code_block: Option<CodeBlock>,
 
-    /// Only populated if the html_fn option has been set
+    /// Only populated if the `html_fn` option has been set
     html_block: String,
     is_list_item: bool,
     def_list: DefinitionList,
@@ -1395,7 +1399,7 @@ pub struct CommonMarkViewerInternal {
     current_heading_y: Option<f32>,
     current_heading_source_start: Option<usize>,
     current_heading_text: String,
-    /// Accumulate heading RichText fragments for single render at end
+    /// Accumulate heading `RichText` fragments for single render at end
     current_heading_rich_texts: Vec<egui::RichText>,
     /// Content-space Y of the first event rendered by the current slice.
     slice_start_y: f32,
@@ -1442,8 +1446,8 @@ impl CommonMarkViewerInternal {
         }
     }
 
-    pub(crate) fn responsive_tables(mut self, enabled: bool) -> Self {
-        self.responsive_tables = enabled;
+    pub(crate) fn responsive_tables(mut self, layout: TableLayout) -> Self {
+        self.responsive_tables = layout == TableLayout::Responsive;
         self
     }
 }
@@ -1453,7 +1457,7 @@ impl CommonMarkViewerInternal {
 /// `split_points` cache y-positions, which become invalid when anything that
 /// affects layout changes. The previous code (parsers/pulldown.rs invalidation
 /// block) only watched `available_size`, so zooming (Ctrl++/-) or toggling
-/// dark mode would leave stale split_points in place and the viewport-skip
+/// dark mode would leave stale `split_points` in place and the viewport-skip
 /// math would render the wrong content range.
 fn compute_layout_signature(ui: &egui::Ui, options: &CommonMarkOptions) -> u64 {
     use std::hash::{Hash, Hasher};
@@ -1482,7 +1486,7 @@ fn compute_layout_signature(ui: &egui::Ui, options: &CommonMarkOptions) -> u64 {
     h.finish()
 }
 
-/// Whether a TagEnd marks a safe block-level boundary for viewport-skip.
+/// Whether a `TagEnd` marks a safe block-level boundary for viewport-skip.
 ///
 /// At a block end the renderer's transient inline state (heading rich-text
 /// accumulator, list nesting, emphasis flags) is neutral, so a future frame
@@ -1490,7 +1494,7 @@ fn compute_layout_signature(ui: &egui::Ui, options: &CommonMarkOptions) -> u64 {
 ///
 /// Inline ends (Emphasis, Strong, Link, Image, Superscript, Subscript) are
 /// rejected — splitting mid-paragraph would orphan inline formatting state.
-/// Table-internal ends (TableHead, TableRow, TableCell) are rejected because
+/// Table-internal ends (`TableHead`, `TableRow`, `TableCell`) are rejected because
 /// tables are pre-parsed and rendered as a single atomic unit.
 fn is_block_end_tag(tag: &pulldown_cmark::TagEnd) -> bool {
     use pulldown_cmark::TagEnd;
@@ -1545,7 +1549,7 @@ fn is_likely_currency(tex: &str) -> bool {
     // Relational / grouping operators that a closed `$...$` currency amount
     // never contains: `w(z)`, `f(R)`, `D>0`, `p=P`, `[-1.1,-1.0]`, `=0`.
     // Their presence means real math, not a `$5`-style misparse.
-    if trimmed.contains(|c: char| matches!(c, '=' | '<' | '>' | '(' | ')' | '[' | ']')) {
+    if trimmed.contains(['=', '<', '>', '(', ')', '[', ']']) {
         return false;
     }
 
@@ -1568,7 +1572,9 @@ fn is_likely_currency(tex: &str) -> bool {
     // InlineMath by spanning two `$` across prose, so its mis-parsed content
     // carries spaces or dashes (`"8.5 to "`, `"3,000–"`) — which fail this test
     // and fall through to the currency branch below.
-    if trimmed.chars().all(|c| c.is_ascii_digit() || c == '.' || c == ',')
+    if trimmed
+        .chars()
+        .all(|c| c.is_ascii_digit() || c == '.' || c == ',')
         && trimmed.chars().any(|c| c.is_ascii_digit())
     {
         return false;
@@ -1607,8 +1613,14 @@ fn registered_auto_link_ranges(
         }
         for (start, _) in text.match_indices(destination) {
             let end = start + destination.len();
-            let left_ok = text[..start].chars().next_back().is_none_or(|ch| !is_path_char(ch));
-            let right_ok = text[end..].chars().next().is_none_or(|ch| !is_path_char(ch));
+            let left_ok = text[..start]
+                .chars()
+                .next_back()
+                .is_none_or(|ch| !is_path_char(ch));
+            let right_ok = text[end..]
+                .chars()
+                .next()
+                .is_none_or(|ch| !is_path_char(ch));
             if left_ok && right_ok {
                 matches.push((start..end, destination.clone()));
             }
@@ -1652,7 +1664,7 @@ impl CommonMarkViewerInternal {
         hasher.finish()
     }
 
-    /// Be aware that this acquires egui::Context internally.
+    /// Be aware that this acquires `egui::Context` internally.
     /// If split Id is provided then split points will be populated
     pub(crate) fn show(
         &mut self,
@@ -1674,7 +1686,11 @@ impl CommonMarkViewerInternal {
             // rewritten pre-parse on an in-memory copy and ranges are mapped
             // back, so they stay valid against the original text.
             let owned_events: Vec<(pulldown_cmark::Event<'static>, Range<usize>)> =
-                super::latex_delimiters::parse_events(text, math_enabled, options.render_frontmatter);
+                super::latex_delimiters::parse_events(
+                    text,
+                    MathSupport::from(math_enabled),
+                    Frontmatter::from(options.render_frontmatter),
+                );
             cache.set_cached_events(content_hash, owned_events);
         }
 
@@ -1700,14 +1716,12 @@ impl CommonMarkViewerInternal {
 
             // Use cached events — clone the Vec reference data for iteration
             // (events are 'static so this is cheap pointer copies, not re-parsing)
-            let events_data = cache.get_cached_events(content_hash)
+            let events_data = cache
+                .get_cached_events(content_hash)
                 .expect("events just cached")
                 .to_vec();
             let event_count = events_data.len();
-            let mut events = events_data
-                .into_iter()
-                .enumerate()
-                .peekable();
+            let mut events = events_data.into_iter().enumerate().peekable();
 
             while let Some((index, (e, src_span))) = events.next() {
                 let start_position = ui.next_widget_position();
@@ -1766,8 +1780,7 @@ impl CommonMarkViewerInternal {
                         let split_index = if is_atomic_table {
                             events
                                 .peek()
-                                .map(|(next_index, _)| *next_index)
-                                .unwrap_or(event_count)
+                                .map_or(event_count, |(next_index, _)| *next_index)
                         } else {
                             index.saturating_add(1)
                         };
@@ -1817,7 +1830,10 @@ impl CommonMarkViewerInternal {
         (re, std::mem::take(&mut self.checkbox_events))
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "the renderer entry point borrows independent UI, cache, document, and scroll configuration"
+    )]
     pub(crate) fn show_scrollable(
         &mut self,
         source_id: Id,
@@ -1827,9 +1843,10 @@ impl CommonMarkViewerInternal {
         text: &str,
         content_version: Option<u64>,
         pending_scroll_offset: Option<f32>,
-        force_full_render: bool,
+        scope: RenderScope,
         scroll_source: Option<egui::scroll_area::ScrollSource>,
     ) -> egui::scroll_area::ScrollAreaOutput<()> {
+        let force_full_render = scope == RenderScope::FullDocument;
         self.source_id = Some(source_id);
         let available_size = ui.available_size();
         let scroll_id = source_id.with("_scroll_area");
@@ -1860,12 +1877,15 @@ impl CommonMarkViewerInternal {
                 // iteration at an unrelated event — often `Tag::Item` with no
                 // matching `Tag::List` start → `List::start_item` panics
                 // (`lib.rs:566 unreachable!()`). See docs/devlog/027.
-                let math_enabled =
-                    options.math_fn.is_some() || cfg!(feature = "math");
+                let math_enabled = options.math_fn.is_some() || cfg!(feature = "math");
                 // Must produce byte-identical events to the cache-fill parse
                 // above — including any LaTeX delimiter rewrite (#60) — or
                 // split_points index into an unrelated stream (see devlog 027).
-                sc.events = super::latex_delimiters::parse_events(text, math_enabled, options.render_frontmatter);
+                sc.events = super::latex_delimiters::parse_events(
+                    text,
+                    MathSupport::from(math_enabled),
+                    Frontmatter::from(options.render_frontmatter),
+                );
                 sc.content_version = version;
                 // Content changed — cached split_points y-coords are no
                 // longer valid for this content. Drop them so the first
@@ -1995,9 +2015,8 @@ impl CommonMarkViewerInternal {
             // space differently — so the slice wrapped at a different column
             // than the pass that produced `page_size` and `split_points`.
             let recorded_geometry = scroll_cache(cache, &source_id).content_geometry;
-            let max_width = recorded_geometry
-                .map(|geometry| geometry.width)
-                .unwrap_or_else(|| options.max_width(ui));
+            let max_width =
+                recorded_geometry.map_or_else(|| options.max_width(ui), |geometry| geometry.width);
             let content_left =
                 ui.max_rect().left() + recorded_geometry.map_or(0.0, |g| g.left_offset);
             // Same visible-edge cap as the bootstrap pass (see there for why
@@ -2007,8 +2026,13 @@ impl CommonMarkViewerInternal {
             // used to extend the slice past the pane and over the sidebar.
             let max_width = max_width.min((ui.max_rect().right() - content_left).max(0.0));
 
-            let (first_event_index, first_end_y, events_range,
-                 diag_viewport_min_y, diag_viewport_max_y) = {
+            let (
+                first_event_index,
+                first_end_y,
+                events_range,
+                diag_viewport_min_y,
+                diag_viewport_max_y,
+            ) = {
                 let scroll_cache = scroll_cache(cache, &source_id);
 
                 // Resume after the last complete block above the viewport.
@@ -2028,9 +2052,7 @@ impl CommonMarkViewerInternal {
                     .split_points
                     .partition_point(|(_, start, _)| start.y <= viewport.max.y);
                 let last_split = scroll_cache.split_points.get(below + 1);
-                let last_event_index = last_split
-                    .map(|(index, _, _)| *index)
-                    .unwrap_or(num_rows);
+                let last_event_index = last_split.map_or(num_rows, |(index, _, _)| *index);
 
                 let range_end = last_event_index.min(scroll_cache.events.len());
                 let events_range = if first_event_index < range_end {
@@ -2051,8 +2073,13 @@ impl CommonMarkViewerInternal {
                     page_size.y,
                 );
 
-                (first_event_index, first_end_position.y, events_range,
-                 viewport.min.y, viewport.max.y)
+                (
+                    first_event_index,
+                    first_end_position.y,
+                    events_range,
+                    viewport.min.y,
+                    viewport.max.y,
+                )
             };
 
             // Match egui's show_rows strategy: size the parent to the full
@@ -2066,7 +2093,12 @@ impl CommonMarkViewerInternal {
             // extent and let the scroll offset run past the real document.
             let content_top = ui.max_rect().top();
             let slice_top = content_top + first_end_y;
-            diag_report_slice(first_end_y, diag_viewport_min_y, diag_viewport_max_y, events_range.len());
+            diag_report_slice(
+                first_end_y,
+                diag_viewport_min_y,
+                diag_viewport_max_y,
+                events_range.len(),
+            );
 
             let slice_rect = egui::Rect::from_min_size(
                 egui::pos2(content_left, slice_top),
@@ -2134,7 +2166,10 @@ impl CommonMarkViewerInternal {
         // instead of one frame later.
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "event dispatch shares the parser cursor and render context across specialized handlers"
+    )]
     fn process_event<'e>(
         &mut self,
         ui: &mut Ui,
@@ -2154,14 +2189,7 @@ impl CommonMarkViewerInternal {
 
         self.def_list_def_wrapping(events, max_width, cache, options, ui);
         self.item_list_wrapping(events, max_width, cache, options, ui);
-        self.table(
-            events,
-            cache,
-            options,
-            ui,
-            max_width,
-            table_source_start,
-        );
+        self.table(events, cache, options, ui, max_width, table_source_start);
         self.blockquote(events, max_width, cache, options, ui);
     }
 
@@ -2281,7 +2309,7 @@ impl CommonMarkViewerInternal {
                     for (event, src_span) in collected_events {
                         self.event(ui, event, src_span, cache, options, max_width);
                     }
-                })
+                });
             } else {
                 blockquote(ui, ui.visuals().weak_text_color(), |ui| {
                     self.text_style.quote = true;
@@ -2326,10 +2354,10 @@ impl CommonMarkViewerInternal {
             let Table { header, rows } = parse_table(events);
             // Drop trailing empty rows that pulldown_cmark sometimes appends.
             let rows: Vec<_> = rows.into_iter().filter(|r| !r.is_empty()).collect();
-            let num_cols = if !header.is_empty() {
-                header.len()
+            let num_cols = if header.is_empty() {
+                rows.first().map_or(0, std::vec::Vec::len)
             } else {
-                rows.first().map(|r| r.len()).unwrap_or(0)
+                header.len()
             };
             let line_h = body_line_height(ui, options);
 
@@ -2355,16 +2383,12 @@ impl CommonMarkViewerInternal {
             // The caller chooses whether `table_max_width` is the capped reading
             // width or the full content pane. Horizontal scrolling keeps columns
             // reachable when their minimum widths exceed that bound (#64, #110).
-            let table_bound = options
-                .table_max_width
-                .map(|w| w as f32)
-                .unwrap_or(max_width);
+            let table_bound = options.table_max_width.map_or(max_width, |w| w as f32);
             let mut minimum_widths: Vec<f32> = (0..num_cols)
                 .map(|column| {
-                    header
-                        .get(column)
-                        .map(|cell| unbreakable_text_width(ui, &markdown_cell_text(cell)))
-                        .unwrap_or(40.0)
+                    header.get(column).map_or(40.0, |cell| {
+                        unbreakable_text_width(ui, &markdown_cell_text(cell))
+                    })
                 })
                 .collect();
             let mut table_rows = Vec::with_capacity(rows.len() + usize::from(!header.is_empty()));
@@ -2414,11 +2438,13 @@ impl CommonMarkViewerInternal {
                     ui,
                     id,
                     layout_key,
-                    &baseline_widths,
-                    &desired_widths,
-                    &minimum_widths,
-                    visible_column_budget,
-                    table_rows.len(),
+                    TableMeasurements {
+                        baseline: &baseline_widths,
+                        desired: &desired_widths,
+                        minimums: &minimum_widths,
+                        visible_column_budget,
+                        row_count: table_rows.len(),
+                    },
                     |column, width| {
                         table_rows
                             .iter()
@@ -2661,7 +2687,7 @@ impl CommonMarkViewerInternal {
     ) {
         match event {
             pulldown_cmark::Event::Start(tag) => {
-                self.start_tag(ui, tag, src_span.start, options)
+                self.start_tag(ui, tag, src_span.start, options);
             }
             pulldown_cmark::Event::End(tag) => self.end_tag(ui, tag, cache, options, max_width),
             pulldown_cmark::Event::Text(text) => {
@@ -2690,7 +2716,7 @@ impl CommonMarkViewerInternal {
                 // code text. Wrapped (>56 char) code skips highlighting in v1.
                 let interior_span = if !wrap && src_span.len() >= text.len() {
                     let delim_total = src_span.len() - text.len();
-                    if delim_total > 0 && delim_total % 2 == 0 {
+                    if delim_total > 0 && delim_total.is_multiple_of(2) {
                         let bt = delim_total / 2;
                         Some((src_span.start + bt)..(src_span.end - bt))
                     } else {
@@ -2824,8 +2850,7 @@ impl CommonMarkViewerInternal {
             // manually with a monospace font instead of calling `.code()` — that gives
             // the visual effect of code (monospace + slightly larger weight) while
             // letting our background_color survive.
-            let mut t = egui::RichText::new(text.as_ref())
-                .text_style(egui::TextStyle::Monospace);
+            let mut t = egui::RichText::new(text.as_ref()).text_style(egui::TextStyle::Monospace);
             if self.text_style.strong {
                 t = t.strong();
             }
@@ -3066,13 +3091,13 @@ impl CommonMarkViewerInternal {
                     pulldown_cmark::CodeBlockKind::Fenced(lang) => {
                         self.code_block = Some(crate::CodeBlock {
                             lang: Some(lang.to_string()),
-                            content: "".to_string(),
+                            content: String::new(),
                         });
                     }
                     pulldown_cmark::CodeBlockKind::Indented => {
                         self.code_block = Some(crate::CodeBlock {
                             lang: None,
-                            content: "".to_string(),
+                            content: String::new(),
                         });
                     }
                 }
@@ -3144,10 +3169,10 @@ impl CommonMarkViewerInternal {
             pulldown_cmark::Tag::DefinitionListTitle => {
                 // we disable newline as the first title should not insert a newline
                 // as we have already done that upon the DefinitionList Tag
-                if !self.def_list.is_first_item {
-                    self.line.try_insert_start(ui)
-                } else {
+                if self.def_list.is_first_item {
                     self.def_list.is_first_item = false;
+                } else {
+                    self.line.try_insert_start(ui);
                 }
             }
             pulldown_cmark::Tag::DefinitionListDefinition => {
@@ -3182,7 +3207,10 @@ impl CommonMarkViewerInternal {
                     let left_edge = ui.min_rect().left();
                     let heading_rect = egui::Rect::from_min_size(
                         egui::pos2(left_edge, available.top()),
-                        egui::vec2(available.width() + (available.left() - left_edge), available.height()),
+                        egui::vec2(
+                            available.width() + (available.left() - left_edge),
+                            available.height(),
+                        ),
                     );
                     let rich_texts = std::mem::take(&mut self.current_heading_rich_texts);
                     ui.scope_builder(egui::UiBuilder::new().max_rect(heading_rect), |ui| {
@@ -3219,11 +3247,8 @@ impl CommonMarkViewerInternal {
                         // Previously stored `cur_offset + cursor.y` which gave
                         // 323 (off by 44 = panel chrome height), so scrolling
                         // to (323-50)=273 landed 44 px past the heading.
-                        let content_y = content_relative_y(
-                            y,
-                            self.render_origin_y,
-                            self.slice_start_y,
-                        );
+                        let content_y =
+                            content_relative_y(y, self.render_origin_y, self.slice_start_y);
                         // Always refresh with current layout, not first-paint
                         // value. First-paint pinning produced increasing
                         // overshoot for deeper headers — the first frame
@@ -3262,7 +3287,8 @@ impl CommonMarkViewerInternal {
                     self.line.should_end_newline = true;
                 }
 
-                self.list.end_level(ui, self.line.can_insert_end());
+                self.list
+                    .end_level(ui, ListSpacing::from(self.line.can_insert_end()));
 
                 if !self.list.is_inside_a_list() {
                     // Reset all the state and make it ready for the next list that occurs
@@ -3317,13 +3343,18 @@ impl CommonMarkViewerInternal {
             }
             pulldown_cmark::TagEnd::HtmlBlock => {
                 if !self.html_block.is_empty() {
-                    if let Some(table) = egui_commonmark_backend_extended::html_table::parse_html_table(&self.html_block) {
+                    if let Some(table) =
+                        egui_commonmark_backend_extended::html_table::parse_html_table(
+                            &self.html_block,
+                        )
+                    {
                         self.render_html_table(ui, &table, options, max_width);
                     } else if let Some(html_fn) = options.html_fn {
                         html_fn(ui, &self.html_block);
                     } else {
                         // Render non-table HTML as plain text (existing fallback)
-                        let text: pulldown_cmark::CowStr = std::mem::take(&mut self.html_block).into();
+                        let text: pulldown_cmark::CowStr =
+                            std::mem::take(&mut self.html_block).into();
                         self.event_text(text, ui, options);
                     }
                     self.html_block.clear();
@@ -3373,8 +3404,7 @@ impl CommonMarkViewerInternal {
             .header
             .first()
             .or(table.rows.first())
-            .map(|r| r.len())
-            .unwrap_or(0);
+            .map_or(0, std::vec::Vec::len);
 
         let line_h = body_line_height(ui, options);
         let cell_h = line_h + ui.spacing().item_spacing.y;
@@ -3389,10 +3419,7 @@ impl CommonMarkViewerInternal {
         // stays with the outer document scroller (#22); Shift+wheel opts in to
         // horizontal table scrolling via `forward_shift_wheel_to_horizontal_scroll`.
         // Bound at `table_max_width` over the prose cap (#64), same as markdown tables.
-        let table_bound = options
-            .table_max_width
-            .map(|w| w as f32)
-            .unwrap_or(max_width);
+        let table_bound = options.table_max_width.map_or(max_width, |w| w as f32);
         let table_rows: Vec<(bool, &[String])> = table
             .header
             .iter()
@@ -3433,11 +3460,13 @@ impl CommonMarkViewerInternal {
             ui,
             id,
             layout_key,
-            &baseline_widths,
-            &desired_widths,
-            &minimum_widths,
-            visible_column_budget,
-            table_rows.len(),
+            TableMeasurements {
+                baseline: &baseline_widths,
+                desired: &desired_widths,
+                minimums: &minimum_widths,
+                visible_column_budget,
+                row_count: table_rows.len(),
+            },
             |column, width| {
                 table_rows
                     .iter()
@@ -3451,12 +3480,10 @@ impl CommonMarkViewerInternal {
         );
         // Column widths persist across pane-width changes (see the markdown
         // table notes), with the same separator-drag caps.
-        let usable_bound_now = (table_bound
-            - table_frame.total_margin().sum().x
-            - table_frame.stroke.width * 2.0)
-            .max(0.0);
-        let last_widths = ui
-            .data(|data| data.get_temp::<Vec<f32>>(id.with("_column_widths")));
+        let usable_bound_now =
+            (table_bound - table_frame.total_margin().sum().x - table_frame.stroke.width * 2.0)
+                .max(0.0);
+        let last_widths = ui.data(|data| data.get_temp::<Vec<f32>>(id.with("_column_widths")));
         let initial_widths = last_widths.clone().unwrap_or(initial_widths);
         let column_caps = last_widths.map(|widths| {
             let total: f32 = widths.iter().sum();
@@ -3489,91 +3516,97 @@ impl CommonMarkViewerInternal {
                     .max_width(table_bound)
                     .auto_shrink([false, true])
                     .show(ui, |ui| {
-                ui.vertical(|ui| {
-                    table_frame.show(ui, |ui| {
-                        let reset_column_widths = height_layout_changed;
-                        let mut builder = egui_extras::TableBuilder::new(ui)
-                            .id_salt(id.with("_wrapped"))
-                            .striped(true)
-                            .resizable(true)
-                            .vscroll(false)
-                            // Hug columns when narrower than the panel (#47); the
-                            // outer ScrollArea still handles wide-table overflow.
-                            .auto_shrink([true, true])
-                            .min_scrolled_height(0.0)
-                            .cell_layout(egui::Layout::left_to_right(egui::Align::Min));
-                        for (column, width) in initial_widths.into_iter().enumerate() {
-                            let mut column_width = egui_extras::Column::initial(width)
-                                .resizable(true)
-                                .clip(true)
-                                .at_least(minimum_widths[column]);
-                            if let Some(max) =
-                                column_caps.as_ref().and_then(|caps| caps.get(column))
-                            {
-                                column_width = column_width.at_most(*max);
-                            }
-                            builder = builder.column(column_width);
-                        }
+                        ui.vertical(|ui| {
+                            table_frame.show(ui, |ui| {
+                                let reset_column_widths = height_layout_changed;
+                                let mut builder = egui_extras::TableBuilder::new(ui)
+                                    .id_salt(id.with("_wrapped"))
+                                    .striped(true)
+                                    .resizable(true)
+                                    .vscroll(false)
+                                    // Hug columns when narrower than the panel (#47); the
+                                    // outer ScrollArea still handles wide-table overflow.
+                                    .auto_shrink([true, true])
+                                    .min_scrolled_height(0.0)
+                                    .cell_layout(egui::Layout::left_to_right(egui::Align::Min));
+                                for (column, width) in initial_widths.into_iter().enumerate() {
+                                    let mut column_width = egui_extras::Column::initial(width)
+                                        .resizable(true)
+                                        .clip(true)
+                                        .at_least(minimum_widths[column]);
+                                    if let Some(max) =
+                                        column_caps.as_ref().and_then(|caps| caps.get(column))
+                                    {
+                                        column_width = column_width.at_most(*max);
+                                    }
+                                    builder = builder.column(column_width);
+                                }
 
-                        if reset_column_widths {
-                            builder.reset();
-                        }
+                                if reset_column_widths {
+                                    builder.reset();
+                                }
 
-                        let render_cell_strong = |ui: &mut Ui, cell: &str| {
-                            egui::Frame::NONE
-                                .inner_margin(egui::Margin::symmetric(8, 4))
-                                .show(ui, |ui| {
-                                    ui.strong(cell);
-                                });
-                        };
+                                let render_cell_strong = |ui: &mut Ui, cell: &str| {
+                                    egui::Frame::NONE
+                                        .inner_margin(egui::Margin::symmetric(8, 4))
+                                        .show(ui, |ui| {
+                                            ui.strong(cell);
+                                        });
+                                };
 
-                        builder.body(|mut body| {
-                            let widths = body.widths().to_vec();
-                            let heights: Vec<f32> = {
-                                let measure_ui = body.ui_mut();
-                                table_rows
-                                    .iter()
-                                    .map(|(_, row)| {
-                                        row.iter()
-                                            .enumerate()
-                                            .map(|(column, cell)| {
-                                                wrapped_text_height(
-                                                    measure_ui,
-                                                    cell,
-                                                    widths.get(column).copied().unwrap_or(40.0)
-                                                        - 16.0,
-                                                    line_h,
-                                                ) + 8.0
+                                builder.body(|mut body| {
+                                    let widths = body.widths().to_vec();
+                                    let heights: Vec<f32> = {
+                                        let measure_ui = body.ui_mut();
+                                        table_rows
+                                            .iter()
+                                            .map(|(_, row)| {
+                                                row.iter()
+                                                    .enumerate()
+                                                    .map(|(column, cell)| {
+                                                        wrapped_text_height(
+                                                            measure_ui,
+                                                            cell,
+                                                            widths
+                                                                .get(column)
+                                                                .copied()
+                                                                .unwrap_or(40.0)
+                                                                - 16.0,
+                                                            line_h,
+                                                        ) + 8.0
+                                                    })
+                                                    .fold(cell_h, f32::max)
                                             })
-                                            .fold(cell_h, f32::max)
-                                    })
-                                    .collect()
-                            };
-                            store_table_column_widths(body.ui_mut(), id, &widths);
-                            body.heterogeneous_rows(heights.into_iter(), |mut row_ui| {
-                                let (is_header, row) = table_rows[row_ui.index()];
-                                for cell in row {
-                                    row_ui.col(|ui| {
-                                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
-                                        if is_header {
-                                            render_cell_strong(ui, cell);
-                                        } else {
-                                            egui::Frame::NONE
-                                                .inner_margin(egui::Margin::symmetric(8, 4))
-                                                .show(ui, |ui| {
-                                                    let rich_text = self
-                                                        .text_style
-                                                        .to_richtext_with_options(ui, cell, options);
-                                                    ui.label(rich_text);
-                                                });
+                                            .collect()
+                                    };
+                                    store_table_column_widths(body.ui_mut(), id, &widths);
+                                    body.heterogeneous_rows(heights.into_iter(), |mut row_ui| {
+                                        let (is_header, row) = table_rows[row_ui.index()];
+                                        for cell in row {
+                                            row_ui.col(|ui| {
+                                                ui.style_mut().wrap_mode =
+                                                    Some(egui::TextWrapMode::Wrap);
+                                                if is_header {
+                                                    render_cell_strong(ui, cell);
+                                                } else {
+                                                    egui::Frame::NONE
+                                                        .inner_margin(egui::Margin::symmetric(8, 4))
+                                                        .show(ui, |ui| {
+                                                            let rich_text = self
+                                                                .text_style
+                                                                .to_richtext_with_options(
+                                                                    ui, cell, options,
+                                                                );
+                                                            ui.label(rich_text);
+                                                        });
+                                                }
+                                            });
                                         }
                                     });
-                                }
+                                });
                             });
                         });
                     });
-                });
-            });
                 forward_shift_wheel_to_horizontal_scroll(ui, &mut scroll_out);
                 scroll_out
             })
@@ -3586,9 +3619,8 @@ impl CommonMarkViewerInternal {
 mod tests {
     #[test]
     fn frontmatter_splits_top_level_key_value_pairs() {
-        let pairs = parse_frontmatter_pairs(
-            "title: My Document\nauthor: Jane Doe\ndate: 2026-08-30\n",
-        );
+        let pairs =
+            parse_frontmatter_pairs("title: My Document\nauthor: Jane Doe\ndate: 2026-08-30\n");
         assert_eq!(
             pairs,
             vec![
@@ -3614,7 +3646,8 @@ mod tests {
         // Not a YAML parser by design: nested mappings and sequence items are
         // folded into the parent value rather than dropped or mis-split into
         // their own rows.
-        let pairs = parse_frontmatter_pairs("nested:\n  key: value\nlist:\n  - first\n  - second\n");
+        let pairs =
+            parse_frontmatter_pairs("nested:\n  key: value\nlist:\n  - first\n  - second\n");
         assert_eq!(
             pairs,
             vec![
@@ -3738,8 +3771,7 @@ mod tests {
             let cell = vec![(Event::Code(code.into()), 0..code.len())];
             let options = CommonMarkOptions::default();
 
-            let height =
-                table_cell_height(&cell, line_height, &cache, ui, column_width, &options);
+            let height = table_cell_height(&cell, line_height, &cache, ui, column_width, &options);
             assert!(height >= line_height * 2.0);
             assert!(
                 height < line_height * 3.0,
@@ -3755,9 +3787,7 @@ mod tests {
 
         egui::__run_test_ui(|ui| {
             let font = egui::TextStyle::Body.resolve(ui.style());
-            let natural = ui
-                .text_style_height(&egui::TextStyle::Body)
-                .max(font.size);
+            let natural = ui.text_style_height(&egui::TextStyle::Body).max(font.size);
             let mut options = CommonMarkOptions::default();
 
             assert!((body_line_height(ui, &options) - natural).abs() < 0.01);
@@ -3836,7 +3866,10 @@ mod tests {
             let column_width = (body_total + mixed_total) * 0.5 + 8.0;
             let cell = vec![
                 (Event::Text(plain.into()), 0..plain.len()),
-                (Event::Code(code.into()), plain.len()..plain.len() + code.len()),
+                (
+                    Event::Code(code.into()),
+                    plain.len()..plain.len() + code.len(),
+                ),
             ];
 
             assert_eq!(cell_visual_lines(&cell, ui, column_width), 2);
@@ -3924,8 +3957,7 @@ mod tests {
             let desired = [400.0, 500.0, 600.0];
             let (frame, widths, column_budget) =
                 framed_table_widths(ui, &desired, &[40.0; 3], table_bound);
-            let column_space =
-                ui.spacing().item_spacing.x * desired.len().saturating_sub(1) as f32;
+            let column_space = ui.spacing().item_spacing.x * desired.len().saturating_sub(1) as f32;
             let visible_width =
                 widths.iter().sum::<f32>() + column_space + frame.total_margin().sum().x;
 
@@ -3974,7 +4006,10 @@ mod tests {
         let table_id = Id::new("responsive-table");
         let initial = render_resizable_table_widths(&ctx, table_id, 180.0, &[60.0, 80.0]);
         let same_bound = render_resizable_table_widths(&ctx, table_id, 180.0, &[90.0, 110.0]);
-        assert_eq!(same_bound, initial, "stable bounds must retain cached widths");
+        assert_eq!(
+            same_bound, initial,
+            "stable bounds must retain cached widths"
+        );
 
         // Pane-width changes must never disturb the columns: widening leaves
         // the layout alone (`auto_shrink` closes any gap), and shrinking lets
@@ -4009,12 +4044,10 @@ mod tests {
         let widths = fit_column_widths(&[100.0, 300.0, 240.0], 300.0, &minimums);
 
         assert!((widths.iter().sum::<f32>() - 300.0).abs() < 0.1);
-        assert!(
-            widths
-                .iter()
-                .zip(minimums)
-                .all(|(width, minimum)| *width >= minimum)
-        );
+        assert!(widths
+            .iter()
+            .zip(minimums)
+            .all(|(width, minimum)| *width >= minimum));
     }
 
     #[test]
@@ -4089,12 +4122,10 @@ mod tests {
 
         assert!((widths.iter().sum::<f32>() - 200.0).abs() < 0.1);
         assert!(widths[2] > widths[1] && widths[1] > widths[0]);
-        assert!(
-            widths
-                .iter()
-                .zip(desired)
-                .all(|(width, wanted)| *width >= 40.0 && *width <= wanted)
-        );
+        assert!(widths
+            .iter()
+            .zip(desired)
+            .all(|(width, wanted)| *width >= 40.0 && *width <= wanted));
     }
 
     #[test]
@@ -4108,10 +4139,7 @@ mod tests {
 
     #[test]
     fn fitted_table_columns_handle_a_single_column() {
-        assert_eq!(
-            fit_column_widths(&[500.0], 200.0, &[40.0]),
-            vec![200.0]
-        );
+        assert_eq!(fit_column_widths(&[500.0], 200.0, &[40.0]), vec![200.0]);
     }
 
     #[test]
@@ -4126,28 +4154,20 @@ mod tests {
     fn height_aware_columns_move_space_to_reduce_wrapping() {
         let baseline = [150.0, 150.0];
         let desired = [200.0, 500.0];
-        let widths = optimize_fitted_widths(
-            &baseline,
-            &desired,
-            &[40.0; 2],
-            2,
-            |column, width| {
-                let logical_lengths = if column == 0 {
-                    [40.0, 60.0]
-                } else {
-                    [500.0, 700.0]
-                };
-                logical_lengths
-                    .map(|length| (length / width).ceil() * 20.0)
-                    .to_vec()
-            },
-        );
+        let widths = optimize_fitted_widths(&baseline, &desired, &[40.0; 2], 2, |column, width| {
+            let logical_lengths = if column == 0 {
+                [40.0, 60.0]
+            } else {
+                [500.0, 700.0]
+            };
+            logical_lengths
+                .map(|length| (length / width).ceil() * 20.0)
+                .to_vec()
+        });
 
         assert!(widths[0] < baseline[0]);
         assert!(widths[1] > baseline[1]);
-        assert!(
-            (widths.iter().sum::<f32>() - baseline.iter().sum::<f32>()).abs() < 0.01
-        );
+        assert!((widths.iter().sum::<f32>() - baseline.iter().sum::<f32>()).abs() < 0.01);
         assert!(widths[0] >= 40.0 && widths[1] <= desired[1]);
     }
 
@@ -4161,7 +4181,11 @@ mod tests {
             1,
             |column, width| {
                 let height = if column == 0 {
-                    if width < 76.0 { 100.0 } else { 20.0 }
+                    if width < 76.0 {
+                        100.0
+                    } else {
+                        20.0
+                    }
                 } else if width < 124.0 {
                     100.0
                 } else {
@@ -4209,20 +4233,14 @@ mod tests {
 
     #[test]
     fn height_aware_columns_skip_measurement_when_no_transfer_is_possible() {
-        let compact = optimize_fitted_widths(
-            &[80.0, 120.0],
-            &[80.0, 120.0],
-            &[40.0, 40.0],
-            2,
-            |_, _| panic!("compact natural widths do not need height optimization"),
-        );
-        let all_at_minimum = optimize_fitted_widths(
-            &[60.0, 80.0],
-            &[200.0, 300.0],
-            &[60.0, 80.0],
-            2,
-            |_, _| panic!("columns at their floors cannot donate width"),
-        );
+        let compact =
+            optimize_fitted_widths(&[80.0, 120.0], &[80.0, 120.0], &[40.0, 40.0], 2, |_, _| {
+                panic!("compact natural widths do not need height optimization")
+            });
+        let all_at_minimum =
+            optimize_fitted_widths(&[60.0, 80.0], &[200.0, 300.0], &[60.0, 80.0], 2, |_, _| {
+                panic!("columns at their floors cannot donate width")
+            });
 
         assert_eq!(compact, [80.0, 120.0]);
         assert_eq!(all_at_minimum, [60.0, 80.0]);
@@ -4230,7 +4248,10 @@ mod tests {
 
     #[test]
     fn dense_table_overflow_candidates_obey_all_caps() {
-        assert_eq!(overflow_candidates(600.0, 1_000.0), [0.0, 32.0, 64.0, 96.0, 128.0, 160.0]);
+        assert_eq!(
+            overflow_candidates(600.0, 1_000.0),
+            [0.0, 32.0, 64.0, 96.0, 128.0, 160.0]
+        );
         let proportional = overflow_candidates(200.0, 1_000.0);
         assert_eq!(&proportional[..2], &[0.0, 32.0]);
         assert!((proportional[2] - 60.0).abs() < 0.01);
@@ -4243,13 +4264,8 @@ mod tests {
         let mut desired = minimums;
         desired[12] = 400.0;
         let baseline = minimums;
-        let widths = optimize_table_widths(
-            &baseline,
-            &desired,
-            &minimums,
-            500.0,
-            1,
-            |column, width| {
+        let widths =
+            optimize_table_widths(&baseline, &desired, &minimums, 500.0, 1, |column, width| {
                 vec![if column == 12 && width >= 205.0 {
                     20.0
                 } else if column == 12 {
@@ -4257,8 +4273,7 @@ mod tests {
                 } else {
                     20.0
                 }]
-            },
-        );
+            });
 
         assert!((widths.iter().sum::<f32>() - (minimums.iter().sum::<f32>() + 160.0)).abs() < 0.1);
         assert!(widths[12] >= 205.0);
@@ -4283,7 +4298,12 @@ mod tests {
             candidate(96.0, 10.0, 140.0),
         ];
 
-        assert_eq!(select_overflow_knee(&candidates).unwrap().0, 64.0);
+        assert_eq!(
+            select_overflow_knee(&candidates)
+                .expect("overflow candidates contain a usable knee")
+                .0,
+            64.0
+        );
     }
 
     #[test]
@@ -4295,13 +4315,8 @@ mod tests {
         let mut desired = minimums;
         desired[12] = 400.0;
         let mut measured_receiver_widths = Vec::new();
-        let widths = optimize_table_widths(
-            &minimums,
-            &desired,
-            &minimums,
-            500.0,
-            1,
-            |column, width| {
+        let widths =
+            optimize_table_widths(&minimums, &desired, &minimums, 500.0, 1, |column, width| {
                 if column != 12 {
                     return vec![20.0];
                 }
@@ -4321,8 +4336,7 @@ mod tests {
                     100.0
                 };
                 vec![height]
-            },
-        );
+            });
 
         for expected in [46.0, 78.0, 110.0, 142.0, 174.0, 206.0] {
             assert!(
@@ -4348,22 +4362,8 @@ mod tests {
             }]
         };
 
-        let fitting = optimize_table_widths(
-            &baseline,
-            &desired,
-            &minimums,
-            200.0,
-            1,
-            measure,
-        );
-        let dense = optimize_table_widths(
-            &baseline,
-            &desired,
-            &minimums,
-            199.0,
-            1,
-            measure,
-        );
+        let fitting = optimize_table_widths(&baseline, &desired, &minimums, 200.0, 1, measure);
+        let dense = optimize_table_widths(&baseline, &desired, &minimums, 199.0, 1, measure);
 
         assert_eq!(fitting, baseline);
         assert!(dense.iter().sum::<f32>() > 200.0);
@@ -4373,14 +4373,9 @@ mod tests {
     fn dense_overflow_keeps_floors_when_extra_width_does_not_reduce_rows() {
         let minimums = [80.0, 120.0];
         let desired = [300.0, 400.0];
-        let widths = optimize_table_widths(
-            &minimums,
-            &desired,
-            &minimums,
-            180.0,
-            2,
-            |_, _| vec![20.0; 2],
-        );
+        let widths = optimize_table_widths(&minimums, &desired, &minimums, 180.0, 2, |_, _| {
+            vec![20.0; 2]
+        });
 
         assert_eq!(widths, minimums);
     }
@@ -4390,17 +4385,10 @@ mod tests {
         let minimums = [100.0; 5];
         let desired = [300.0; 5];
         let measured_cells = std::cell::Cell::new(0);
-        let widths = optimize_table_widths(
-            &minimums,
-            &desired,
-            &minimums,
-            400.0,
-            1_000,
-            |_, _| {
-                measured_cells.set(measured_cells.get() + 1_000);
-                vec![20.0; 1_000]
-            },
-        );
+        let widths = optimize_table_widths(&minimums, &desired, &minimums, 400.0, 1_000, |_, _| {
+            measured_cells.set(measured_cells.get() + 1_000);
+            vec![20.0; 1_000]
+        });
 
         assert_eq!(widths, minimums);
         assert!(measured_cells.get() <= 4_096);
@@ -4411,19 +4399,13 @@ mod tests {
         let baseline = [100.0, 100.0];
         let desired = [200.0, 200.0];
         let minimums = [40.0, 40.0];
-        let widths = optimize_fitted_widths(
-            &baseline,
-            &desired,
-            &minimums,
-            1,
-            |column, width| {
-                if column == 0 {
-                    vec![if width >= 108.0 { 20.0 } else { 40.0 }]
-                } else {
-                    vec![100.0]
-                }
-            },
-        );
+        let widths = optimize_fitted_widths(&baseline, &desired, &minimums, 1, |column, width| {
+            if column == 0 {
+                vec![if width >= 108.0 { 20.0 } else { 40.0 }]
+            } else {
+                vec![100.0]
+            }
+        });
 
         assert_eq!(widths, baseline);
     }
@@ -4433,20 +4415,14 @@ mod tests {
         let baseline = [100.0, 100.0, 100.0];
         let desired = [200.0, 200.0, 100.0];
         let minimums = [40.0, 40.0, 40.0];
-        let widths = optimize_fitted_widths(
-            &baseline,
-            &desired,
-            &minimums,
-            1,
-            |column, width| {
-                let height = match column {
-                    0 | 1 if width >= 108.0 => 20.0,
-                    0 | 1 => 100.0,
-                    _ => 20.0,
-                };
-                vec![height]
-            },
-        );
+        let widths = optimize_fitted_widths(&baseline, &desired, &minimums, 1, |column, width| {
+            let height = match column {
+                0 | 1 if width >= 108.0 => 20.0,
+                0 | 1 => 100.0,
+                _ => 20.0,
+            };
+            vec![height]
+        });
 
         assert!(widths[0] >= 108.0);
         assert!(widths[1] >= 108.0);
@@ -4468,15 +4444,45 @@ mod tests {
             };
 
             let (_, first_changed) = cached_height_aware_widths(
-                ui, id, 1, &baseline, &desired, &minimums, 200.0, 1, measure,
+                ui,
+                id,
+                1,
+                TableMeasurements {
+                    baseline: &baseline,
+                    desired: &desired,
+                    minimums: &minimums,
+                    visible_column_budget: 200.0,
+                    row_count: 1,
+                },
+                measure,
             );
             let after_first = measurements.get();
             let (_, stable_changed) = cached_height_aware_widths(
-                ui, id, 1, &baseline, &desired, &minimums, 200.0, 1, measure,
+                ui,
+                id,
+                1,
+                TableMeasurements {
+                    baseline: &baseline,
+                    desired: &desired,
+                    minimums: &minimums,
+                    visible_column_budget: 200.0,
+                    row_count: 1,
+                },
+                measure,
             );
             let after_stable = measurements.get();
             let (_, new_key_changed) = cached_height_aware_widths(
-                ui, id, 2, &baseline, &desired, &minimums, 200.0, 1, measure,
+                ui,
+                id,
+                2,
+                TableMeasurements {
+                    baseline: &baseline,
+                    desired: &desired,
+                    minimums: &minimums,
+                    visible_column_budget: 200.0,
+                    row_count: 1,
+                },
+                measure,
             );
 
             assert!(!first_changed);
@@ -4513,11 +4519,13 @@ mod tests {
                 ui,
                 id,
                 key,
-                &minimums,
-                &desired,
-                &minimums,
-                199.6,
-                1,
+                TableMeasurements {
+                    baseline: &minimums,
+                    desired: &desired,
+                    minimums: &minimums,
+                    visible_column_budget: 199.6,
+                    row_count: 1,
+                },
                 measure,
             );
             let after_first = measurements.get();
@@ -4525,11 +4533,13 @@ mod tests {
                 ui,
                 id,
                 key,
-                &minimums,
-                &desired,
-                &minimums,
-                160.0,
-                1,
+                TableMeasurements {
+                    baseline: &minimums,
+                    desired: &desired,
+                    minimums: &minimums,
+                    visible_column_budget: 160.0,
+                    row_count: 1,
+                },
                 measure,
             );
 
@@ -4549,15 +4559,7 @@ mod tests {
 
             assert_ne!(
                 key,
-                table_layout_key(
-                    ui,
-                    &desired,
-                    &[40.0, 61.0],
-                    20.0,
-                    7,
-                    0,
-                    1.0,
-                )
+                table_layout_key(ui, &desired, &[40.0, 61.0], 20.0, 7, 0, 1.0,)
             );
             assert_ne!(
                 key,
@@ -4652,7 +4654,7 @@ mod tests {
                         .collect()
                 },
             )
-            .unwrap();
+            .expect("the fixture contains the requested parser event");
             let mut after_cache = HashMap::new();
             let after = table_height_score(
                 &optimized,
@@ -4674,7 +4676,7 @@ mod tests {
                         .collect()
                 },
             )
-            .unwrap();
+            .expect("the fixture contains the requested parser event");
 
             assert!(
                 after.row_max_total < before.row_max_total,
@@ -4710,7 +4712,7 @@ mod tests {
                 markdown,
                 Some(1),
                 None,
-                false,
+                RenderScope::Viewport,
                 None,
             );
             let sc = scroll_cache(&mut cache, &source_id);
@@ -4744,7 +4746,7 @@ mod tests {
                 markdown,
                 Some(1),
                 None,
-                false,
+                RenderScope::Viewport,
                 None,
             );
         });
@@ -4941,11 +4943,11 @@ mod tests {
     fn replacement_highlight_is_indivisible_for_any_source_overlap() {
         let source = 22..31;
         assert_eq!(
-            highlight_for_source_span(&source, &[25..26], None),
+            highlight_for_source_span(&source, std::slice::from_ref(&(25..26)), None),
             HighlightKind::Match
         );
         assert_eq!(
-            highlight_for_source_span(&source, &[0..100], None),
+            highlight_for_source_span(&source, std::slice::from_ref(&(0..100)), None),
             HighlightKind::Match
         );
     }
@@ -4953,7 +4955,7 @@ mod tests {
     #[test]
     fn active_overlap_wins_over_regular_match() {
         assert_eq!(
-            highlight_for_source_span(&(22..31), &[22..31], Some(&(24..25))),
+            highlight_for_source_span(&(22..31), std::slice::from_ref(&(22..31)), Some(&(24..25))),
             HighlightKind::Active
         );
     }
@@ -5030,7 +5032,7 @@ mod tests {
             let display: String = renderer
                 .current_heading_rich_texts
                 .iter()
-                .map(|text| text.text())
+                .map(egui::RichText::text)
                 .collect();
             assert_eq!(display, "Pin 📌");
             assert_eq!(renderer.current_heading_text, "Pin :pushpin:");
@@ -5107,14 +5109,20 @@ mod tests {
             "|---|---|\n",
             "| row | ACTIVE_TABLE_MATCH |\n",
         );
-        let active_start = markdown.find("ACTIVE_TABLE_MATCH").unwrap();
+        let active_start = markdown
+            .find("ACTIVE_TABLE_MATCH")
+            .expect("the fixture contains the active table match");
         let active_range = active_start..active_start + "ACTIVE_TABLE_MATCH".len();
-        let heading_source_start = crate::parsers::latex_delimiters::parse_events(markdown, false, false)
-            .into_iter()
-            .find_map(|(event, range)| {
-                matches!(event, Event::Start(Tag::Heading { .. })).then_some(range.start)
-            })
-            .expect("fixture contains a nested heading");
+        let heading_source_start = crate::parsers::latex_delimiters::parse_events(
+            markdown,
+            MathSupport::Disabled,
+            Frontmatter::Hidden,
+        )
+        .into_iter()
+        .find_map(|(event, range)| {
+            matches!(event, Event::Start(Tag::Heading { .. })).then_some(range.start)
+        })
+        .expect("fixture contains a nested heading");
         let heading_key = crate::header_position_key(heading_source_start);
         let mut cache = CommonMarkCache::default();
         cache.set_search_ranges(vec![active_range.clone()]);

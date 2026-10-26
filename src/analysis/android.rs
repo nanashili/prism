@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn index(
     target: &Target,
     settings: &Settings,
@@ -110,6 +111,7 @@ fn collect(
     Ok(())
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn code(target: &Target, store: &Store, address: &str) -> Result<String> {
     let (file, owner, signature) = store.function_source(&target.sha256, address)?;
     let root = cache(target).join("sources");

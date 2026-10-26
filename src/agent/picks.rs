@@ -27,7 +27,7 @@ pub(super) fn load(agent: &str) -> Result<Vec<Pick>> {
         .unwrap_or_default()
         .into_iter()
         .map(|(id, value)| Pick {
-            legacy: id == "mode",
+            modes_api: id == "mode",
             id,
             value,
         })
@@ -43,13 +43,6 @@ pub(crate) fn remember(agent: &str, id: &str, value: Option<&str>) -> Result<()>
         picks.remove(id);
     }
     write(&saved)
-}
-
-pub(crate) fn import_from(source: &Path, destination: &Path) -> Result<()> {
-    if destination.try_exists()? || !source.try_exists()? {
-        return Ok(());
-    }
-    write_file(destination, &read_file(source)?)
 }
 
 pub(crate) fn restore_if_current(

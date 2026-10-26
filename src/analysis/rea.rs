@@ -7,56 +7,66 @@ use std::path::Path;
 use std::sync::{Arc, atomic::AtomicBool};
 use std::time::Duration;
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch_item;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch_parse;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch_state;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch_transport;
 mod connection;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod error_projection;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod identity;
-mod java_runtime;
 mod launch;
 mod reply;
 mod rust_package;
 mod rust_runtime;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 mod shutdown;
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 pub(crate) use batch_state::{DecompilationBatch, DecompilationBatchPoll, DecompilationItem};
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 pub(crate) use identity::backend_identity;
 
 pub(crate) struct Rea {
     rpc: Rpc,
     timeout: Duration,
-    opening_timeout: Duration,
     target: Option<String>,
     provider: String,
     backend: AnalysisBackend,
     sink: Sink,
-    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+    #[cfg(feature = "rea-rust-ghidra")]
     session: Arc<()>,
-    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+    #[cfg(feature = "rea-rust-ghidra")]
     active_batch: Option<u64>,
-    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+    #[cfg(feature = "rea-rust-ghidra")]
     abandoned: Option<batch_state::PendingCall>,
     healthy: bool,
 }
 
 impl Rea {
+    /// Check that the selected native REA executable and its Ghidra worker
+    /// can be launched before setup commits the engine choice.
+    pub(crate) fn validate_installation(settings: &Settings) -> Result<()> {
+        let backend = settings.analysis_backend();
+        backend.require_available()?;
+        let rea = launch::rea_executable(settings)?;
+        if backend == AnalysisBackend::RustGhidraRea {
+            rust_package::validate(&rea)?;
+            rust_runtime::worker_executable(settings, &rea)?;
+        }
+        Ok(())
+    }
+
     pub fn is_reusable(&self) -> bool {
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         let pending = self.active_batch.is_some() || self.abandoned.is_some();
-        #[cfg(not(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra")))]
+        #[cfg(not(feature = "rea-rust-ghidra"))]
         let pending = false;
         self.healthy && (self.rpc.is_reusable() || pending)
     }
@@ -65,6 +75,7 @@ impl Rea {
         self.backend.retains_prepared_session() && self.target.is_some() && self.healthy
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn connect(settings: &Settings, cancelled: Arc<AtomicBool>, sink: Sink) -> Result<Self> {
         let mut launch = launch::Launch::new(settings)?;
         let backend = settings.analysis_backend();
@@ -73,21 +84,21 @@ impl Rea {
         Ok(Self {
             rpc,
             timeout: launch.timeout,
-            opening_timeout: launch.opening_timeout,
             target: None,
             provider: launch.provider,
             backend,
             sink,
-            #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+            #[cfg(feature = "rea-rust-ghidra")]
             session: Arc::new(()),
-            #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+            #[cfg(feature = "rea-rust-ghidra")]
             active_batch: None,
-            #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+            #[cfg(feature = "rea-rust-ghidra")]
             abandoned: None,
             healthy: true,
         })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn open(&mut self, path: &Path) -> Result<Value> {
         let text = path.to_string_lossy();
         if self.target.as_deref() == Some(&text) {
@@ -97,7 +108,7 @@ impl Rea {
         let reply = self.call_tool(
             "open_binary",
             json!({"path":text,"provider_id":self.provider}),
-            self.opening_timeout,
+            self.timeout,
         )?;
         let value = reply.into_result()?;
         if self.backend.retains_prepared_session() {
@@ -105,7 +116,7 @@ impl Rea {
                 "Preparing {} analysis",
                 self.backend.label(),
             )))?;
-            self.call_tool("list_segments", json!({}), self.opening_timeout)?
+            self.call_tool("list_segments", json!({}), self.timeout)?
                 .into_result()?;
         }
         self.target = Some(text.into_owned());
@@ -130,13 +141,14 @@ impl Rea {
         reply.into_result()
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn call_tool(
         &mut self,
         name: &str,
         args: Value,
         timeout: Duration,
     ) -> Result<reply::ToolReply> {
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         self.ensure_available()?;
         let sink = self.sink.clone();
         let reply = self.rpc.call(
@@ -168,7 +180,7 @@ impl Rea {
     }
 
     pub fn tools(&mut self) -> Result<Value> {
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         self.ensure_available()?;
         self.rpc
             .call("tools/list", json!({}), self.timeout, |_| Ok(None))

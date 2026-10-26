@@ -4,8 +4,8 @@ use serde_json::{Value, json};
 pub(super) fn response(params: &Value, permissions: &Permissions) -> Option<Value> {
     match level(params, permissions) {
         Level::Ask => None,
-        Level::Allow => select(params, true),
-        Level::Never => Some(select(params, false).unwrap_or_else(cancelled)),
+        Level::Allow => select(params, PermissionDecision::Allow),
+        Level::Never => Some(select(params, PermissionDecision::Deny).unwrap_or_else(cancelled)),
     }
 }
 
@@ -17,7 +17,9 @@ pub(super) fn level(params: &Value, permissions: &Permissions) -> Level {
     permissions.level(category(title))
 }
 
-pub(super) fn select(params: &Value, allow: bool) -> Option<Value> {
+pub(super) fn select(params: &Value, allow: PermissionDecision) -> Option<Value> {
+    let allow = allow == PermissionDecision::Allow;
+
     let kinds = if allow {
         ["allow_once", "allow_always"]
     } else {
@@ -44,8 +46,14 @@ pub(super) fn cancelled() -> Value {
 fn category(title: &str) -> Tool {
     if let Some(tool) = server_tool(title, "prism") {
         return match tool {
-            "get_state" | "list_functions" | "read_bytes" | "analysis_tools"
-            | "decompile_batch" => Tool::Read,
+            "get_state"
+            | "list_functions"
+            | "read_bytes"
+            | "analysis_tools"
+            | "decompile_batch"
+            | "investigation"
+            | "semantic_search"
+            | "index_function_search" => Tool::Read,
             "open_function"
             | "current_view"
             | "set_view"
@@ -74,7 +82,13 @@ fn category(title: &str) -> Tool {
     }
     if let Some(tool) = server_tool(title, "prism-analysis") {
         return match tool {
-            "list_functions" | "read_bytes" | "analysis_tools" | "decompile_batch" => Tool::Read,
+            "list_functions"
+            | "read_bytes"
+            | "analysis_tools"
+            | "decompile_batch"
+            | "investigation"
+            | "semantic_search"
+            | "index_function_search" => Tool::Read,
             _ => Tool::Shell,
         };
     }
@@ -117,3 +131,15 @@ const READ_ONLY_REA: &[&str] = &[
     "compare_",
     "build_call_path",
 ];
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum PermissionDecision {
+    Allow,
+    Deny,
+}
+
+impl From<bool> for PermissionDecision {
+    fn from(value: bool) -> Self {
+        if value { Self::Allow } else { Self::Deny }
+    }
+}

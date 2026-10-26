@@ -1,3 +1,4 @@
+use crate::ui::presentation::{Disclosure, HeaderBehavior, Selection};
 use crate::ui::{app::Prism, icons::Icon, popup, theme::Palette, widgets};
 use eframe::egui::{self, Align2, FontId, Rect, Sense};
 
@@ -5,8 +6,10 @@ impl Prism {
     pub(super) fn chat_list_header(
         &mut self,
         ui: &mut egui::Ui,
-        collapsible: bool,
+        collapsible: HeaderBehavior,
     ) -> (bool, bool) {
+        let collapsible = collapsible == HeaderBehavior::Collapsible;
+
         let mut expanded = !collapsible || self.sidebar_section_open("chats");
         let mut changed = false;
         ui.horizontal(|ui| {
@@ -21,7 +24,7 @@ impl Prism {
             });
             if title.clicked() && collapsible {
                 expanded = !expanded;
-                self.set_sidebar_section_open("chats", expanded);
+                self.set_sidebar_section_open("chats", Disclosure::from(expanded));
             }
 
             if widgets::icon_button(ui, Icon::Search, "Search chats", 24.0).clicked() {
@@ -45,7 +48,7 @@ impl Prism {
             }
         });
         if collapsible && expanded && !self.sidebar_section_open("chats") {
-            self.set_sidebar_section_open("chats", true);
+            self.set_sidebar_section_open("chats", Disclosure::Open);
         }
         (expanded, changed)
     }
@@ -59,7 +62,7 @@ impl Prism {
                 Some(Icon::Folder),
                 "Archived chats",
                 "",
-                self.chat_list.archived,
+                Selection::from(self.chat_list.archived),
             )
             .clicked()
             {

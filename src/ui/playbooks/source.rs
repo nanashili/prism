@@ -45,7 +45,7 @@ pub(super) fn read_custom(path: &Path) -> crate::error::Result<String> {
     }
     let mut source = String::new();
     file.take(MAX_BYTES + 1).read_to_string(&mut source)?;
-    if source.len() > MAX_BYTES as usize {
+    if u64::try_from(source.len())? > MAX_BYTES {
         return Err("Skill exceeds 128 KB".into());
     }
     Ok(source.replace("\r\n", "\n"))

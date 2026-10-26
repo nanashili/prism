@@ -62,8 +62,7 @@ impl Prism {
             .workspace
             .project
             .as_ref()
-            .map(|project| project.target.name.as_str())
-            .unwrap_or("this file");
+            .map_or("this file", |project| project.target.name.as_str());
         popup::heading(ui, &format!("Run on {name}"));
         ui.add_enabled_ui(!self.chat.busy, |ui| {
             for playbook in self.playbooks.enabled(&self.settings).into_iter().take(12) {

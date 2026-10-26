@@ -1,7 +1,7 @@
 # Bounded MCP requests and serial worker scheduling
 
 This implements the MCP, bridge, and analysis-owner portion of
-[REFERENCE_TOOL_LATENCY.md](REFERENCE_TOOL_LATENCY.md). It changes protocol admission
+the current native responsiveness measurements. It changes protocol admission
 and scheduling without adding native engine workers or changing the existing
 saved-result query limits. ACP permission/event changes are described separately
 by their owning implementation slice.

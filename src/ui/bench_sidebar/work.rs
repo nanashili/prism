@@ -30,7 +30,7 @@ impl Prism {
                 Icon::Thread,
                 original
                     .and_then(|value| value["comments"].as_object())
-                    .map_or(0, |values| values.len()),
+                    .map_or(0, serde_json::Map::len),
             ),
             (
                 "patches",
@@ -130,11 +130,7 @@ fn items(project: &Project, kind: &str, offset: usize) -> Vec<WorkItem> {
     let function = |address: &str| {
         named(
             address,
-            project
-                .renamed
-                .get(address)
-                .map(String::as_str)
-                .unwrap_or(address),
+            project.renamed.get(address).map_or(address, String::as_str),
         )
     };
     match kind {

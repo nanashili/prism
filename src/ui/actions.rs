@@ -1,8 +1,11 @@
 use super::app::{Chat, Prism};
+use crate::ui::presentation::{OpenTarget, SaveDestination};
 use crate::worker::Job;
 
 impl Prism {
-    pub(super) fn choose_open(&mut self, folder: bool) {
+    pub(super) fn choose_open(&mut self, folder: OpenTarget) {
+        let folder = folder == OpenTarget::Folder;
+
         let dialog =
             rfd::FileDialog::new().set_title("Open an app, binary, shader, model or project");
         let path = if folder {
@@ -82,7 +85,9 @@ impl Prism {
         }
     }
 
-    pub(super) fn save_document(&mut self, choose: bool) {
+    pub(super) fn save_document(&mut self, choose: SaveDestination) {
+        let choose = choose == SaveDestination::Choose;
+
         let Some(project) = self.workspace.project.clone() else {
             return;
         };
@@ -118,6 +123,8 @@ impl Prism {
         };
         if let Err(error) = result {
             self.error = Some(error.to_string());
+        } else if self.screen == crate::model::Screen::Setup {
+            self.screen = crate::model::Screen::Home;
         }
     }
 }

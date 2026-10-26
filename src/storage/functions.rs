@@ -28,6 +28,7 @@ impl Store {
         )?)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn begin_functions(&mut self, project: &str) -> Result<FunctionImport<'_>> {
         let transaction = self.db.transaction()?;
         transaction.execute("DELETE FROM functions WHERE project=?1", [project])?;
@@ -48,6 +49,7 @@ impl FunctionImport<'_> {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn append(&mut self, functions: &[Procedure]) -> Result<()> {
         // Providers may repeat an address within a page or across pages. Keep
         // its first name and let unrelated database failures propagate.
@@ -69,6 +71,7 @@ impl FunctionImport<'_> {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn finish(self) -> Result<usize> {
         self.transaction
             .execute_batch("DROP TABLE IF EXISTS temp.sidebar_identity")?;

@@ -1,14 +1,19 @@
+//! Native desktop and managed headless entry point for Prism.
+
 mod agent;
 mod analysis;
+mod analysis_repair;
 mod bridge;
+mod comparison;
 mod debug;
 mod decompilation;
 mod error;
 mod events;
 mod executable_paths;
 mod headless;
-mod migration;
+mod investigation;
 mod model;
+mod profiling;
 mod project;
 mod protocol;
 mod reconstruction;
@@ -27,8 +32,22 @@ fn main() {
 fn run() -> error::Result<()> {
     let mut arguments = std::env::args_os().skip(1);
     let first = arguments.next();
-    let command = first.as_ref().and_then(|argument| argument.to_str());
-    if command == Some("--headless") {
+    let command = first
+        .as_ref()
+        .and_then(|argument| argument.to_str())
+        .map(str::to_owned);
+
+    let is_mcp = matches!(
+        command.as_deref(),
+        Some("mcp" | "--prism-mcp" | "--rea-mcp")
+    );
+    let _profiling = if is_mcp || command.as_deref() == Some("--headless") {
+        profiling::start_mcp()
+    } else {
+        profiling::start()
+    };
+
+    if command.as_deref() == Some("--headless") {
         let path = arguments
             .next()
             .ok_or("Usage: prism --headless <project-path>")?;
@@ -37,19 +56,18 @@ fn run() -> error::Result<()> {
         }
         return headless::run(std::path::PathBuf::from(path));
     }
-    if command == Some("import-upstream") {
-        return migration::run(arguments);
-    }
-    if matches!(command, Some("mcp" | "--prism-mcp" | "--rea-mcp")) {
-        let mode = match command {
+
+    if is_mcp {
+        let mode = match command.as_deref() {
             Some("--prism-mcp") => Some(std::ffi::OsString::from("--window")),
             Some("--rea-mcp") => Some(std::ffi::OsString::from("--analysis")),
             _ => None,
         };
-        return prism::mcp::run_cli(mode.into_iter().chain(arguments));
+        return Ok(prism::mcp::run_cli(mode.into_iter().chain(arguments))?);
     }
+
     let initial = first.map(std::path::PathBuf::from);
-    let _data_lock = migration::lock_data(&settings::support_dir())?;
+    let _profile_lock = storage::lock_profile(&settings::support_dir())?;
     eframe::run_native(
         "Prism",
         native_options()?,

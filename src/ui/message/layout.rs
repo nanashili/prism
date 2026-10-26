@@ -1,4 +1,5 @@
 use super::style::ChatStyle;
+use crate::ui::presentation::ThoughtDisplay;
 use eframe::egui;
 use std::hash::{Hash, Hasher};
 
@@ -9,7 +10,9 @@ pub(in crate::ui) struct LayoutKey {
 }
 
 impl LayoutKey {
-    pub fn new(ui: &egui::Ui, style: &ChatStyle, thinking: bool) -> Self {
+    pub fn new(ui: &egui::Ui, style: &ChatStyle, thinking: ThoughtDisplay) -> Self {
+        let thinking = thinking == ThoughtDisplay::Visible;
+
         let mut revision = std::collections::hash_map::DefaultHasher::new();
         style.appearance.font.hash(&mut revision);
         style.appearance.block_colors.hash(&mut revision);

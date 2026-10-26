@@ -1,6 +1,7 @@
 use super::app::Prism;
 use super::{icons::Icon, popup, tab_strip, widgets};
 use crate::model::View;
+use crate::ui::presentation::{Selection, TabCloseScope};
 use eframe::egui::{self, Rect};
 
 enum TabAction {
@@ -36,7 +37,9 @@ impl Prism {
                 }
                 TabAction::Close(index) => self.close_workbench_tab(index),
                 TabAction::Keep(index) => self.pin_workbench_tab(index),
-                TabAction::CloseOthers(index, right) => self.close_other_tabs(index, right),
+                TabAction::CloseOthers(index, right) => {
+                    self.close_other_tabs(index, TabCloseScope::from(right))
+                }
             }
         }
         self.pane_tab_controls(ui, controls);
@@ -117,7 +120,7 @@ impl Prism {
                 TabAction::CloseOthers(index, true),
             ),
         ] {
-            if popup::row(ui, Some(icon), label, "", false).clicked() {
+            if popup::row(ui, Some(icon), label, "", Selection::Unselected).clicked() {
                 *action = Some(command);
                 ui.close();
             }

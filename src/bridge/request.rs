@@ -28,6 +28,7 @@ pub(super) struct Services {
     pub(super) admission: Admission,
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn serve(mut socket: TcpStream, services: &Services) {
     let response = match handle(&mut socket, services) {
         Ok(result) => json!({"result":result}),
@@ -63,6 +64,7 @@ fn handle(socket: &mut TcpStream, services: &Services) -> Result<Value> {
     result
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 fn dispatch(
     incoming: Incoming,
     answer: mpsc::SyncSender<Result<Value>>,

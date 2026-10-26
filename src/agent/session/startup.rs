@@ -8,6 +8,7 @@ use std::process::Command;
 use std::sync::{Arc, atomic::AtomicBool, mpsc::Receiver};
 use std::time::Duration;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn connect(
     prompt: &Prompt,
     sink: &Sink,
@@ -25,12 +26,7 @@ pub(super) fn connect(
         rpc,
         updates: updates::Updates::new(crate::agent::picks::key(&prompt.settings)),
         id: String::new(),
-        chat: prompt.chat,
-        command: prompt.settings.agent.clone(),
-        arguments: prompt.settings.agent_args.clone(),
-        registry_id: prompt.settings.agent_id.clone(),
-        cwd: prompt.cwd.clone(),
-        servers: prompt.servers.clone(),
+        identity: super::SessionIdentity::from_prompt(prompt),
         permissions: permission::Policy::new(prompt),
         permission_requests: Default::default(),
         pending: Default::default(),

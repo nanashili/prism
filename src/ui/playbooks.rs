@@ -95,13 +95,13 @@ impl Catalog {
             .map(|entry| entry.id.to_string())
             .collect();
         for entry in index.entries {
-            if !identifiers.insert(entry.id.to_string()) {
+            if identifiers.insert(entry.id.to_string()) {
+                self.entries.push(Arc::new(entry));
+            } else {
                 self.warnings.push(format!(
                     "Duplicate skill name: {}. Rename the custom skill to keep both.",
                     entry.id
                 ));
-            } else {
-                self.entries.push(Arc::new(entry));
             }
         }
         self.entries.sort_by(|a, b| {

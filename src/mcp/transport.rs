@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 
 pub(super) const MAX_MESSAGE: usize = 8 * 1024 * 1024;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn read_cancellable(
     socket: &mut std::net::TcpStream,
     cancelled: &AtomicBool,
@@ -44,6 +45,7 @@ pub(super) fn read_cancellable(
     }
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn read(input: &mut impl BufRead) -> Result<Option<Vec<u8>>> {
     let mut bytes = Vec::new();
     input
@@ -58,11 +60,13 @@ pub(super) fn read(input: &mut impl BufRead) -> Result<Option<Vec<u8>>> {
     Ok(Some(bytes))
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn write<T: Serialize>(output: &mut impl Write, message: &T) -> Result<()> {
     let bytes = serde_json::to_vec(message)?;
     write_bytes(output, &bytes)
 }
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(super) fn write_bytes(output: &mut impl Write, bytes: &[u8]) -> Result<()> {
     if bytes.len() > MAX_MESSAGE {
         return Err(failure("MCP reply exceeds 8 MiB"));

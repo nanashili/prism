@@ -2,6 +2,7 @@ use super::{
     PageView,
     rows::{Anchor, RowSpec},
 };
+use crate::ui::presentation::{ActivityState, ChoiceAccess, ThoughtDisplay};
 use crate::ui::{
     activity_view,
     icons::Icon,
@@ -29,6 +30,7 @@ pub(super) struct RenderFrame<'a> {
 }
 
 impl PageView {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn show(&mut self, ui: &mut egui::Ui, mut frame: RenderFrame<'_>) {
         let historical = frame.chat.history.page.is_some();
         let output = egui::ScrollArea::vertical()
@@ -46,8 +48,10 @@ impl PageView {
                     fallback: viewport.top(),
                     viewport_height: viewport.height(),
                 };
-                self.rows
-                    .sync(frame.specs, LayoutKey::new(ui, frame.style, frame.thinking));
+                self.rows.sync(
+                    frame.specs,
+                    LayoutKey::new(ui, frame.style, ThoughtDisplay::from(frame.thinking)),
+                );
                 let changed = self.render_rows(ui, viewport, &position, &mut frame);
                 let target = self.offset(&position);
                 ui.set_min_size(egui::vec2(
@@ -134,9 +138,9 @@ impl RenderFrame<'_> {
             render_message_cached(
                 &mut row_ui,
                 message,
-                self.thinking,
-                self.chat.busy && self.chat.history.page.is_none() && last,
-                self.chat.questions.is_reply() && last,
+                ThoughtDisplay::from(self.thinking),
+                ActivityState::from(self.chat.busy && self.chat.history.page.is_none() && last),
+                ChoiceAccess::from(self.chat.questions.is_reply() && last),
                 self.style,
                 self.cache,
             );
@@ -163,7 +167,7 @@ fn settle_geometry(context: &egui::Context, (correction, changed): (f32, bool)) 
 fn show_status(ui: &mut egui::Ui, chat: &Chat, style: &ChatStyle) {
     ui.horizontal(|ui| {
         Icon::Spark.show(ui, 14.0, style.palette.accent);
-        activity_view::shimmer::scope(ui, true, |ui| {
+        activity_view::shimmer::scope(ui, ActivityState::Active, |ui| {
             ui.label(style.text(&chat.status).weak());
         });
     });

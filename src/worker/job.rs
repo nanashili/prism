@@ -28,6 +28,11 @@ pub(crate) enum ViewJob {
 pub(crate) enum Job {
     Open(PathBuf),
     Index,
+    StartInvestigation {
+        project: String,
+        objective: String,
+        budget: crate::investigation::Budget,
+    },
     Sidebar {
         project: String,
         generation: u64,

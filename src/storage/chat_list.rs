@@ -66,10 +66,12 @@ impl Store {
     }
 
     pub fn chats(&self) -> Result<Vec<ChatSummary>> {
-        self.chats_for(None, "", false, 0)
+        self.chats_for(None, "", ChatArchive::Current, 0)
     }
 
-    pub fn chat_count(&self, project: Option<&str>, archived: bool) -> Result<usize> {
+    pub fn chat_count(&self, project: Option<&str>, archived: ChatArchive) -> Result<usize> {
+        let archived = archived == ChatArchive::Archived;
+
         let count: u32 = self.db.query_row(
             "SELECT count(*) FROM chats c LEFT JOIN chat_preferences p ON p.chat=c.id
              WHERE c.project IS ?1 AND coalesce(p.archived,0)=?2",
@@ -83,9 +85,11 @@ impl Store {
         &self,
         project: Option<&str>,
         filter: &str,
-        archived: bool,
+        archived: ChatArchive,
         offset: usize,
     ) -> Result<Vec<ChatSummary>> {
+        let archived = archived == ChatArchive::Archived;
+
         self.chat_page(project, filter, archived, offset, true)
     }
 
@@ -101,9 +105,11 @@ impl Store {
     pub fn stored_chats(
         &self,
         filter: &str,
-        archived: bool,
+        archived: ChatArchive,
         offset: usize,
     ) -> Result<Vec<StoredChat>> {
+        let archived = archived == ChatArchive::Archived;
+
         let mut statement = self.db.prepare(
             "SELECT c.id,substr(coalesce(c.title,'Untitled chat'),1,200),c.updated,
                     substr(coalesce(r.title,CASE WHEN c.project IS NULL THEN 'General chats'
@@ -126,6 +132,7 @@ impl Store {
         Ok(rows.collect::<std::result::Result<_, _>>()?)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn chat_page(
         &self,
         project: Option<&str>,
@@ -164,7 +171,9 @@ impl Store {
         Ok(rows.collect::<std::result::Result<_, _>>()?)
     }
 
-    pub fn pin_chat(&self, id: i64, pinned: bool) -> Result<()> {
+    pub fn pin_chat(&self, id: i64, pinned: ChatPin) -> Result<()> {
+        let pinned = pinned == ChatPin::Pinned;
+
         self.db.execute(
             "INSERT INTO chat_preferences(chat,pinned) VALUES(?1,?2)
              ON CONFLICT(chat) DO UPDATE SET pinned=?2",
@@ -173,7 +182,9 @@ impl Store {
         Ok(())
     }
 
-    pub fn archive_chat(&self, id: i64, archived: bool) -> Result<()> {
+    pub fn archive_chat(&self, id: i64, archived: ChatArchive) -> Result<()> {
+        let archived = archived == ChatArchive::Archived;
+
         self.db.execute(
             "INSERT INTO chat_preferences(chat,archived) VALUES(?1,?2)
              ON CONFLICT(chat) DO UPDATE SET archived=?2",
@@ -202,5 +213,29 @@ impl Store {
                 |row| row.get(0),
             )
             .optional()?)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ChatArchive {
+    Archived,
+    Current,
+}
+
+impl From<bool> for ChatArchive {
+    fn from(value: bool) -> Self {
+        if value { Self::Archived } else { Self::Current }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ChatPin {
+    Pinned,
+    Unpinned,
+}
+
+impl From<bool> for ChatPin {
+    fn from(value: bool) -> Self {
+        if value { Self::Pinned } else { Self::Unpinned }
     }
 }

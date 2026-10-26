@@ -15,6 +15,7 @@ impl Rpc {
         response_result(message)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn dispatch(
         &mut self,
         message: Value,
@@ -57,6 +58,7 @@ impl Rpc {
         self.wait_with_control(id, method, timeout, event, |_| Ok(()))
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn wait_with_control(
         &mut self,
         id: u64,
@@ -96,10 +98,7 @@ impl Rpc {
                             .unwrap_or("Debugger request failed"),
                     ));
                 }
-                return Ok(message
-                    .get_mut("body")
-                    .map(Value::take)
-                    .unwrap_or(Value::Null));
+                return Ok(message.get_mut("body").map_or(Value::Null, Value::take));
             }
             self.dispatch(message, &mut event)?;
         }
@@ -120,8 +119,5 @@ pub(crate) fn response_result(mut message: Value) -> Result<Value> {
     if let Some(error) = message.get("error") {
         return Err(failure(error.to_string()));
     }
-    Ok(message
-        .get_mut("result")
-        .map(Value::take)
-        .unwrap_or(Value::Null))
+    Ok(message.get_mut("result").map_or(Value::Null, Value::take))
 }

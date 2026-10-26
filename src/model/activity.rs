@@ -146,6 +146,6 @@ pub(crate) fn prefix(text: &str, limit: usize) -> &str {
 pub(crate) fn now_ms() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|elapsed| elapsed.as_millis().min(i64::MAX as u128) as i64)
+        .map(|elapsed| i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX))
         .unwrap_or_default()
 }

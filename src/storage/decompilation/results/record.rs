@@ -14,7 +14,9 @@ impl Store {
     ) -> Result<bool> {
         let transaction = self.db.unchecked_transaction()?;
         let previous = load_previous(&transaction, id, address)?;
-        if !should_reuse(&previous, None) || verify_previous_success(previous.as_ref()).is_err() {
+        if !should_reuse(previous.as_ref(), None)
+            || verify_previous_success(previous.as_ref()).is_err()
+        {
             transaction.commit()?;
             return Ok(false);
         }
@@ -25,6 +27,7 @@ impl Store {
         Ok(true)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(crate) fn record_decompilation_result(
         &self,
         id: &str,
@@ -39,7 +42,7 @@ impl Store {
         let previous = load_previous(&transaction, id, address)?;
         let expected_offset = validate_cursor(&transaction, id, address, next_offset)?;
 
-        if should_reuse(&previous, text) {
+        if should_reuse(previous.as_ref(), text) {
             verify_previous_success(previous.as_ref())?;
             advance_cursor(&transaction, id, next_offset, expected_offset)?;
             transaction.commit()?;
@@ -62,6 +65,19 @@ impl Store {
             digest.as_deref(),
             error,
         )?;
+        if let Some(text) = text {
+            let project: String = transaction.query_row(
+                "SELECT project FROM decompilation_jobs WHERE id=?1",
+                [id],
+                |row| row.get(0),
+            )?;
+            crate::storage::verification::observe_pseudocode(
+                &transaction,
+                &project,
+                address,
+                text,
+            )?;
+        }
         update_progress(&transaction, id, previous.as_ref(), status)?;
         advance_cursor(&transaction, id, next_offset, expected_offset)?;
         transaction.commit()?;
@@ -116,7 +132,7 @@ fn validate_cursor(
     Ok(expected_offset)
 }
 
-fn should_reuse(previous: &Option<PreviousArtifact>, text: Option<&str>) -> bool {
+fn should_reuse(previous: Option<&PreviousArtifact>, text: Option<&str>) -> bool {
     matches!(previous, Some((status, _, _, _)) if status == "succeeded") && text.is_none()
 }
 

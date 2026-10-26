@@ -105,7 +105,7 @@ pub(super) fn paint_lead(ui: &egui::Ui, lead: Lead<'_>, rect: Rect) {
         Lead::Agent(id) => agent_logos::paint(ui, id, rect),
         Lead::Engine(provider) => {
             let image = match provider {
-                "ghidra" | "ghidra-rea" | "ghidra-rust-rea" => {
+                "ghidra-rust-rea" => {
                     egui::include_image!("../../resources/upstream/engines/ghidra.png")
                 }
                 "ida" => egui::include_image!("../../resources/upstream/engines/ida.png"),

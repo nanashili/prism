@@ -1,3 +1,4 @@
+use crate::ui::presentation::{ActivityState, Disclosure, ThoughtDisplay};
 mod progress;
 pub(super) mod shimmer;
 mod steps;
@@ -13,15 +14,24 @@ use eframe::egui::{self, RichText};
 pub(super) fn history<'a>(
     ui: &mut egui::Ui,
     message: &'a Message,
-    thinking: bool,
-    active: bool,
+    thinking: ThoughtDisplay,
+    active: ActivityState,
     style: &ChatStyle,
     cache: &mut BodyCache,
 ) -> &'a str {
+    let thinking = thinking == ThoughtDisplay::Visible;
+    let active = active == ActivityState::Active;
+
     let Some(activity) = &message.activity else {
         return &message.text;
     };
-    progress::show(ui, &activity.progress, thinking, style, cache);
+    progress::show(
+        ui,
+        &activity.progress,
+        ThoughtDisplay::from(thinking),
+        style,
+        cache,
+    );
     let end = activity
         .blocks
         .iter()
@@ -36,8 +46,8 @@ pub(super) fn history<'a>(
         let running = active && activity.outcome == Outcome::Running;
         let label = summary(activity, count, thinking);
         let id = ui.id().with("step-history");
-        let open = shimmer::scope(ui, running, |ui| {
-            tool_step::disclosure(ui, id, Icon::Thought, &label, "", running)
+        let open = shimmer::scope(ui, ActivityState::from(running), |ui| {
+            tool_step::disclosure(ui, id, Icon::Thought, &label, "", Disclosure::from(running))
         });
         if open {
             steps::Page {

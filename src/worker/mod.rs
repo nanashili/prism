@@ -1,13 +1,19 @@
 mod analysis;
 mod analysis_cache;
-mod analysis_cache_identity;
+pub(crate) mod analysis_cache_identity;
+mod analysis_repair;
+mod analysis_tools;
+mod comparison;
 mod decompilation_run;
 mod decompile_batch;
 mod durable_decompilation;
 mod execute;
+mod execution;
 mod exports;
+mod function_search;
 mod indexing;
 mod inspection;
+mod investigation;
 mod job;
 mod listing;
 mod open;
@@ -20,6 +26,7 @@ mod runtime;
 mod scheduling;
 mod sidebar;
 mod thread;
+mod verification;
 mod views;
 
 pub(crate) use crate::decompilation::ExportRunner;

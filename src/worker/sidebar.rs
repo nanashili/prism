@@ -4,6 +4,7 @@ use crate::events::Event;
 use crate::storage::navigation::{Counts, Query};
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn resource_page(
         &mut self,
         project: String,
@@ -33,6 +34,7 @@ impl State {
         Ok(String::new())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn sidebar(
         &mut self,
         project: String,
@@ -87,29 +89,7 @@ impl State {
                 Err(error) => counts.warning = Some(error.to_string()),
             }
         }
-        counts.strings = cached_count(&self.store, project, "Strings", "strings")?;
-        if let Some(segments) = cached_count(&self.store, project, "Segments", "segments")? {
-            counts.segments = Some(segments);
-        }
         self.sidebar_counts = Some((project.into(), counts.clone()));
         Ok(counts)
     }
-}
-
-fn cached_count(
-    store: &crate::storage::Store,
-    project: &str,
-    view: &str,
-    field: &str,
-) -> Result<Option<usize>> {
-    let Some(text) = store.cache(project, "", &format!("upstream:{view}"))? else {
-        return Ok(None);
-    };
-    let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) else {
-        return Ok(None);
-    };
-    Ok(value
-        .as_array()
-        .or_else(|| value[field].as_array())
-        .map(Vec::len))
 }

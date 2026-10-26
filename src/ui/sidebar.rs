@@ -2,6 +2,7 @@ use super::app::Prism;
 use super::sidebar_rows::project_row;
 use super::{icons::Icon, theme::Palette, widgets};
 use crate::model::Screen;
+use crate::ui::presentation::{OpenTarget, Selection};
 use crate::worker::Job;
 use eframe::egui::{self, Align2, FontId, Frame, Rect};
 
@@ -82,15 +83,15 @@ impl Prism {
 
     fn home_navigation(&mut self, ui: &mut egui::Ui) {
         ui.add_space(46.0);
-        let new = widgets::row(ui, Icon::NewChat, "New chat", false, 32.0);
+        let new = widgets::row(ui, Icon::NewChat, "New chat", Selection::Unselected, 32.0);
         shortcut(ui, new.rect, "N");
         if new.clicked() {
             self.new_chat();
         }
-        let open = widgets::row(ui, Icon::Folder, "Open…", false, 32.0);
+        let open = widgets::row(ui, Icon::Folder, "Open…", Selection::Unselected, 32.0);
         shortcut(ui, open.rect, "O");
         if open.clicked() {
-            self.choose_open(false);
+            self.choose_open(OpenTarget::File);
         }
         self.project_switcher(ui);
         egui::ScrollArea::vertical()
@@ -106,7 +107,7 @@ impl Prism {
                         .project
                         .as_ref()
                         .is_some_and(|project| project.target.sha256 == recent.id);
-                    if project_row(ui, recent, selected).clicked() {
+                    if project_row(ui, recent, Selection::from(selected)).clicked() {
                         self.enqueue(Job::Open(self.recent[index].path.clone()));
                     }
                 }

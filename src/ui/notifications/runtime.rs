@@ -1,5 +1,6 @@
 use super::{Level, state::Notice};
 use crate::ui::app::Prism;
+use crate::ui::presentation::TurnEnd;
 use eframe::egui;
 
 impl Prism {
@@ -8,8 +9,7 @@ impl Prism {
             .workspace
             .project
             .as_ref()
-            .map(|project| project.target.name.as_str())
-            .unwrap_or("");
+            .map_or("", |project| project.target.name.as_str());
         self.notifications
             .push(Notice::new(level, title, body, details, scope));
     }
@@ -33,7 +33,9 @@ impl Prism {
         }
     }
 
-    pub(in crate::ui) fn notify_agent_complete(&mut self, stopped: bool) {
+    pub(in crate::ui) fn notify_agent_complete(&mut self, stopped: TurnEnd) {
+        let stopped = stopped == TurnEnd::Stopped;
+
         let title = if stopped {
             "Agent stopped"
         } else {
@@ -49,8 +51,7 @@ impl Prism {
             .workspace
             .project
             .as_ref()
-            .map(|project| project.target.name.as_str())
-            .unwrap_or("");
+            .map_or("", |project| project.target.name.as_str());
         let mut notice = Notice::new(Level::Warning, "The agent needs your OK", title, "", scope);
         notice.chat = self.chat.id;
         self.notifications.push(notice);

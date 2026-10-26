@@ -1,12 +1,64 @@
 use super::{icons::Icon, popup, theme::Palette};
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Align2, FontId, Rect, Sense, Stroke};
+
+pub(super) fn button_width(ui: &egui::Ui, label: &str) -> f32 {
+    ui.painter()
+        .layout_no_wrap(
+            label.into(),
+            FontId::proportional(12.5),
+            Palette::for_context(ui.ctx()).text3,
+        )
+        .size()
+        .x
+        + 22.0
+}
+
+pub(super) fn button(ui: &mut egui::Ui, label: &str) -> egui::Response {
+    let p = Palette::for_context(ui.ctx());
+    ui.add_sized(
+        [button_width(ui, label), 28.0],
+        egui::Button::new(egui::RichText::new(label).size(12.5).color(p.text3))
+            .corner_radius(8)
+            .fill(egui::Color32::TRANSPARENT)
+            .stroke(Stroke::new(1.0, p.line3)),
+    )
+}
+
+pub(super) fn text_input(
+    ui: &mut egui::Ui,
+    value: &mut String,
+    hint: &str,
+    width: f32,
+    limit: usize,
+) -> egui::Response {
+    let p = Palette::for_context(ui.ctx());
+    egui::Frame::NONE
+        .stroke(Stroke::new(1.0, p.line3))
+        .corner_radius(8)
+        .inner_margin(egui::Margin::symmetric(10, 5))
+        .show(ui, |ui| {
+            ui.add(
+                egui::TextEdit::singleline(value)
+                    .font(FontId::monospace(12.0))
+                    .frame(false)
+                    .margin(egui::Margin::ZERO)
+                    .desired_width((width - 22.0).max(0.0))
+                    .char_limit(limit)
+                    .hint_text(hint),
+            )
+        })
+        .inner
+}
 
 pub(super) fn radio_indicator(
     ui: &egui::Ui,
     center: egui::Pos2,
-    selected: bool,
+    selected: Selection,
     response: &egui::Response,
 ) {
+    let selected = selected == Selection::Selected;
+
     let p = Palette::for_context(ui.ctx());
     let color = if selected {
         p.text
@@ -121,7 +173,15 @@ pub(super) fn select_sized(ui: &mut egui::Ui, value: &mut String, options: &[&st
     popup::menu(&response, width.max(200.0)).show(|ui| {
         for option in options {
             let selected = value == option;
-            if popup::row(ui, None, option, if selected { "✓" } else { "" }, selected).clicked() {
+            if popup::row(
+                ui,
+                None,
+                option,
+                if selected { "✓" } else { "" },
+                Selection::from(selected),
+            )
+            .clicked()
+            {
                 *value = (*option).into();
                 ui.close();
             }

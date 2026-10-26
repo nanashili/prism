@@ -29,8 +29,7 @@ impl Prism {
                     .workspace
                     .project
                     .as_ref()
-                    .map(|project| project.target.name.as_str())
-                    .unwrap_or("this project");
+                    .map_or("this project", |project| project.target.name.as_str());
                 let search = popup::search(
                     ui,
                     &mut self.chat_tabs.history.query,

@@ -1,5 +1,6 @@
 use super::model::{Group, Preview, Row};
 use crate::settings::Settings;
+use crate::ui::presentation::{ActivityState, ChoiceAccess, ThoughtDisplay};
 use eframe::egui;
 
 const PREVIEW_REPLY: &str = r#"This sets `ready` to true, then prints its value.
@@ -127,7 +128,14 @@ pub(super) fn preview(ui: &mut egui::Ui, settings: &Settings) {
                     text: text.into(),
                     activity: (role == "assistant").then(preview_activity),
                 };
-                message::render_message(ui, &sample, true, false, false, &style);
+                message::render_message(
+                    ui,
+                    &sample,
+                    ThoughtDisplay::Visible,
+                    ActivityState::Idle,
+                    ChoiceAccess::Blocked,
+                    &style,
+                );
             }
         });
 }

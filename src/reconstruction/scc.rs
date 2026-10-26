@@ -27,7 +27,7 @@ fn finish_order(
     seen: &mut BTreeSet<String>,
     order: &mut Vec<String>,
 ) {
-    if !seen.insert(root.to_owned()) {
+    if seen.contains(root) {
         return;
     }
     let mut stack = vec![(root.to_owned(), false)];
@@ -36,10 +36,15 @@ fn finish_order(
             order.push(node);
             continue;
         }
+        // Mark discovery when entering a node, not while scheduling siblings.
+        // A child reached through a sibling must finish before that sibling exits.
+        if !seen.insert(node.clone()) {
+            continue;
+        }
         stack.push((node.clone(), true));
         if let Some(children) = graph.get(&node) {
             for child in children.iter().rev() {
-                if seen.insert(child.clone()) {
+                if !seen.contains(child) {
                     stack.push((child.clone(), false));
                 }
             }
@@ -81,4 +86,42 @@ fn reverse(graph: &BTreeMap<String, Vec<String>>) -> BTreeMap<String, Vec<String
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::components;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn dependencies_between_siblings_do_not_create_a_cycle() {
+        let graph = BTreeMap::from([
+            ("a".into(), vec!["b".into(), "c".into()]),
+            ("b".into(), vec!["c".into()]),
+            ("c".into(), Vec::new()),
+        ]);
+        let mut groups = components(&graph);
+        groups.sort();
+        assert_eq!(
+            groups,
+            vec![vec!["a"], vec!["b"], vec!["c"]],
+            "a DAG has no multi-module cycle groups"
+        );
+    }
+
+    #[test]
+    fn cycles_are_grouped_without_absorbing_their_dependants() {
+        let graph = BTreeMap::from([
+            ("a".into(), vec!["b".into()]),
+            ("b".into(), vec!["c".into()]),
+            ("c".into(), vec!["b".into()]),
+        ]);
+        let mut groups = components(&graph);
+        groups.sort();
+        assert_eq!(
+            groups,
+            vec![vec!["a"], vec!["b", "c"]],
+            "only mutually reachable modules share a cycle group"
+        );
+    }
 }

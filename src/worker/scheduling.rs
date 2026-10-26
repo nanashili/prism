@@ -26,6 +26,9 @@ impl State {
         if let Err(error) = self.pause_decompilation() {
             eprintln!("Could not checkpoint the durable job on shutdown: {error}");
         }
+        if let Err(error) = self.close_engine() {
+            eprintln!("Could not close the analysis session: {error}");
+        }
     }
 
     fn run_round(
@@ -79,8 +82,9 @@ impl State {
             .engine
             .as_ref()
             .is_some_and(|engine| engine.idle_remaining().is_zero())
+            && let Err(error) = self.close_engine()
         {
-            self.engine = None;
+            eprintln!("Could not close the idle analysis session: {error}");
         }
         match ordinary.recv_timeout(CONTROL_POLL) {
             Ok(job) if !stopped.load(Ordering::Relaxed) => self.run_job(job),

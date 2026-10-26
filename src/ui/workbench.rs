@@ -1,9 +1,10 @@
 use super::app::Prism;
 use crate::model::View;
-use crate::worker::{Job, ViewJob};
+use crate::worker::Job;
 use eframe::egui::{self, Frame};
 
 impl Prism {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn workbench(&mut self, ui: &mut egui::Ui) {
         if self.workspace.project.is_none() {
             ui.label("Open an app or binary to use the workbench.");
@@ -30,7 +31,7 @@ impl Prism {
         }
         let identity = self.workspace.tabs[self.workspace.active].identity;
         ui.push_id(("workbench-tab", identity), |ui| {
-            self.workbench_tab_body(ui)
+            self.workbench_tab_body(ui);
         });
     }
 
@@ -56,14 +57,7 @@ impl Prism {
                     self.hex_controls(ui);
                     self.code(ui);
                 }
-                View::Diff => {
-                    if ui.button("Compare with another file…").clicked()
-                        && let Some(path) = rfd::FileDialog::new().pick_file()
-                    {
-                        self.enqueue_view(ViewJob::Diff(path));
-                    }
-                    self.code(ui);
-                }
+                View::Diff => self.comparison_view(ui),
                 View::Debug => self.debug_screen(ui),
                 View::Reconstruct => self.reconstruction_screen(ui),
                 _ => self.code(ui),

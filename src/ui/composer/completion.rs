@@ -4,6 +4,7 @@ use super::{
     picker::{self, Keys},
     query::Query,
 };
+use crate::ui::presentation::{InputFocus, Selection};
 use crate::ui::{app::Prism, icons::Icon, popup};
 use eframe::egui::{
     self,
@@ -18,12 +19,19 @@ pub(super) enum Suggestion {
 }
 
 impl Suggestion {
-    pub(super) fn row(&self, ui: &mut egui::Ui, selected: bool) -> egui::Response {
+    pub(super) fn row(&self, ui: &mut egui::Ui, selected: Selection) -> egui::Response {
+        let selected = selected == Selection::Selected;
+
         match self {
-            Self::Palette(item) => {
-                popup::row_with_height(ui, Some(item.icon), &item.label, &item.hint, selected, 34.0)
-                    .on_hover_text(&item.description)
-            }
+            Self::Palette(item) => popup::row_with_height(
+                ui,
+                Some(item.icon),
+                &item.label,
+                &item.hint,
+                Selection::from(selected),
+                34.0,
+            )
+            .on_hover_text(&item.description),
             Self::Mention(mention) => {
                 let icon = match mention.kind {
                     "bookmark" => Icon::Star,
@@ -35,7 +43,7 @@ impl Suggestion {
                     Some(icon),
                     &mention.label,
                     &mention.address,
-                    selected,
+                    Selection::from(selected),
                     34.0,
                 )
             }
@@ -66,10 +74,12 @@ impl Completion {
         self.query.is_some() && !self.dismissed
     }
 
-    pub fn keys(&mut self, ui: &egui::Ui, focused: bool) -> Keys {
+    pub fn keys(&mut self, ui: &egui::Ui, focused: InputFocus) -> Keys {
+        let focused = focused == InputFocus::Focused;
+
         let keys = picker::keys(
             ui,
-            focused && self.is_open(),
+            InputFocus::from(focused && self.is_open()),
             self.entries.len(),
             &mut self.selected,
         );
@@ -79,7 +89,9 @@ impl Completion {
         keys
     }
 
-    pub fn update(&mut self, draft: &str, cursor: Option<CCursorRange>, focused: bool) {
+    pub fn update(&mut self, draft: &str, cursor: Option<CCursorRange>, focused: InputFocus) {
+        let focused = focused == InputFocus::Focused;
+
         let query = cursor.and_then(|cursor| Query::at(draft, cursor));
         if query != self.query {
             self.query = query;

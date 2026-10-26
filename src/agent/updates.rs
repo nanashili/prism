@@ -99,15 +99,18 @@ impl Updates {
                 self.publish_options(options, sink)?;
             }
             "available_commands_update" => {
-                sink.send(Event::AgentUpdate(AgentUpdate::Commands(commands(update))))?
+                sink.send(Event::AgentUpdate(AgentUpdate::Commands(commands(update))))?;
             }
             "session_info_update" => {
-                if let Some(goal) = crate::model::Goal::from_metadata(&update["_meta"]) {
-                    self.goal_active = goal
-                        .as_ref()
-                        .is_some_and(|goal| goal.status == crate::model::GoalStatus::Active);
-                    sink.send(Event::AgentUpdate(AgentUpdate::Goal(goal)))?;
-                }
+                let goal = match crate::model::GoalUpdate::from_metadata(&update["_meta"]) {
+                    crate::model::GoalUpdate::Unchanged => return Ok(()),
+                    crate::model::GoalUpdate::Clear => None,
+                    crate::model::GoalUpdate::Set(goal) => Some(goal),
+                };
+                self.goal_active = goal
+                    .as_ref()
+                    .is_some_and(|goal| goal.status == crate::model::GoalStatus::Active);
+                sink.send(Event::AgentUpdate(AgentUpdate::Goal(goal)))?;
             }
             "plan" => sink.send(Event::AgentUpdate(AgentUpdate::Plan(plan(update))))?,
             "usage_update" => sink.send(Event::AgentUpdate(AgentUpdate::Usage(ContextUsage {

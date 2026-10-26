@@ -7,23 +7,31 @@ use crate::model::View;
 use crate::project::files;
 use serde_json::Value;
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch;
 mod view;
 
 impl State {
-    pub(super) fn discard_unusable_engine(&mut self) {
+    pub(super) fn discard_unusable_engine(&mut self) -> Result<()> {
         if self
             .engine
             .as_ref()
             .is_some_and(|engine| !engine.is_reusable())
         {
-            self.engine = None;
+            self.close_engine()?;
         }
+        Ok(())
+    }
+
+    pub(super) fn close_engine(&mut self) -> Result<()> {
+        if let Some(engine) = self.engine.take() {
+            engine.close()?;
+        }
+        Ok(())
     }
 
     pub(super) fn engine(&mut self) -> Result<&mut Engine> {
-        self.discard_unusable_engine();
+        self.discard_unusable_engine()?;
 
         if self.engine.is_none() && self.settings.analysis_backend().retains_prepared_session() {
             return Err(crate::error::failure(
@@ -36,6 +44,21 @@ impl State {
 
     pub(super) fn analysis_call(&mut self, name: &str, arguments: Value) -> Result<Value> {
         Self::reject_direct_decompilation_tool(name)?;
+        // Unknown provider operations may mutate analysis even when they fail.
+        if !matches!(
+            name,
+            "procedure_assembly"
+                | "analyze_function"
+                | "procedure_callers"
+                | "procedure_callees"
+                | "list_procedures"
+                | "list_segments"
+                | "list_strings"
+                | "inspect_analysis_view"
+        ) {
+            let project = self.project.as_ref().ok_or("Open a file first")?;
+            self.store.invalidate_verification(&project.target.sha256)?;
+        }
         self.engine()?.tool(name, arguments)
     }
 
@@ -49,8 +72,9 @@ impl State {
     }
 
     /// Only explicit project opening or analysis may prepare a new external session.
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn prepare_engine(&mut self) -> Result<&mut Engine> {
-        self.discard_unusable_engine();
+        self.discard_unusable_engine()?;
         let target = &self.project.as_ref().ok_or("Open a file first")?.target;
         if target.kind == "android" {
             return Err(crate::error::failure(
@@ -118,6 +142,7 @@ impl State {
         self.read_view_with_cache(View::Pseudocode, address, 0, ViewCachePolicy::DurableResult)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn read_view_with_cache(
         &mut self,
         view: View,
@@ -152,7 +177,7 @@ impl State {
             ));
         }
 
-        let text = match view {
+        let mut text = match view {
             View::Assembly if address.is_empty() && target.kind != "android" => {
                 self.whole_listing(offset)?
             }
@@ -187,9 +212,10 @@ impl State {
                 files::text(&target.path)?
             }
             View::Diff | View::Debug | View::Reconstruct => return Ok(String::new()),
-            _ => match cached {
-                Some(text) => text,
-                None => {
+            _ => {
+                if let Some(text) = cached {
+                    text
+                } else {
                     let text = if use_bounded_batch_preview {
                         self.single_address_decompile_batch(address)?
                     } else {
@@ -206,8 +232,16 @@ impl State {
                     }
                     text
                 }
-            },
+            }
         };
+        // Persist only static graphs. Apply fresh evidence after every cache read so
+        // imports and removals cannot leave stale dynamic annotations in the cache.
+        if view == View::Graph {
+            let mut graph: crate::analysis::graph::Graph = serde_json::from_str(&text)?;
+            let traces = self.store.execution_traces(&target.sha256)?;
+            graph.annotate(&traces);
+            text = serde_json::to_string(&graph)?;
+        }
         Ok(text)
     }
 }

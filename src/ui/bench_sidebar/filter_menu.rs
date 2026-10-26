@@ -1,4 +1,5 @@
 use crate::storage::navigation::{Show, Sort};
+use crate::ui::presentation::Selection;
 use crate::ui::{app::Prism, icons::Icon, popup};
 use crate::worker::Job;
 use eframe::egui;
@@ -20,7 +21,7 @@ impl Prism {
                 None,
                 label,
                 "",
-                self.workspace.navigation.query.show == show,
+                Selection::from(self.workspace.navigation.query.show == show),
             )
             .clicked()
             {
@@ -40,7 +41,7 @@ impl Prism {
                 None,
                 label,
                 "",
-                self.workspace.navigation.query.sort == sort,
+                Selection::from(self.workspace.navigation.query.sort == sort),
             )
             .clicked()
             {
@@ -49,11 +50,27 @@ impl Prism {
             }
         }
         ui.separator();
-        if popup::row(ui, Some(Icon::Play), "Analyze functions", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Play),
+            "Analyze functions",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.enqueue(Job::Index);
             ui.close();
         }
-        if popup::row(ui, Some(Icon::Retry), "Refresh functions", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Retry),
+            "Refresh functions",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.workspace.navigation.invalidate();
             ui.close();
         }

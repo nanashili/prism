@@ -29,7 +29,7 @@ pub(super) struct UnitResult {
     pub paths: Vec<String>,
 }
 
-impl<'a> Submission<'a> {
+impl Submission<'_> {
     pub fn validate(&self) -> Result<()> {
         if self.lease.len() != 32 || !self.lease.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err(failure("Supply a valid batch lease token"));

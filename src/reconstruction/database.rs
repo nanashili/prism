@@ -8,7 +8,9 @@ pub(crate) struct Database {
 }
 
 impl Database {
-    pub fn open(root: &Path, create: bool) -> Result<Self> {
+    pub fn open(root: &Path, create: DatabaseOpen) -> Result<Self> {
+        let create = create == DatabaseOpen::Create;
+
         if !root.is_absolute() || !root.is_dir() {
             return Err(failure("Choose an existing absolute reconstruction folder"));
         }
@@ -78,5 +80,17 @@ impl Database {
             ));
         }
         Ok(())
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum DatabaseOpen {
+    Create,
+    Existing,
+}
+
+impl From<bool> for DatabaseOpen {
+    fn from(value: bool) -> Self {
+        if value { Self::Create } else { Self::Existing }
     }
 }

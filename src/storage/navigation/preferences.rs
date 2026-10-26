@@ -24,9 +24,10 @@ impl Store {
                 |row| row.get(0),
             )
             .optional()?;
-        state
-            .map(|state| Ok(serde_json::from_str(&state)?))
-            .unwrap_or_else(|| Ok(Preferences::default()))
+        state.map_or_else(
+            || Ok(Preferences::default()),
+            |state| Ok(serde_json::from_str(&state)?),
+        )
     }
 
     pub(crate) fn save_sidebar_preferences(

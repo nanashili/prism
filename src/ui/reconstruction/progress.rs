@@ -1,4 +1,5 @@
 use crate::ui::app::Prism;
+use crate::ui::presentation::AgentLaunch;
 use eframe::egui;
 use serde_json::Value;
 
@@ -7,8 +8,10 @@ impl Prism {
         &mut self,
         project: &str,
         status: Value,
-        start_agent: bool,
+        start_agent: AgentLaunch,
     ) {
+        let start_agent = start_agent == AgentLaunch::Start;
+
         if self
             .workspace
             .project
@@ -31,10 +34,14 @@ impl Prism {
                 .as_str()
                 .unwrap_or_default()
                 .into();
-            self.reconstruction.batch_size =
-                status["generation"]["batch_size"].as_u64().unwrap_or(16) as u32;
-            self.reconstruction.workers =
-                status["generation"]["workers"].as_u64().unwrap_or(2) as u32;
+            self.reconstruction.batch_size = status["generation"]["batch_size"]
+                .as_u64()
+                .and_then(|size| u32::try_from(size).ok())
+                .unwrap_or(16);
+            self.reconstruction.workers = status["generation"]["workers"]
+                .as_u64()
+                .and_then(|workers| u32::try_from(workers).ok())
+                .unwrap_or(2);
         }
         self.reconstruction.status = Some(status);
         if start_agent && !self.chat.busy {

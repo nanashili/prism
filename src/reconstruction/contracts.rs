@@ -64,7 +64,7 @@ impl Database {
                 value.0 != interface_hash
                     || value.1 != abi_hash
                     || value.2 != contract.unknowns
-                    || value.3 != next_ready as i64
+                    || value.3 != i64::from(next_ready)
             }) {
                 changed.push(contract.module.clone());
             }
@@ -75,11 +75,11 @@ impl Database {
                  abi_hash=excluded.abi_hash,interface=excluded.interface,abi=excluded.abi,
                  unknowns=excluded.unknowns,ready=excluded.ready",
                 params![generation, contract.module, contract.interface, contract.abi,
-                    interface_hash, abi_hash, contract.unknowns, next_ready as i64],
+                    interface_hash, abi_hash, contract.unknowns, i64::from(next_ready)],
             )?;
             tx.execute(
                 "UPDATE modules SET contract_ready=?1 WHERE generation=?2 AND module=?3",
-                params![next_ready as i64, generation, contract.module],
+                params![i64::from(next_ready), generation, contract.module],
             )?;
         }
         modules::invalidate_consumers(&tx, generation, &changed)?;

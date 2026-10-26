@@ -10,7 +10,23 @@ fn valid_module(name: &str) -> bool {
     !name.is_empty() && name.bytes().all(|byte| byte.is_ascii_alphanumeric())
 }
 
-pub(super) fn marker<'a>(name: &'a str, modules: &BTreeSet<String>) -> Option<Option<&'a str>> {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum ModuleMarker<'a> {
+    Unrelated,
+    Boundary,
+    Module(&'a str),
+}
+
+impl<'a> ModuleMarker<'a> {
+    pub fn module(self) -> Option<&'a str> {
+        match self {
+            Self::Module(module) => Some(module),
+            Self::Unrelated | Self::Boundary => None,
+        }
+    }
+}
+
+pub(super) fn marker<'a>(name: &'a str, modules: &BTreeSet<String>) -> ModuleMarker<'a> {
     let name = name.trim_start_matches('_');
     for prefix in [
         "RegisterModule_",
@@ -25,7 +41,11 @@ pub(super) fn marker<'a>(name: &'a str, modules: &BTreeSet<String>) -> Option<Op
             .strip_prefix(prefix)
             .and_then(|name| name.split("::").next())
         {
-            return modules.contains(module).then_some(Some(module));
+            return if modules.contains(module) {
+                ModuleMarker::Module(module)
+            } else {
+                ModuleMarker::Unrelated
+            };
         }
     }
     for prefix in ["Initialize", "Cleanup", "Get"] {
@@ -33,23 +53,33 @@ pub(super) fn marker<'a>(name: &'a str, modules: &BTreeSet<String>) -> Option<Op
             name.strip_suffix("ScriptingClasses")
                 .or_else(|| name.strip_suffix("ModuleSpec"))
         }) {
-            return modules.contains(module).then_some(Some(module));
+            return if modules.contains(module) {
+                ModuleMarker::Module(module)
+            } else {
+                ModuleMarker::Unrelated
+            };
         }
     }
-    let unit = name.strip_prefix("GLOBAL__sub_I_")?;
+    let Some(unit) = name.strip_prefix("GLOBAL__sub_I_") else {
+        return ModuleMarker::Unrelated;
+    };
     if let Some(unit) = unit.strip_prefix("Modules_") {
-        let module = unit.split('_').next()?;
-        return Some(modules.contains(module).then_some(module));
+        let module = unit.split('_').next().unwrap_or_default();
+        return if modules.contains(module) {
+            ModuleMarker::Module(module)
+        } else {
+            ModuleMarker::Boundary
+        };
     }
     for (prefix, module) in [("Runtime_", "Core"), ("Editor_", "Editor")] {
         if unit.starts_with(prefix) && modules.contains(module) {
-            return Some(Some(module));
+            return ModuleMarker::Module(module);
         }
     }
     unit.split("ScriptingClasses.")
         .next()
         .filter(|module| unit.contains("ScriptingClasses.") && modules.contains(*module))
-        .map(Some)
+        .map_or(ModuleMarker::Unrelated, ModuleMarker::Module)
 }
 
 pub(super) fn source_module(path: &str) -> Option<&str> {
@@ -105,18 +135,15 @@ pub(super) fn origin(name: &str, kind: &str, path: &str) -> &'static str {
 
 pub(super) fn file_group(name: &str, path: &str, owner: &str, origin: &str) -> String {
     let symbol = name.split('(').next().unwrap_or(name);
-    let owner = if !owner.is_empty() {
+    let owner = if owner.is_empty() {
+        symbol.rsplit_once("::").map_or("", |(owner, _)| owner)
+    } else {
         owner
-    } else {
-        symbol
-            .rsplit_once("::")
-            .map(|(owner, _)| owner)
-            .unwrap_or("")
     };
-    let path = if !path.is_empty() {
-        path.to_owned()
-    } else {
+    let path = if path.is_empty() {
         owner.replace("::", "/")
+    } else {
+        path.to_owned()
     };
     let path = path.replace('\\', "/");
     let path = path.trim_matches('/');

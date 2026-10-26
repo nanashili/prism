@@ -11,8 +11,10 @@ impl Store {
         id: &str,
         offset: usize,
         limit: usize,
-        include_data: bool,
+        include_data: ResultDetail,
     ) -> Result<(Vec<DecompilationResult>, bool)> {
+        let include_data = include_data == ResultDetail::WithData;
+
         let limit = limit.min(100);
         let query_limit = limit.saturating_add(1);
         let byte_limit = 1008 * 1024;
@@ -104,5 +106,17 @@ impl Store {
             }
         }
         Ok((results, false))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ResultDetail {
+    WithData,
+    Summary,
+}
+
+impl From<bool> for ResultDetail {
+    fn from(value: bool) -> Self {
+        if value { Self::WithData } else { Self::Summary }
     }
 }

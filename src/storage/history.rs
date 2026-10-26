@@ -5,6 +5,7 @@ use rusqlite::{OptionalExtension, params};
 use std::collections::VecDeque;
 
 impl Store {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn save_chat_draft(
         &self,
         chat: i64,
@@ -98,6 +99,7 @@ impl Store {
         }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn append_message(&self, chat: i64, message: &Message) -> Result<i64> {
         let transaction = self.db.unchecked_transaction()?;
         transaction.execute(
@@ -120,6 +122,7 @@ impl Store {
         Ok(id)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn update_message_activity(
         &self,
         message: i64,

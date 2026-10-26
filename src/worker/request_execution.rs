@@ -1,5 +1,5 @@
 use super::{Job, RequestLifetime, State};
-use crate::error::{Result, failure};
+use crate::error::Result;
 use crate::events::Event;
 use serde_json::Value;
 
@@ -13,14 +13,22 @@ impl State {
         } = job
         {
             let result = self.execute_remote(&tool, args, lifetime.as_ref());
-            self.discard_unusable_engine();
+            let result = crate::error::finish(
+                result,
+                self.discard_unusable_engine(),
+                "Closing the analysis session",
+            );
             if answer.send(result).is_err() {
                 eprintln!("The agent no longer needs the analysis result");
             }
             return self.sink.send(Event::Analysis(None)).is_ok();
         }
         let result = self.execute(job);
-        self.discard_unusable_engine();
+        let result = crate::error::finish(
+            result,
+            self.discard_unusable_engine(),
+            "Closing the analysis session",
+        );
         if self.sink.send(Event::Analysis(None)).is_err() {
             return false;
         }
@@ -37,13 +45,9 @@ impl State {
             .map(|request| request.activate(self.cancelled.clone()))
             .transpose()?;
         let result = self.remote(tool, args);
-        let cleanup = active.map(|active| active.finish()).transpose();
-        match (result, cleanup) {
-            (Err(primary), Err(cleanup)) => {
-                Err(failure(format!("{primary}\nTool cleanup: {cleanup}")))
-            }
-            (Err(error), Ok(_)) | (Ok(_), Err(error)) => Err(error),
-            (Ok(value), Ok(_)) => Ok(value),
-        }
+        let cleanup = active
+            .map(super::request_lifetime::ActiveRequest::finish)
+            .transpose();
+        crate::error::finish(result, cleanup.map(|_| ()), "Tool cleanup")
     }
 }

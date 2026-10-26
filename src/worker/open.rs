@@ -7,12 +7,16 @@ use crate::project::files;
 use std::path::{Path, PathBuf};
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn open(&mut self, path: PathBuf) -> Result<String> {
         let _transition = self.runtime.begin_transition()?;
         self.pause_decompilation()?;
         self.sink.analysis("Reading file", 0, None)?;
         self.sink.send(Event::Progress("Reading file".into()))?;
-        self.engine = None;
+        self.close_engine()?;
+        if let Some(project) = self.debug_project.take() {
+            self.store.invalidate_runtime_evidence(&project)?;
+        }
 
         let document = path
             .extension()
@@ -31,7 +35,9 @@ impl State {
         self.sink.send(Event::Functions { rows, offset: 0 })?;
         let kind = project.target.kind.clone();
         self.project = Some(project);
+        self.comparison = None;
         self.runtime.set_context(context)?;
+        self.sync_verification_context()?;
 
         match kind.as_str() {
             "app" | "binary" | "android" if !analyzed => self.index(),
@@ -47,7 +53,8 @@ impl State {
         }
     }
 
-    fn read_project(&self, path: &Path, document: bool) -> Result<Project> {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
+    pub(super) fn read_project(&self, path: &Path, document: bool) -> Result<Project> {
         if document {
             let mut protected = vec![path];
             if let Some(project) = &self.project {
@@ -64,10 +71,10 @@ impl State {
         let target = files::inspect(path, &self.cancelled)?;
         match self.store.project(&target.sha256) {
             Ok(mut saved) => {
-                if saved.target.path != target.path {
-                    saved.target = target;
-                } else {
+                if saved.target.path == target.path {
                     saved.target.size = target.size;
+                } else {
+                    saved.target = target;
                 }
                 saved.source_document = None;
                 Ok(saved)

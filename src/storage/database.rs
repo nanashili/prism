@@ -17,6 +17,7 @@ impl Store {
         Ok(Self { db, cache })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn open(path: &Path) -> Result<Self> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -100,10 +101,17 @@ impl Store {
         super::database_migrations::migrate_decompilation_schema(&db)?;
         migrate_draft_attachments(&db)?;
         super::chat_models::migrate(&db)?;
+        super::function_search::initialize(&db)?;
+        super::investigation::migrate(&db)?;
+        super::type_recovery::migrate(&db)?;
+        super::execution::migrate(&db)?;
+        super::verification::initialize(&db)?;
+        super::analysis_repair::initialize(&db)?;
         let cache = super::cache::open(&path.with_extension("views.db"))?;
         Ok(Self { db, cache })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn save_project(&self, project: &Project) -> Result<()> {
         self.db.execute(
             "INSERT INTO projects VALUES(?1,?2,?3,?4,unixepoch())
@@ -122,6 +130,7 @@ impl Store {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn project(&self, id: &str) -> Result<Project> {
         let state: String =
             self.db
@@ -131,6 +140,7 @@ impl Store {
         Ok(serde_json::from_str(&state)?)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn recent(&self, limit: usize) -> Result<Vec<Recent>> {
         let mut statement = self.db.prepare(
             "SELECT id,title,path,opened,
@@ -152,6 +162,7 @@ impl Store {
         Ok(rows.collect::<std::result::Result<_, _>>()?)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn functions(&self, project: &str, filter: &str, offset: usize) -> Result<Vec<Procedure>> {
         let mut statement = self.db.prepare(
             "SELECT address,name,kind FROM functions

@@ -1,7 +1,9 @@
-use super::{app::Prism, notifications::Level, playbooks, theme::Palette};
+mod settings;
+
+use super::{app::Prism, notifications::Level, playbooks};
 use crate::error::Result;
 use crate::settings::{research::Category, skill_library::SkillLibrary};
-use eframe::egui::{self, RichText};
+use eframe::egui;
 use std::path::PathBuf;
 use std::sync::{
     Arc,
@@ -106,62 +108,6 @@ impl Prism {
         }
     }
 
-    pub(super) fn skill_settings(&mut self, ui: &mut egui::Ui, query: &str) {
-        self.skill_library_controls(ui);
-        ui.add_space(16.0);
-        self.installed_skill_libraries(ui);
-        ui.add_space(16.0);
-        self.skill_browser(ui, query);
-    }
-
-    fn skill_library_controls(&mut self, ui: &mut egui::Ui) {
-        ui.label(RichText::new("Download a skill library").strong());
-        ui.label("Enter a public GitHub repository. Prism downloads skill Markdown and license files on demand. Git must be installed.");
-        ui.add(
-            egui::TextEdit::singleline(&mut self.settings_ui.libraries.repository)
-                .hint_text("https://github.com/owner/repository")
-                .desired_width(ui.available_width())
-                .char_limit(2048),
-        );
-        let busy = self.settings_ui.libraries.pending.is_some();
-        let mut download = false;
-        ui.horizontal_wrapped(|ui| {
-            download = ui
-                .add_enabled(
-                    !busy && !self.settings_ui.libraries.repository.trim().is_empty(),
-                    egui::Button::new("Download from GitHub"),
-                )
-                .clicked();
-            if ui
-                .add_enabled(!busy, egui::Button::new("Import local folder…"))
-                .clicked()
-            {
-                self.import_skill_folder(ui.ctx());
-            }
-            if busy {
-                ui.spinner();
-                ui.label("Updating library…");
-                if ui.button("Cancel").clicked() {
-                    self.settings_ui
-                        .libraries
-                        .cancelled
-                        .store(true, Ordering::Relaxed);
-                }
-            }
-        });
-        ui.horizontal_wrapped(|ui| {
-            ui.label("Suggested:");
-            if ui.link("mcp-gamehacking").clicked() {
-                self.settings_ui.libraries.repository = playbooks::download::GAME_LIBRARY.into();
-            }
-            ui.hyperlink_to("View repository", playbooks::download::GAME_LIBRARY);
-        });
-        ui.label(RichText::new("Libraries stay outside the app bundle. Adding one does not run its scripts or start an MCP server. Source archives are not downloaded.").small().color(Palette::for_context(ui.ctx()).muted));
-        if download {
-            self.download_skill_library(ui.ctx());
-        }
-    }
-
     fn download_skill_library(&mut self, context: &egui::Context) {
         let url = self.settings_ui.libraries.repository.clone();
         let fallback = self.settings.research.categories.clone();
@@ -210,19 +156,6 @@ impl Prism {
         }
     }
 
-    fn installed_skill_libraries(&mut self, ui: &mut egui::Ui) {
-        let busy = self.settings_ui.libraries.pending.is_some();
-        let mut removal = None;
-        for library in &mut self.settings.desktop.skill_libraries {
-            if library_row(ui, library, busy) {
-                removal = Some(library.clone());
-            }
-        }
-        if let Some(library) = removal {
-            self.remove_skill_library(ui.ctx(), library);
-        }
-    }
-
     fn remove_skill_library(&mut self, context: &egui::Context, library: SkillLibrary) {
         if library.repository.is_none() {
             self.settings
@@ -265,49 +198,4 @@ fn fallback_categories(
     } else {
         current
     }
-}
-
-fn library_row(ui: &mut egui::Ui, library: &mut SkillLibrary, busy: bool) -> bool {
-    let mut remove = false;
-    ui.push_id(library.path.clone(), |ui| {
-        let title = library
-            .repository
-            .as_deref()
-            .unwrap_or_else(|| library.path.to_str().unwrap_or("Local library"))
-            .to_owned();
-        ui.horizontal_wrapped(|ui| {
-            ui.checkbox(&mut library.enabled, title);
-            let label = if library.repository.is_some() {
-                "Remove download"
-            } else {
-                "Disconnect"
-            };
-            remove = ui.add_enabled(!busy, egui::Button::new(label)).clicked();
-        });
-        ui.checkbox(
-            &mut library.include_archives,
-            "Include archived-project skill summaries",
-        );
-        if let Some(revision) = &library.revision {
-            ui.label(RichText::new(format!("Revision {revision}")).small().weak());
-        }
-        egui::CollapsingHeader::new("Categories for skills without topic metadata").show(
-            ui,
-            |ui| {
-                for category in Category::ALL {
-                    let mut selected = library.fallback_categories.contains(&category);
-                    if ui.checkbox(&mut selected, category.label()).changed() {
-                        library
-                            .fallback_categories
-                            .retain(|entry| *entry != category);
-                        if selected {
-                            library.fallback_categories.push(category);
-                        }
-                    }
-                }
-            },
-        );
-        ui.add_space(8.0);
-    });
-    remove
 }

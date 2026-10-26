@@ -1,5 +1,6 @@
 use super::app::Prism;
 use crate::model::View;
+use crate::ui::presentation::HistoryDirection;
 use crate::worker::{Job, ViewJob};
 
 impl Prism {
@@ -38,7 +39,9 @@ impl Prism {
         self.load_view(view);
     }
 
-    pub(super) fn navigate_history(&mut self, forward: bool) {
+    pub(super) fn navigate_history(&mut self, forward: HistoryDirection) {
+        let forward = forward == HistoryDirection::Forward;
+
         let index = if forward {
             self.workspace.history_at + 1
         } else {

@@ -70,7 +70,7 @@ memory proportional to the current page.
 Durable decompilation and reconstruction evidence use the configured provider's
 cache namespace. They first reuse matching checksum-verified durable pseudocode,
 then matching view-cache entries, and finally invoke the native provider on a
-miss. They do not consume legacy upstream UI cache entries. The namespace now
+miss. They do not consume incompatible UI cache entries. The namespace now
 includes the complete analysis configuration, so older unqualified entries miss
 once. Clearing the evictable view cache does not delete durable artifacts.
 
@@ -115,9 +115,9 @@ status in the database; they do not automatically export artifact files to the
 filesystem. The module manifest describes an agent-side export or reconstruction
 workflow.
 
-Native analysis remains serialized through the existing worker and checkpoint
-ownership. Batching reduces request and persistence overhead; it does not imply
-unbounded native processes or a throughput promise. A decompilation job cannot
+Native analysis uses a prepared external REA session for the selected project.
+Batching reduces request and persistence overhead; it does not imply unbounded
+provider processes or a throughput promise. A decompilation job cannot
 claim reconstruction or behavioral equivalence. To reconstruct source, start or
 resume a generation and follow [RECONSTRUCTION.md](RECONSTRUCTION.md) and the
 `recompile` skill.

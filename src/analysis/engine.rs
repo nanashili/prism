@@ -14,7 +14,7 @@ pub(crate) struct Engine {
 
 const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod batch;
 
 enum Backend {
@@ -23,6 +23,15 @@ enum Backend {
 }
 
 impl Engine {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
+    pub fn close(self) -> Result<()> {
+        match self.backend {
+            Backend::Rea(engine) => engine.close(),
+            Backend::Rizin(engine) => engine.close(),
+        }
+    }
+
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn open(
         settings: &Settings,
         path: &Path,
@@ -31,13 +40,12 @@ impl Engine {
     ) -> Result<Self> {
         let selection = settings.analysis_backend();
         selection.require_available()?;
-        let backend = match selection {
-            AnalysisBackend::Rizin => Backend::Rizin(Rizin::open(settings, path, cancelled)?),
-            _ => {
-                let mut engine = Rea::connect(settings, cancelled, sink)?;
-                engine.open(path)?;
-                Backend::Rea(engine)
-            }
+        let backend = if selection == AnalysisBackend::Rizin {
+            Backend::Rizin(Rizin::open(settings, path, cancelled)?)
+        } else {
+            let mut engine = Rea::connect(settings, cancelled, sink)?;
+            engine.open(path)?;
+            Backend::Rea(engine)
         };
         Ok(Self {
             backend,
@@ -59,6 +67,7 @@ impl Engine {
         }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn index(&mut self, store: &mut crate::storage::Store, project: &str) -> Result<usize> {
         let result = match &mut self.backend {
             Backend::Rea(engine) => engine.index(store, project),
@@ -68,6 +77,7 @@ impl Engine {
         result
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn tool(&mut self, name: &str, args: Value) -> Result<Value> {
         let result = match &mut self.backend {
             Backend::Rea(engine) => engine.tool(name, args),

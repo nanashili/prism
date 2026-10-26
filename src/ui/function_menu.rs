@@ -1,5 +1,6 @@
 use super::{app::Prism, icons::Icon, popup};
 use crate::model::View;
+use crate::ui::presentation::Selection;
 use crate::worker::Job;
 use eframe::egui;
 
@@ -13,7 +14,7 @@ impl Prism {
         ui.separator();
         popup::submenu(ui, Icon::Copy, "Copy", |ui| {
             for (label, text) in [("Name", name), ("Address", address)] {
-                if popup::row(ui, Some(Icon::Copy), label, "", false).clicked() {
+                if popup::row(ui, Some(Icon::Copy), label, "", Selection::Unselected).clicked() {
                     ui.ctx().copy_text(text.into());
                     ui.close();
                 }
@@ -23,7 +24,8 @@ impl Prism {
                     (View::Pseudocode, Icon::Pseudocode),
                     (View::Assembly, Icon::Assembly),
                 ] {
-                    if popup::row(ui, Some(icon), view.label(), "", false).clicked() {
+                    if popup::row(ui, Some(icon), view.label(), "", Selection::Unselected).clicked()
+                    {
                         self.enqueue(Job::CopyCode {
                             view,
                             address: address.into(),
@@ -43,25 +45,49 @@ impl Prism {
             Some(Icon::References),
             &format!("References to {name}"),
             "",
-            false,
+            Selection::Unselected,
         )
         .clicked()
         {
             self.open_function_view(address, name, View::References);
             ui.close();
         }
-        if popup::row(ui, Some(Icon::Graph), "Callers and callees", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Graph),
+            "Callers and callees",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.open_function_view(address, name, View::Graph);
             ui.close();
         }
     }
 
     fn function_open_menu(&mut self, ui: &mut egui::Ui, address: &str, name: &str) {
-        if popup::row(ui, Some(Icon::Function), &format!("Open {name}"), "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Function),
+            &format!("Open {name}"),
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.open_function_view(address, name, View::Pseudocode);
             ui.close();
         }
-        if popup::row(ui, Some(Icon::Split), "Open in split", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Split),
+            "Open in split",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.open_function_in_split(address, name, View::Pseudocode);
             ui.close();
         }
@@ -72,7 +98,7 @@ impl Prism {
                 (View::Graph, Icon::Graph),
                 (View::Hex, Icon::Hex),
             ] {
-                if popup::row(ui, Some(icon), view.label(), "", false).clicked() {
+                if popup::row(ui, Some(icon), view.label(), "", Selection::Unselected).clicked() {
                     self.open_function_view(address, name, view);
                     ui.close();
                 }
@@ -94,7 +120,7 @@ impl Prism {
                     ),
                 ),
             ] {
-                if popup::row(ui, Some(Icon::Spark), &label, "", false).clicked() {
+                if popup::row(ui, Some(Icon::Spark), &label, "", Selection::Unselected).clicked() {
                     self.workspace.selected = address.into();
                     self.workspace.agent_closed = false;
                     self.chat.draft = prompt;
@@ -106,7 +132,15 @@ impl Prism {
     }
 
     fn function_edit_menu(&mut self, ui: &mut egui::Ui, address: &str, name: &str) {
-        if popup::row(ui, Some(Icon::Rename), &format!("Rename {name}"), "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Rename),
+            &format!("Rename {name}"),
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.open_function_view(address, name, View::Notes);
             ui.close();
         }
@@ -120,7 +154,7 @@ impl Prism {
             } else {
                 "Bookmark"
             };
-            if popup::row(ui, Some(Icon::Bookmark), label, "", marked).clicked() {
+            if popup::row(ui, Some(Icon::Bookmark), label, "", Selection::from(marked)).clicked() {
                 self.edit_project(|project| {
                     if marked {
                         project.bookmarks.retain(|bookmark| bookmark != address);
@@ -131,7 +165,15 @@ impl Prism {
                 ui.close();
             }
         });
-        if popup::row(ui, Some(Icon::Note), "Write a note", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Note),
+            "Write a note",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.open_function_view(address, name, View::Notes);
             ui.close();
         }

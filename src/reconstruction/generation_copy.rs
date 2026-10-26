@@ -5,9 +5,12 @@ pub(super) fn copy(
     db: &Connection,
     parent: i64,
     id: i64,
-    reuse_source: bool,
-    reuse_evidence: bool,
+    reuse_source: SourceReuse,
+    reuse_evidence: EvidenceReuse,
 ) -> Result<()> {
+    let reuse_source = reuse_source == SourceReuse::Reuse;
+    let reuse_evidence = reuse_evidence == EvidenceReuse::Reuse;
+
     db.execute(
         "INSERT INTO units(generation,address,name,module,kind,state,evidence)
          SELECT ?1,address,name,module,kind,
@@ -93,4 +96,28 @@ fn copy_stage(db: &Connection, parent: i64, id: i64, stage: &str) -> Result<()> 
         params![id, parent, stage],
     )?;
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum SourceReuse {
+    Reuse,
+    Invalidate,
+}
+
+impl From<bool> for SourceReuse {
+    fn from(value: bool) -> Self {
+        if value { Self::Reuse } else { Self::Invalidate }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum EvidenceReuse {
+    Reuse,
+    Invalidate,
+}
+
+impl From<bool> for EvidenceReuse {
+    fn from(value: bool) -> Self {
+        if value { Self::Reuse } else { Self::Invalidate }
+    }
 }

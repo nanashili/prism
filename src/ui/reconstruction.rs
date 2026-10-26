@@ -1,4 +1,5 @@
 use super::app::Prism;
+use crate::ui::presentation::ReconstructionReadiness;
 use eframe::egui;
 use serde_json::Value;
 
@@ -64,7 +65,7 @@ impl Prism {
                     self.reconstruction_job("reconstruction_status", serde_json::json!({}));
                 }
             } else {
-                self.reconstruction_controls(ui, ready);
+                self.reconstruction_controls(ui, ReconstructionReadiness::from(ready));
             }
         });
     }

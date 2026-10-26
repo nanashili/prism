@@ -1,5 +1,6 @@
 use crate::error::Result;
 use crate::ui::app::Prism;
+use crate::ui::presentation::ReconstructionReadiness;
 use crate::worker::Job;
 use eframe::egui;
 use serde_json::{Value, json};
@@ -80,7 +81,13 @@ impl Prism {
         });
     }
 
-    pub(super) fn reconstruction_controls(&mut self, ui: &mut egui::Ui, ready: bool) {
+    pub(super) fn reconstruction_controls(
+        &mut self,
+        ui: &mut egui::Ui,
+        ready: ReconstructionReadiness,
+    ) {
+        let ready = ready == ReconstructionReadiness::Ready;
+
         ui.add_enabled_ui(ready, |ui| {
             if ui.button("Continue with agent").clicked() {
                 self.reconstruction_job(

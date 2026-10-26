@@ -1,5 +1,6 @@
 use super::{key_combo, keyboard_edit::Editor, shortcut_catalog as catalog, theme::Palette};
 use crate::settings::Settings;
+use crate::ui::presentation::RowPosition;
 use eframe::egui::{self, RichText};
 
 pub(super) fn show(ui: &mut egui::Ui, settings: &mut Settings, editor: &mut Editor, query: &str) {
@@ -62,7 +63,13 @@ fn shortcut_list(ui: &mut egui::Ui, settings: &mut Settings, editor: &mut Editor
             .show(ui, |ui| {
                 ui.set_width(ui.available_width());
                 for (index, &&(id, label, _, default)) in rows.iter().enumerate() {
-                    row(ui, settings, editor, (id, label, default), index == 0);
+                    row(
+                        ui,
+                        settings,
+                        editor,
+                        (id, label, default),
+                        RowPosition::from(index == 0),
+                    );
                 }
             });
         ui.add_space(26.0);
@@ -74,8 +81,10 @@ pub(super) fn row(
     settings: &mut Settings,
     editor: &mut Editor,
     command: (&str, &str, &str),
-    first: bool,
+    first: RowPosition,
 ) {
+    let first = first == RowPosition::First;
+
     let (id, label, default) = command;
     let p = Palette::for_context(ui.ctx());
     let (rect, _) =

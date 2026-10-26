@@ -1,5 +1,6 @@
 use super::app::Prism;
 use super::{icons::Icon, popup, theme::Palette, widgets};
+use crate::ui::presentation::{OpenTarget, Selection};
 use crate::worker::Job;
 use eframe::egui::{self, Align2, FontId, Rect, Sense};
 
@@ -30,7 +31,7 @@ impl Prism {
             p.text,
         );
         let counts = self.workspace.navigation.counts();
-        let format = counts.map(|counts| counts.format.as_str()).unwrap_or("");
+        let format = counts.map_or("", |counts| counts.format.as_str());
         let architecture = arch.strip_prefix("Mach-O ").unwrap_or(&arch);
         let architecture = if architecture == format {
             ""
@@ -84,7 +85,7 @@ impl Prism {
                     let row = widgets::row_with_icon(
                         ui,
                         &recent.title,
-                        selected,
+                        Selection::from(selected),
                         32.0,
                         FontId::proportional(13.5),
                         |ui, rect| {
@@ -106,11 +107,11 @@ impl Prism {
                     } else {
                         "Ctrl+O"
                     },
-                    false,
+                    Selection::Unselected,
                 )
                 .clicked()
                 {
-                    self.choose_open(false);
+                    self.choose_open(OpenTarget::File);
                     ui.close();
                 }
             });

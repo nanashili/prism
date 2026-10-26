@@ -34,25 +34,24 @@ pub(crate) struct Child {
 impl TurnProgress {
     pub fn update_child(&mut self, update: ChildUpdate) {
         let existing = self.children.iter().position(|child| child.id == update.id);
-        let index = match existing {
-            Some(index) => index,
-            None => {
-                if self.children.len() >= 64 {
-                    self.children.remove(0);
-                    self.limited = true;
-                }
-                self.children.push(Child {
-                    id: prefix(&update.id, 240).into(),
-                    parent: update.parent.map(|parent| prefix(&parent, 240).into()),
-                    name: "Agent".into(),
-                    task: String::new(),
-                    status: "running".into(),
-                    text: String::new(),
-                    thought: String::new(),
-                    tools: Vec::new(),
-                });
-                self.children.len() - 1
+        let index = if let Some(index) = existing {
+            index
+        } else {
+            if self.children.len() >= 64 {
+                self.children.remove(0);
+                self.limited = true;
             }
+            self.children.push(Child {
+                id: prefix(&update.id, 240).into(),
+                parent: update.parent.map(|parent| prefix(&parent, 240).into()),
+                name: "Agent".into(),
+                task: String::new(),
+                status: "running".into(),
+                text: String::new(),
+                thought: String::new(),
+                tools: Vec::new(),
+            });
+            self.children.len() - 1
         };
         let child = &mut self.children[index];
         if let Some(name) = update.name {

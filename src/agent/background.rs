@@ -14,12 +14,18 @@ pub(crate) struct Prompt {
     pub file: Option<PathBuf>,
     pub text: String,
     pub attachments: Vec<crate::model::Attachment>,
-    pub context: String,
+    pub context: PromptContext,
     pub history: String,
     pub cwd: PathBuf,
     pub settings: Settings,
     pub servers: Vec<serde_json::Value>,
     pub picks: Vec<options::Pick>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct PromptContext {
+    pub static_instructions: String,
+    pub dynamic_context: String,
 }
 
 pub(super) enum Request {
@@ -114,19 +120,31 @@ impl Agent {
         self.sender.take();
     }
 
+    pub fn close(mut self) -> Result<()> {
+        self.stop();
+        if let Some(thread) = self.thread.take() {
+            thread
+                .join()
+                .map_err(|_| failure("The agent worker stopped unexpectedly"))?;
+        }
+        Ok(())
+    }
+
     pub fn has_exited(&self) -> bool {
         self.thread
             .as_ref()
-            .is_none_or(|thread| thread.is_finished())
+            .is_none_or(std::thread::JoinHandle::is_finished)
     }
 }
 
 impl Drop for Agent {
     fn drop(&mut self) {
-        self.stopped.store(true, Ordering::Relaxed);
-        self.cancel();
-        self.sender.take();
-        if let Some(thread) = self.thread.take()
+        self.stop();
+        if self
+            .thread
+            .as_ref()
+            .is_some_and(std::thread::JoinHandle::is_finished)
+            && let Some(thread) = self.thread.take()
             && thread.join().is_err()
         {
             eprintln!("The agent worker stopped unexpectedly");

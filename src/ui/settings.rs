@@ -24,7 +24,12 @@ impl Prism {
             .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
             .auto_shrink([false, false])
             .show(ui, |ui| {
-                let width = (ui.available_width() - 56.0).clamp(200.0, 720.0);
+                let available_width = (ui.available_width() - 56.0).max(0.0);
+                let width = if page == SettingsPage::Keyboard && query.is_empty() {
+                    available_width.min(super::keyboard_map::PREFERRED_WIDTH)
+                } else {
+                    available_width.min(720.0)
+                };
                 let rect = egui::Rect::from_min_size(
                     egui::pos2(
                         ui.max_rect().center().x - width * 0.5,
@@ -99,6 +104,7 @@ impl Prism {
         }
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn settings_page(&mut self, ui: &mut egui::Ui, page: SettingsPage, query: &str) {
         match page {
             SettingsPage::Skills => {
@@ -123,7 +129,7 @@ impl Prism {
                 return;
             }
             SettingsPage::Permissions if query.is_empty() => {
-                settings_pages::presets(ui, &mut self.settings.permissions)
+                settings_pages::presets(ui, &mut self.settings.permissions);
             }
             SettingsPage::Storage if query.is_empty() => {
                 if self.storage_settings(ui) {

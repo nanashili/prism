@@ -8,6 +8,7 @@ use std::fs::File;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
 
+#[cfg_attr(feature = "profiling", hotpath::measure)]
 pub(crate) fn save(path: &Path, project: &Project, messages: &[Message]) -> Result<()> {
     super::files::preserve_original(&project.target.path, path)?;
     let parent = path
@@ -102,9 +103,11 @@ fn manifest(project: &Project, entries: Vec<Entry>) -> Result<Vec<u8>> {
         arch: project.target.arch.clone(),
         meta: format!("{} bytes", project.target.size),
         binary: project.target.sha256.clone(),
-        saved_at: std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)?
-            .as_millis() as u64,
+        saved_at: u64::try_from(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_millis(),
+        )?,
         app: format!("Prism {}", env!("CARGO_PKG_VERSION")),
         entries,
     };

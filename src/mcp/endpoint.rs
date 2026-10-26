@@ -21,6 +21,7 @@ struct WireRequest<'a> {
     chat: Option<u64>,
 }
 
+/// Resolves the profile directory, honoring the PRISM_SUPPORT environment override.
 pub fn support_dir() -> PathBuf {
     std::env::var_os("PRISM_SUPPORT")
         .map(PathBuf::from)
@@ -71,6 +72,7 @@ impl Endpoint {
         )
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn call_cancellable(
         &self,
         params: &Value,

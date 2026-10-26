@@ -1,5 +1,6 @@
 use super::model::{Command, Group, Row};
 use crate::settings::Settings;
+use crate::ui::presentation::StatusTone;
 
 const UPDATER: &str = "Automatic installation is not available in the Rust build. Check for updates opens the release page.";
 
@@ -39,7 +40,7 @@ pub(super) fn privacy(s: &mut Settings) -> Vec<Group<'_>> {
     vec![
         Group::new("What leaves your computer", vec![
             Row::new("The agent you use", "Code and questions you send go to that agent’s provider, under its own privacy terms. Local agents keep everything here.")
-                .status(agent, false),
+                .status(agent, StatusTone::Neutral),
             Row::new("Hide your name in paths", "Agents see ~/Downloads instead of /Users/yourname/Downloads.")
                 .toggle(&mut d.hide_paths).blocked("Path redaction across analysis and agent tool responses is not available yet."),
             Row::new("Ask before sending a whole file", "Ask when the agent requests the entire open file through its approval system. The agent’s own file permissions also apply.")

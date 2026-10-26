@@ -1,8 +1,8 @@
-"""Stage explicit REA, Node and Rust-worker inputs for the macOS application."""
+"""Validate and stage an explicit native rea-rust release for macOS."""
+
 import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -11,85 +11,90 @@ from pathlib import Path
 import bundle_native
 
 
-RUNTIME_TREES = ("dist", "node_modules", "bridge/process", "licenses")
 MACOS_ARCHITECTURES = {"arm64", "x86_64"}
-RUNTIME_FILES = (
-    "scripts/rea.mjs", "package.json", "package-lock.json", ".nvmrc",
-    "LICENSE", "THIRD_PARTY_NOTICES.md",
-)
-PROVIDER_FILES = (
-    "dist/generatedPackageMetadata.js", "dist/mcp/main.js",
-    "dist/ghidra-rust/GhidraRustProvider.js",
-    "dist/ghidra-rust/GhidraRustProtocol.js",
-    "dist/contracts/batchDecompileOutput.js", "dist/contracts/enhancedInputs.js",
-    "dist/domain/analysisErrorProjection.js", "dist/application/EnhancedTools.js",
-    "dist/application/FunctionAnalysisEvidence.js", "dist/application/CapabilityInventory.js",
-    "dist/process/OwnedProcessResidentMemory.js",
-    "dist/application/binary/BinarySession.js",
-    "dist/application/binary/BinarySessionExecution.js",
-    "dist/composition/binary.js", "dist/server/registerEnhancedTools.js",
-    "bridge/process/ProcessRunTokenReader.swift",
-    "bridge/process/ProcessRunTokenReaderMain.swift",
-)
 
 
 @dataclass(frozen=True)
 class Inputs:
+    """Validated native REA release inputs."""
+
     package: Path
-    node: Path
+    launcher: Path
     worker: Path
-    worker_notices: Path
+    mcp_server: Path | None
     package_version: str
-    node_version: str
 
     @classmethod
     def resolve(cls, arguments):
-        package = arguments.rea_package.expanduser().resolve(strict=True)
-        node = arguments.node_runtime.expanduser().resolve(strict=True)
-        worker = arguments.rust_ghidra_worker.expanduser().resolve(strict=True)
-        notices = arguments.worker_notices.expanduser().resolve(strict=True)
-        metadata = validate_package(package)
-        require_macos_binary(worker)
-        require_macos_binary(node / "bin/node")
-        require_file(node / "LICENSE")
-        validate_worker_notices(notices)
-        node_version = pinned_node_version(package, node / "bin/node")
-        return cls(package, node, worker, notices, metadata["version"], node_version)
+        supplied = arguments.rea_package.expanduser()
+        if supplied.is_symlink():
+            raise ValueError(f"--rea-package must be a real release directory: {supplied}")
+        package = supplied.resolve(strict=True)
+        if not package.is_dir():
+            raise ValueError(f"--rea-package must be a real release directory: {package}")
 
+        launcher = executable(package, "rea")
+        worker = executable(package, "rea-ghidra-rust-worker")
+        mcp_server = optional_executable(package, "rea-mcp-server")
+        validate_release_metadata(package)
+        for path in (launcher, worker, mcp_server):
+            if path is not None:
+                require_macos_binary(path)
 
-def validate_worker_notices(notices):
-    require_tree(notices)
-    license_files = (
-        path for path in notices.rglob("*")
-        if path.is_file() and path.name.upper().startswith(("LICENSE", "COPYING"))
-    )
-    if next(license_files, None) is None:
-        raise ValueError(
-            "--worker-notices must contain the worker's dependency license notices"
+        return cls(
+            package=package,
+            launcher=launcher,
+            worker=worker,
+            mcp_server=mcp_server,
+            package_version=release_version(package),
         )
 
 
-def validate_package(package):
-    for relative in RUNTIME_FILES + PROVIDER_FILES:
-        require_file(package / relative)
-    for relative in RUNTIME_TREES:
-        require_tree(package / relative)
-    metadata = json.loads((package / "package.json").read_text(encoding="utf-8"))
-    if metadata.get("name") != "rea-agents" or not isinstance(metadata.get("version"), str):
-        raise ValueError("--rea-package must be a built rea-agents package")
-    lock = json.loads((package / "package-lock.json").read_text(encoding="utf-8"))
-    if (lock.get("name"), lock.get("version")) != (metadata["name"], metadata["version"]):
-        raise ValueError("REA package.json and package-lock.json must describe the same release")
-    for name in metadata.get("dependencies", {}):
-        manifest = package / "node_modules" / name / "package.json"
-        require_file(manifest)
-        installed = json.loads(manifest.read_text(encoding="utf-8"))
-        expected = (
-            lock.get("packages", {}).get(f"node_modules/{name}", {}).get("version")
+def executable(package, name):
+    path = optional_executable(package, name)
+    if path is None:
+        raise FileNotFoundError(
+            f"The rea-rust release is missing an executable at bin/{name}: {package}"
         )
-        if expected is None or installed.get("version") != expected:
-            raise ValueError(f"Installed REA dependency does not match package-lock.json: {name}")
-    return metadata
+    return path
+
+
+def optional_executable(package, name):
+    candidate = package / "bin" / name
+    if candidate.is_file():
+        require_executable(candidate)
+        return candidate
+    return None
+
+
+def validate_release_metadata(package):
+    require_file(package / "LICENSE")
+    manifest = package / "release.json"
+    if not manifest.is_file():
+        return
+
+    try:
+        metadata = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Cannot read rea-rust release manifest {manifest}: {error}") from error
+    if metadata.get("name") != "rea-rust":
+        raise ValueError(f"The release manifest does not describe rea-rust: {manifest}")
+    if not isinstance(metadata.get("version"), str) or not metadata["version"]:
+        raise ValueError(f"The release manifest has no version: {manifest}")
+
+
+def release_version(package):
+    version_file = package / "VERSION"
+    if version_file.is_file():
+        version = version_file.read_text(encoding="utf-8").strip()
+        if version:
+            return version
+    manifest = package / "release.json"
+    if manifest.is_file():
+        metadata = json.loads(manifest.read_text(encoding="utf-8"))
+        if isinstance(metadata.get("version"), str):
+            return metadata["version"]
+    return "unknown"
 
 
 def require_file(path):
@@ -99,6 +104,8 @@ def require_file(path):
 
 def require_executable(path):
     require_file(path)
+    if path.is_symlink():
+        raise ValueError(f"Runtime input must be a regular executable: {path}")
     if not os.access(path, os.X_OK):
         raise ValueError(f"Runtime input is not executable: {path}")
 
@@ -114,25 +121,6 @@ def require_macos_binary(path):
             "Bundled executables must support macOS arm64 or x86_64: "
             f"{path} has {sorted(available)}"
         )
-
-
-def require_tree(path):
-    if not path.is_dir() or path.is_symlink():
-        raise ValueError(f"Supply a real runtime directory, not an external directory link: {path}")
-
-
-def pinned_node_version(package, executable):
-    expected = (package / ".nvmrc").read_text(encoding="utf-8").strip().removeprefix("v")
-    if re.fullmatch(r"\d+\.\d+\.\d+", expected) is None:
-        raise ValueError("REA's .nvmrc must pin an exact Node version for bundling")
-    result = subprocess.run(
-        [str(executable), "--version"], check=True, capture_output=True,
-        text=True, timeout=10,
-    )
-    actual = result.stdout.strip().removeprefix("v")
-    if actual != expected:
-        raise ValueError(f"REA pins Node {expected}; --node-runtime supplies {actual!r}")
-    return actual
 
 
 def file_digest(path):
@@ -165,53 +153,37 @@ def copy_tree(source, destination):
 
 
 def copy_file(source, destination):
-    expected = {"sha256": file_digest(source)}
+    """Copy a release binary and verify that its content did not change."""
+    expected = file_digest(source)
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
-    if file_digest(destination) != expected["sha256"]:
+    if file_digest(destination) != expected:
         raise RuntimeError(f"Runtime input changed while copying: {source}")
-    return expected
+    return {"sha256": expected}
 
 
 def install(resources, inputs):
+    destination = resources / "rea-rust"
     copied = {}
-    package = resources / "rea"
-    for relative in RUNTIME_TREES:
-        target = package / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        for path, identity in copy_tree(inputs.package / relative, target).items():
-            copied[f"rea/{relative}/{path}"] = identity
-    for relative in RUNTIME_FILES:
-        copied[f"rea/{relative}"] = copy_file(inputs.package / relative, package / relative)
-    copied["rea/bin/rea-ghidra-rust-worker"] = copy_file(
-        inputs.worker, package / "bin/rea-ghidra-rust-worker",
-    )
-    copied["node/bin/node"] = copy_file(
-        inputs.node / "bin/node", resources / "node/bin/node",
-    )
-    copied["node/LICENSE"] = copy_file(
-        inputs.node / "LICENSE", resources / "node/LICENSE",
-    )
-    notices = resources / "licenses/rust-ghidra-worker"
-    for path, identity in copy_tree(inputs.worker_notices, notices).items():
-        copied[f"licenses/rust-ghidra-worker/{path}"] = identity
+    for relative, identity in copy_tree(inputs.package, destination).items():
+        copied[f"rea-rust/{relative}"] = identity
     return copied
 
 
 def write_manifest(resources, inputs, source_files):
-    signed = {}
-    for relative in ("rea", "node", "licenses/rust-ghidra-worker"):
-        for path, identity in entries(resources / relative).items():
-            signed[f"{relative}/{path}"] = identity
+    signed = {
+        f"rea-rust/{path}": identity
+        for path, identity in entries(resources / "rea-rust").items()
+    }
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "provider": "ghidra-rust",
+        "runtime": "rea-rust",
         "rea_version": inputs.package_version,
-        "node_version": inputs.node_version,
         "source_files_before_signing": source_files,
         "bundled_files_after_signing": signed,
-        "runtime_prerequisites": ["Apple Swift compiler and macOS SDK via xcrun"],
-        "worker_protocol_validation": "REA validates the worker during session preparation",
+        "native_mcp": True,
+        "runtime_prerequisites": [],
     }
     (resources / "rea-runtime-manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8",

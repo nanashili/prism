@@ -1,5 +1,6 @@
 use super::{key_combo, keyboard_edit::Editor, popup, shortcut_catalog, theme::Palette};
 use crate::settings::Settings;
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Align2, FontId, RichText};
 
 const KEYMAPS: &[&str] = &[
@@ -40,7 +41,15 @@ pub(super) fn header(ui: &mut egui::Ui, settings: &mut Settings, editor: &mut Ed
                 .align(egui::RectAlign::BOTTOM_END)
                 .show(|ui| {
                     popup::heading(ui, "Import shortcuts");
-                    if popup::row_with_height(ui, None, "Choose a file", "", false, 36.0).clicked()
+                    if popup::row_with_height(
+                        ui,
+                        None,
+                        "Choose a file",
+                        "",
+                        Selection::Unselected,
+                        36.0,
+                    )
+                    .clicked()
                     {
                         editor.import(settings);
                         ui.close();
@@ -105,7 +114,7 @@ fn keymap(ui: &mut egui::Ui, value: &mut String) {
                     None,
                     "",
                     if value == option { "✓" } else { "" },
-                    value == option,
+                    Selection::from(value == option),
                     34.0,
                 );
                 let center = response.rect.left_center();

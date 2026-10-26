@@ -1,8 +1,16 @@
 use super::{settings_navigation::SettingsPage, theme::Palette};
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Color32, FontId, Rect, Response, Sense};
 use std::sync::Arc;
 
-pub(super) fn show(ui: &mut egui::Ui, page: SettingsPage, title: &str, selected: bool) -> Response {
+pub(super) fn show(
+    ui: &mut egui::Ui,
+    page: SettingsPage,
+    title: &str,
+    selected: Selection,
+) -> Response {
+    let selected = selected == Selection::Selected;
+
     let p = Palette::for_context(ui.ctx());
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), 32.0), Sense::click());

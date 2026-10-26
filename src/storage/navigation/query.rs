@@ -14,6 +14,7 @@ const MATCHES: &str = "(?2='' OR instr(lower(coalesce(r.name,f.name)),lower(?2))
             CASE WHEN n.origin='Imports' THEN 'Imports' ELSE 'Unmapped' END)),lower(?2))>0))";
 
 impl Store {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(crate) fn navigation_page(
         &mut self,
         project: &str,
@@ -56,6 +57,7 @@ impl Store {
         })
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn navigation_matched(
         &self,
         project: &str,
@@ -85,6 +87,7 @@ impl Store {
         )?)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn navigation_renames(&mut self, query: &Query) -> Result<()> {
         let transaction = self.db.transaction()?;
         transaction.execute("DELETE FROM sidebar_renames", [])?;
@@ -98,6 +101,7 @@ impl Store {
         Ok(())
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn navigation_groups(
         &self,
         project: &str,
@@ -156,6 +160,7 @@ impl Store {
         Ok(groups)
     }
 
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn navigation_functions(
         &self,
         project: &str,

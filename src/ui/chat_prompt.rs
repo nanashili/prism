@@ -1,5 +1,6 @@
 use super::app::Prism;
 use crate::agent::Prompt;
+use crate::bridge::{AnalysisTools, WindowTools};
 use crate::model::{Attachment, Message};
 
 impl Prism {
@@ -57,7 +58,7 @@ impl Prism {
             || self
                 .agent
                 .as_ref()
-                .is_some_and(|agent| agent.is_preparing())
+                .is_some_and(crate::agent::Agent::is_preparing)
         {
             return;
         }
@@ -107,15 +108,14 @@ impl Prism {
             .project
             .as_ref()
             .and_then(|project| project.target.path.parent())
-            .map(std::path::Path::to_path_buf)
-            .unwrap_or(crate::settings::support_dir());
+            .map_or(crate::settings::support_dir(), std::path::Path::to_path_buf);
         let servers = self
             .bridge
             .as_ref()
             .ok_or("The window bridge is closed")?
             .configurations(
-                self.settings.conversation.prism_tools,
-                self.settings.conversation.rea_tools,
+                WindowTools::from(self.settings.conversation.prism_tools),
+                AnalysisTools::from(self.settings.conversation.rea_tools),
                 self.chat_tabs.active,
             )?;
         let servers = crate::agent::tool_servers::with_custom(

@@ -13,7 +13,7 @@ impl Database {
              FROM modules m LEFT JOIN contracts c ON c.generation=m.generation AND c.module=m.module
              WHERE m.generation=?1 ORDER BY m.module LIMIT 17 OFFSET ?2",
         )?;
-        let rows = query.query_map(params![generation, offset as i64], |row| {
+        let rows = query.query_map(params![generation, i64::try_from(offset)?], |row| {
             let dependencies: String = row.get(7)?;
             let dependencies = serde_json::from_str::<Value>(&dependencies).map_err(|error| {
                 SqlError::FromSqlConversionFailure(7, Type::Text, Box::new(error))

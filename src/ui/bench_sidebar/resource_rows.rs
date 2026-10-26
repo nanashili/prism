@@ -1,5 +1,6 @@
 use super::parts;
 use crate::storage::resources::ResourceEntry;
+use crate::ui::presentation::{Disclosure, Selection};
 use crate::ui::{app::Prism, icons::Icon, popup};
 use eframe::egui;
 
@@ -100,7 +101,7 @@ impl Prism {
         );
         if response.clicked() {
             if entry.folder {
-                self.toggle_resource_folder(&entry.path, open);
+                self.toggle_resource_folder(&entry.path, Disclosure::from(open));
             } else {
                 self.open_function_view(&address, &entry.name, crate::model::View::Resources);
             }
@@ -109,7 +110,7 @@ impl Prism {
             response.context_menu(|ui| {
                 for split in [false, true] {
                     let label = if split { "Open in split" } else { "Open" };
-                    if popup::row(ui, Some(icon), label, "", false).clicked() {
+                    if popup::row(ui, Some(icon), label, "", Selection::Unselected).clicked() {
                         if split {
                             self.open_function_in_split(
                                 &address,
@@ -126,7 +127,15 @@ impl Prism {
                         ui.close();
                     }
                 }
-                if popup::row(ui, Some(Icon::Copy), "Copy resource path", "", false).clicked() {
+                if popup::row(
+                    ui,
+                    Some(Icon::Copy),
+                    "Copy resource path",
+                    "",
+                    Selection::Unselected,
+                )
+                .clicked()
+                {
                     ui.ctx().copy_text(entry.path.clone());
                     ui.close();
                 }

@@ -75,6 +75,16 @@ pub(super) fn definitions() -> Vec<Value> {
             json!({"view":{"type":"string","minLength":1,"maxLength":64}}),
         ),
         tool(
+            "transfer_version_annotations",
+            "Transfer confirmed project labels, notes and bookmarks for explicitly reviewed version-comparison pairs. Requires a completed comparison in this window. Preserves destination conflicts and supports Undo. Source and destination hashes bind the reviewed comparison; no instruction offsets or patches are copied.",
+            &["source_sha256", "target_sha256", "pairs"],
+            json!({
+                "source_sha256":{"type":"string","minLength":64,"maxLength":64},
+                "target_sha256":{"type":"string","minLength":64,"maxLength":64},
+                "pairs":{"type":"array","minItems":1,"maxItems":20000,"items":{"type":"object","properties":{"source":{"type":"string","minLength":1,"maxLength":64},"target":{"type":"string","minLength":1,"maxLength":64}},"required":["source","target"],"additionalProperties":false}}
+            }),
+        ),
+        tool(
             "rename_function",
             "Set a local function name using a C identifier. Accepts an address, original name or local name.",
             &["function", "new_name"],

@@ -1,3 +1,4 @@
+use crate::ui::presentation::ThoughtDisplay;
 mod choices;
 mod goal;
 mod permission;
@@ -38,6 +39,7 @@ impl Prism {
                 self.permission_card(ui);
                 self.queued_follow_ups(ui);
                 self.goal_bar(ui);
+                self.investigation_panel(ui);
                 self.question_card(ui);
                 ui.add_space(8.0);
                 self.composer(ui);
@@ -51,7 +53,7 @@ impl Prism {
             ui,
             &self.chat,
             self.chat_tabs.active,
-            self.settings.conversation.show_thinking,
+            ThoughtDisplay::from(self.settings.conversation.show_thinking),
             &style,
         );
     }

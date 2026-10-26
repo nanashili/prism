@@ -1,4 +1,5 @@
 use super::{completion::Completion, input_id};
+use crate::ui::presentation::InputFocus;
 use crate::ui::{app::Prism, theme::Palette};
 use eframe::egui::{self, FontId, TextEdit};
 
@@ -8,12 +9,15 @@ impl Prism {
         let mut completion = Completion::load(ui.ctx(), id);
         let was_completing = completion.is_open();
         // Consume picker navigation before TextEdit moves the caret or handles Return.
-        let keys = completion.keys(ui, ui.memory(|memory| memory.has_focus(id)));
+        let keys = completion.keys(
+            ui,
+            InputFocus::from(ui.memory(|memory| memory.has_focus(id))),
+        );
         let mut input = self.draft_input(ui, id, size, height);
         completion.update(
             &self.chat.draft,
             input.cursor_range,
-            input.response.has_focus() || input.response.lost_focus(),
+            InputFocus::from(input.response.has_focus() || input.response.lost_focus()),
         );
         let completing = was_completing || completion.is_open();
         self.composer_suggestions(ui, &mut input, &mut completion, &keys);
@@ -51,7 +55,9 @@ impl Prism {
         size: f32,
         height: f32,
     ) -> egui::text_edit::TextEditOutput {
-        let hint = if self.screen == crate::model::Screen::Workbench {
+        let hint = if self.screen == crate::model::Screen::Setup {
+            "What would you like to learn or investigate?"
+        } else if self.screen == crate::model::Screen::Workbench {
             "Ask about this code, / for skills, @ to mention"
         } else if self.chat.messages.is_empty() {
             "Ask anything, or drop an app, binary, shader or model here"

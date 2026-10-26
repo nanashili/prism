@@ -59,24 +59,21 @@ fn progress_label(progress: &AnalysisProgress) -> String {
 fn progress_bar(ui: &mut egui::Ui, progress: &AnalysisProgress, palette: Palette) {
     let (rect, response) = ui.allocate_exact_size(egui::vec2(96.0, 4.0), Sense::hover());
     ui.painter().rect_filled(rect, 2.0, palette.sel);
-    let filled = match progress.total {
-        Some(total) => {
-            let fraction = if total == 0 {
-                1.0
-            } else {
-                (progress.completed as f64 / total as f64).clamp(0.0, 1.0) as f32
-            };
-            Rect::from_min_size(rect.min, egui::vec2(rect.width() * fraction, rect.height()))
-        }
-        None => {
-            let position = ui.input(|input| (input.time * 0.7).fract()) as f32;
-            let left = rect.left() + position * rect.width() * 0.7;
-            ui.ctx().request_repaint_after(Duration::from_millis(100));
-            Rect::from_min_size(
-                egui::pos2(left, rect.top()),
-                egui::vec2(rect.width() * 0.3, rect.height()),
-            )
-        }
+    let filled = if let Some(total) = progress.total {
+        let fraction = if total == 0 {
+            1.0
+        } else {
+            (progress.completed as f64 / total as f64).clamp(0.0, 1.0) as f32
+        };
+        Rect::from_min_size(rect.min, egui::vec2(rect.width() * fraction, rect.height()))
+    } else {
+        let position = ui.input(|input| (input.time * 0.7).fract()) as f32;
+        let left = rect.left() + position * rect.width() * 0.7;
+        ui.ctx().request_repaint_after(Duration::from_millis(100));
+        Rect::from_min_size(
+            egui::pos2(left, rect.top()),
+            egui::vec2(rect.width() * 0.3, rect.height()),
+        )
     };
     ui.painter().rect_filled(filled, 2.0, palette.accent);
     response.on_hover_text(progress_label(progress));

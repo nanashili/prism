@@ -66,7 +66,8 @@ impl Surface {
         };
 
         // liquid-glass-rs 0.1.1 stores the +1 alloc/init reference as a raw pointer
-        // and never releases it. Adopt that reference; the NSArray retain is separate.
+        // and never releases it.
+        // SAFETY: adopt that owned +1 reference exactly once; the NSArray retain is separate.
         let allocation = unsafe { Retained::from_raw(Retained::as_ptr(&view).cast_mut()) }
             .expect("A retained NSView is non-null");
         match allocation.downcast::<NSGlassEffectView>() {

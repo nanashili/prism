@@ -1,5 +1,6 @@
 use super::{
-    BATCH_INSTRUCTIONS, Mode, RESPONSE_INSTRUCTIONS, definitions, endpoint::Endpoint, transport,
+    BATCH_INSTRUCTIONS, INVESTIGATION_INSTRUCTIONS, Mode, RESPONSE_INSTRUCTIONS, definitions,
+    endpoint::Endpoint, transport,
 };
 use crate::error::Result;
 use serde_json::{Value, json};
@@ -44,12 +45,11 @@ impl Session {
     ) -> Result<()> {
         while let Some(bytes) = transport::read(input)? {
             pending.reap()?;
-            let request = match serde_json::from_slice::<Value>(&bytes) {
-                Ok(request) => request,
-                Err(_) => {
-                    pending.write(&error(Value::Null, -32700, "Invalid JSON"))?;
-                    continue;
-                }
+            let request = if let Ok(request) = serde_json::from_slice::<Value>(&bytes) {
+                request
+            } else {
+                pending.write(&error(Value::Null, -32700, "Invalid JSON"))?;
+                continue;
             };
             if let Err(response) = message::validate(&request) {
                 pending.write(&response)?;
@@ -100,7 +100,7 @@ impl Session {
             VERSIONS[0]
         };
         self.initialized = true;
-        let instructions = if self.mode == Mode::Headless {
+        let mut instructions = if self.mode == Mode::Headless {
             format!(
                 "This is an unattended local Prism worker. UI navigation and user questions are unavailable. Analysis and reconstruction tools operate on the project opened for this process. Analysis results may be incomplete.\n\n{BATCH_INSTRUCTIONS}\n\n{RESPONSE_INSTRUCTIONS}"
             )
@@ -109,6 +109,8 @@ impl Session {
                 "Tools use the open Prism window and its existing analysis worker. Open Prism before calling tools. When available, ask questions with request_user_input and wait for the user's answer. Skip and dismissal are never approval. Analysis results may be incomplete.\n\n{BATCH_INSTRUCTIONS}\n\n{RESPONSE_INSTRUCTIONS}"
             )
         };
+        instructions.push_str("\n\n");
+        instructions.push_str(INVESTIGATION_INSTRUCTIONS);
         reply(
             id,
             json!({

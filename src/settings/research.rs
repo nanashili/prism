@@ -89,13 +89,6 @@ impl Default for Research {
 }
 
 impl Research {
-    pub fn legacy() -> Self {
-        Self {
-            categories: Category::ALL.to_vec(),
-            setup_complete: true,
-        }
-    }
-
     pub fn contains(&self, category: Category) -> bool {
         self.categories.contains(&category)
     }
@@ -104,7 +97,9 @@ impl Research {
         categories.is_empty() || categories.iter().any(|category| self.contains(*category))
     }
 
-    pub fn set(&mut self, category: Category, enabled: bool) {
+    pub fn set(&mut self, category: Category, enabled: CategoryState) {
+        let enabled = enabled == CategoryState::Enabled;
+
         self.categories.retain(|entry| *entry != category);
         if enabled {
             self.categories.push(category);
@@ -124,5 +119,17 @@ impl Research {
             Category::GameRuntime,
             Category::GameSecurity,
         ])
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CategoryState {
+    Enabled,
+    Disabled,
+}
+
+impl From<bool> for CategoryState {
+    fn from(value: bool) -> Self {
+        if value { Self::Enabled } else { Self::Disabled }
     }
 }

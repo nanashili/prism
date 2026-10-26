@@ -1,3 +1,4 @@
+use crate::ui::presentation::CatalogScope;
 mod about;
 mod agents;
 mod chat;
@@ -22,6 +23,7 @@ use std::sync::Arc;
 pub(super) use presets::show as presets;
 pub(super) use render::groups as show;
 pub(super) use row_control::action_button;
+pub(super) use skills::groups as skill_groups;
 
 pub(super) struct PageContext<'a> {
     pub agents: &'a Catalog,
@@ -42,7 +44,7 @@ pub(super) fn groups<'a>(
         SettingsPage::Agents => agents::groups(
             settings,
             context.agents,
-            context.browsing_agents,
+            CatalogScope::from(context.browsing_agents),
             custom_tool_server,
         ),
         SettingsPage::Permissions => permissions::groups(settings),

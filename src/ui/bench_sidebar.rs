@@ -1,3 +1,4 @@
+use crate::ui::presentation::Disclosure;
 mod filter_menu;
 mod functions;
 mod parts;
@@ -53,7 +54,7 @@ impl Prism {
     ) -> bool {
         let mut open = self.sidebar_section_open(id);
         if parts::heading(ui, title, count, &mut open).clicked() {
-            self.set_sidebar_section_open(id, open);
+            self.set_sidebar_section_open(id, Disclosure::from(open));
         }
         open
     }
@@ -62,7 +63,9 @@ impl Prism {
         !self.workspace.navigation.closed.contains(id)
     }
 
-    pub(super) fn set_sidebar_section_open(&mut self, id: &'static str, open: bool) {
+    pub(super) fn set_sidebar_section_open(&mut self, id: &'static str, open: Disclosure) {
+        let open = open == Disclosure::Open;
+
         if open {
             self.workspace.navigation.closed.remove(id);
         } else {

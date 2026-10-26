@@ -3,10 +3,11 @@ use crate::decompilation::ExportRunner;
 use crate::error::Result;
 use std::sync::atomic::Ordering;
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 mod retained;
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn run_decompilation_step(&mut self) -> bool {
         let Some(mut runner) = self.decompilation.take() else {
             return false;
@@ -36,7 +37,9 @@ impl State {
             eprintln!("Could not release the paused durable job after {message}: {error}");
         }
 
-        self.discard_unusable_engine();
+        if let Err(error) = self.discard_unusable_engine() {
+            eprintln!("Could not close the failed decompilation session after {message}: {error}");
+        }
     }
 
     fn advance_decompilation(&mut self, runner: &mut ExportRunner) -> Result<bool> {
@@ -52,7 +55,7 @@ impl State {
             )?;
             return Ok(true);
         }
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         if self.settings.analysis_backend().retains_prepared_session() {
             return self.advance_retained_decompilation(runner);
         }
@@ -75,7 +78,11 @@ impl State {
             // this address instead of retrying the same restore for every item.
             return result.map(|_| ());
         }
-        self.discard_unusable_engine();
+        let result = crate::error::finish(
+            result,
+            self.discard_unusable_engine(),
+            "Closing the decompilation session",
+        );
         if self.cancelled.load(Ordering::Relaxed) {
             return runner.pause(&self.store, None);
         }

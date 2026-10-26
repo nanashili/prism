@@ -1,13 +1,59 @@
 use super::State;
+use super::analysis_tools::{blocked_tool, requires_batch};
 use crate::error::{Result, failure};
 use serde_json::{Value, json};
 
 impl State {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn remote(&mut self, tool: &str, args: Value) -> Result<Value> {
         match tool {
+            "analysis_repair" => self.analysis_repair(&args),
+            "recover_types" => {
+                let project = self.project.as_ref().ok_or("Open a file first")?;
+                if args["project"].as_str() != Some(project.target.sha256.as_str()) {
+                    return Err(failure("The open project changed before type recovery"));
+                }
+                if !matches!(project.target.kind.as_str(), "app" | "binary") {
+                    return Err(failure("Type recovery currently requires a native binary"));
+                }
+                let context = self.decompilation_context()?;
+                let analyzer = super::analysis_cache_identity::namespace(&context);
+                let mut payload = args;
+                payload
+                    .as_object_mut()
+                    .ok_or("Supply type recovery arguments")?
+                    .remove("project");
+                self.store
+                    .recover_types(&context.project, &analyzer, &payload)
+            }
+            "compare_versions" => self.compare_versions(&args),
+            "version_matches" => self.version_matches(&args),
+            "verification_claim" => self.verification_claim_tool(&args),
+            "verification_evidence" => self.verification_evidence_tool(&args),
+            "investigation" => {
+                let project = &self
+                    .project
+                    .as_ref()
+                    .ok_or("Open a file first")?
+                    .target
+                    .sha256;
+                let result = crate::investigation::call(&self.store, project, &args)?;
+                if !matches!(args["action"].as_str(), Some("list" | "status"))
+                    && let Some(id) = result["graph"]["id"].as_str()
+                {
+                    self.sink.send(crate::events::Event::InvestigationChanged {
+                        project: project.clone(),
+                        id: id.into(),
+                    })?;
+                }
+                Ok(result)
+            }
+            "execution_evidence" => self.execution_evidence(&args),
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
             "inspect_selection" => self.inspect_selection(&args),
+            "index_function_search" => self.index_function_search(&args),
+            "semantic_search" => self.semantic_search(&args),
             "list_functions" => {
                 let project = self.project.as_ref().ok_or("Open a file first")?;
                 let offset = usize::try_from(args["offset"].as_u64().unwrap_or_default())?;
@@ -28,16 +74,7 @@ impl State {
                 let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
                 Ok(json!({"offset":offset,"length":bytes.len(),"bytes_hex":hex}))
             }
-            "analysis_tools" => {
-                let mut result = self.engine()?.tools()?;
-                if let Some(tools) = result["tools"].as_array_mut() {
-                    tools.retain(|tool| {
-                        let name = tool["name"].as_str().unwrap_or_default();
-                        !blocked_tool(name) && !requires_batch(name)
-                    });
-                }
-                Ok(result)
-            }
+            "analysis_tools" => self.analysis_tools(&args),
             "analysis_call" => {
                 let name = args["name"]
                     .as_str()
@@ -52,28 +89,11 @@ impl State {
                         "Use decompile_batch for native decompilation, or reconstruction_evidence for a claimed reconstruction batch",
                     ));
                 }
-                self.analysis_call(name, args.get("arguments").cloned().unwrap_or(json!({})))
+                let arguments = args.get("arguments").cloned().unwrap_or(json!({}));
+                let reply = self.analysis_call(name, arguments.clone())?;
+                self.capture_analysis_reply(name, &arguments, reply)
             }
             _ => Err(failure(format!("Unknown Prism tool: {tool}"))),
         }
     }
-}
-
-fn requires_batch(name: &str) -> bool {
-    matches!(name, "procedure_pseudo_code" | "batch_decompile")
-}
-
-fn blocked_tool(name: &str) -> bool {
-    matches!(
-        name,
-        "open_binary"
-            | "close_binary"
-            | "set_address_name"
-            | "set_addresses_names"
-            | "set_comment"
-            | "set_inline_comment"
-            | "set_bookmark"
-            | "unset_bookmark"
-            | "set_code_type"
-    )
 }

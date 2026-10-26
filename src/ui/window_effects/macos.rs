@@ -14,6 +14,7 @@ pub(super) fn apply(context: &eframe::CreationContext<'_>) -> Result<()> {
 
     // SAFETY: the borrowed eframe handle keeps this NSView alive on the main thread.
     let content = unsafe { handle.ns_view.cast::<NSView>().as_ref() };
+    // SAFETY: the borrowed content view remains live on the main UI thread.
     let container =
         unsafe { content.superview() }.ok_or("The window content view has no container")?;
     let handle = AppKitWindowHandle::new(NonNull::from(&*container).cast());

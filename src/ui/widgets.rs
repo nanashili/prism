@@ -1,4 +1,5 @@
 use super::{icons::Icon, theme::Palette};
+use crate::ui::presentation::{Border, Caret, Presence, Selection};
 use eframe::egui::{self, Align2, Color32, FontId, Rect, Response, Sense, Stroke};
 
 pub(super) fn icon_button(ui: &mut egui::Ui, icon: Icon, label: &str, size: f32) -> Response {
@@ -22,8 +23,8 @@ pub(super) fn chip(
     ui: &mut egui::Ui,
     icon: Option<Icon>,
     label: &str,
-    border: bool,
-    caret: bool,
+    border: Border,
+    caret: Caret,
 ) -> Response {
     chip_tinted(
         ui,
@@ -39,10 +40,13 @@ pub(super) fn chip_tinted(
     ui: &mut egui::Ui,
     icon: Option<Icon>,
     label: &str,
-    border: bool,
-    caret: bool,
+    border: Border,
+    caret: Caret,
     color: Color32,
 ) -> Response {
+    let border = border == Border::Visible;
+    let caret = caret == Caret::Visible;
+
     chip_contents(
         ui,
         label,
@@ -53,7 +57,10 @@ pub(super) fn chip_tinted(
     )
 }
 
-pub(super) fn chip_width(ui: &egui::Ui, label: &str, icon: bool, caret: bool) -> f32 {
+pub(super) fn chip_width(ui: &egui::Ui, label: &str, icon: Presence, caret: Caret) -> f32 {
+    let icon = icon == Presence::Present;
+    let caret = caret == Caret::Visible;
+
     let text = ui.painter().layout_no_wrap(
         label.into(),
         FontId::proportional(12.5),
@@ -136,14 +143,16 @@ pub(super) fn row(
     ui: &mut egui::Ui,
     icon: Icon,
     label: &str,
-    selected: bool,
+    selected: Selection,
     height: f32,
 ) -> Response {
+    let selected = selected == Selection::Selected;
+
     row_with_font(
         ui,
         icon,
         label,
-        selected,
+        Selection::from(selected),
         height,
         FontId::proportional(13.5),
     )
@@ -153,23 +162,34 @@ pub(super) fn row_with_font(
     ui: &mut egui::Ui,
     icon: Icon,
     label: &str,
-    selected: bool,
+    selected: Selection,
     height: f32,
     font: FontId,
 ) -> Response {
-    row_with_icon(ui, label, selected, height, font, |ui, rect| {
-        icon.paint(ui, rect, Palette::for_context(ui.ctx()).muted);
-    })
+    let selected = selected == Selection::Selected;
+
+    row_with_icon(
+        ui,
+        label,
+        Selection::from(selected),
+        height,
+        font,
+        |ui, rect| {
+            icon.paint(ui, rect, Palette::for_context(ui.ctx()).muted);
+        },
+    )
 }
 
 pub(super) fn row_with_icon(
     ui: &mut egui::Ui,
     label: &str,
-    selected: bool,
+    selected: Selection,
     height: f32,
     font: FontId,
     paint: impl FnOnce(&egui::Ui, Rect),
 ) -> Response {
+    let selected = selected == Selection::Selected;
+
     let p = Palette::for_context(ui.ctx());
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), height), Sense::click());

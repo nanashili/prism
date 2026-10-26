@@ -5,7 +5,7 @@ use crate::project::files;
 use serde_json::{Value, json};
 
 impl State {
-    pub(super) fn engine_view(&mut self, view: View, address: &str) -> Result<String> {
+    pub(in crate::worker) fn engine_view(&mut self, view: View, address: &str) -> Result<String> {
         if address.is_empty()
             && matches!(
                 view,
@@ -30,7 +30,7 @@ impl State {
 
     fn read_engine_text(&mut self, view: View, address: &str) -> Result<String> {
         let (tool, args) = match view {
-            #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+            #[cfg(feature = "rea-rust-ghidra")]
             View::Pseudocode if self.settings.analysis_backend().retains_prepared_session() => {
                 return self.batch_pseudocode(address);
             }
@@ -55,14 +55,6 @@ impl State {
     }
 
     fn read_dossier(&mut self, address: &str) -> Result<Value> {
-        let project = self.project.as_ref().ok_or("Open a file first")?;
-        if !self.settings.analysis_backend().retains_prepared_session()
-            && let Some(text) =
-                self.store
-                    .cache(&project.target.sha256, address, "upstream:Dossier")?
-        {
-            return Ok(serde_json::from_str(&text)?);
-        }
         let mut reply = self.analysis_call("analyze_function", json!({"procedure": address}))?;
         if let Some(value) = reply.pointer_mut("/raw_result/value") {
             return Ok(value.take());

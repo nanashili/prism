@@ -1,6 +1,7 @@
 use super::{parts, state::LoadedPage};
 use crate::model::View;
 use crate::storage::navigation::Row;
+use crate::ui::presentation::Selection;
 use crate::ui::{app::Prism, icons::Icon, widgets};
 use eframe::egui::{self, FontId};
 
@@ -123,7 +124,7 @@ impl Prism {
                             ui,
                             Icon::Function,
                             &procedure.name,
-                            self.workspace.selected == procedure.address,
+                            Selection::from(self.workspace.selected == procedure.address),
                             26.0,
                             FontId::monospace(12.0),
                         )

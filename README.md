@@ -22,6 +22,8 @@ Prism keeps the target, its analysis, and the conversation together. Its workben
 
 The intended workflow is iterative: open a target, locate useful evidence, inspect it, ask a focused question, and record what was learned. Function renames and notes are local project annotations. File-offset patches are exported to a separate copy rather than written over the input binary.
 
+The [autonomous investigation planner](docs/INVESTIGATION_PLANNER.md) turns a goal into a Prism-owned task graph with dependencies, findings, blockers, and resource budgets. Agents gather evidence while Prism schedules the next step and saves progress for restart recovery.
+
 ### A desktop client for agents
 
 Prism communicates with agents through the **Agent Client Protocol (ACP)**. An agent can explain code and use Prism's **Model Context Protocol (MCP)** tools to inspect the open project, navigate functions, annotate findings, and coordinate reconstruction. The conversation supports streaming replies, tool activity, plans, attachments, model selection, and permission requests, subject to what the connected adapter advertises.
@@ -32,9 +34,9 @@ Bundled playbooks cover first-look surveys, function explanations, behavior sear
 
 ### A coordinator for established analysis engines
 
-The default native-analysis route is **Java Ghidra through REA**. Prism owns the UI, project state, local storage, and request coordination; the selected provider performs the underlying analysis.
+The default native-analysis route is **Rust Ghidra through native REA**. Prism owns the UI, project state, local storage, and request coordination; the selected provider performs the underlying analysis.
 
-Additional routes include Rizin, jadx for Android source, and optional REA integrations for other installed tools. An experimental Rust Ghidra worker can be enabled explicitly. Available formats, decompiler quality, function discovery, and reference completeness depend on the selected engine.
+Additional routes include Rizin, jadx for Android source, and optional REA integrations for other installed tools. Available formats, decompiler quality, function discovery, and reference completeness depend on the selected engine.
 
 ### A place to reconstruct and check candidate source
 
@@ -49,12 +51,12 @@ The output is a proposed implementation for review. Decompiled text, generated s
 - **Not a new universal decompiler.** Prism integrates analysis engines. It cannot recover information that the input and selected engine do not expose.
 - **Not an exact source recovery machine.** Compilation can remove names, comments, types, source boundaries, and build information. A reconstruction can be plausible or compile successfully while behaving differently from the original program.
 - **Not a complete replacement for every established reverse engineering suite.** Advanced processor support, dynamic analysis, platform-specific metadata, debugger behavior, and specialist workflows remain dependent on external tools or unfinished integrations.
-- **Not an entirely Rust analysis stack.** The UI and MCP helper are Rust, but the default route uses REA, Node.js, Java, and Ghidra. The optional Rust worker still uses REA's runtime.
+- **Not a complete Ghidra replacement.** The UI, MCP helper, and default REA runtime are Rust. Analysis coverage depends on the selected native engine and its worker.
 - **Not an AI model or hosted AI service.** Prism connects to agents. Installing it does not supply model access, subscriptions, or credentials.
 - **Not automatically offline or a security sandbox.** Project storage is local, but agents, registries, downloads, and configured tools can use the network. Data sent to an agent follows that agent's behavior and provider policies. Permission handling does not isolate arbitrary external processes.
 - **Not a packet capture tool or browser engine.** Web and network investigation currently depend on agent tools, supplied artifacts, and playbooks.
 - **Not a finished GPU profiler or model debugger.** Current readers cover selected shader/source text and model metadata; full profiling and tensor inspection are outside the implemented scope.
-- **Not a promise of a fixed memory limit or universal speedup.** Paging, bounded queues, and caches constrain particular workloads. External engines and agents have their own resource use. Historical benchmarks apply to their recorded machines, inputs, and builds.
+- **Not a promise of a fixed memory limit or universal speedup.** Paging, bounded queues, and caches constrain particular workloads. External engines and agents have their own resource use.
 - **Not a production release guarantee.** Successful compilation is one check. Live engine sessions, platform packaging, signing, and behavior on real targets require separate validation.
 
 ## Current capabilities and boundaries
@@ -65,8 +67,8 @@ The output is a proposed implementation for review. Decompiled text, generated s
 | Native analysis | Ghidra through REA, Rizin adapter, saved function inventories, bounded decompilation jobs, cached views | Requires compatible external tools; indirect references and discovery may be incomplete |
 | Project browser | Paged function trees, grouping and filters, imports, segments, macOS app resources | Specialized resource previews and Android resource browsing are incomplete |
 | Conversations | ACP sessions, streamed Markdown, tool activity, project chats, attachments, queued prompts, advertised model controls | Adapter capabilities vary; presence in the registry does not establish working authentication |
-| Local projects | `.prism` archives, binary integrity checks, annotations, chat history, SQLite storage | This standalone format and profile replace earlier development identities; no automatic old-profile conversion is provided |
-| Patches and comparison | File-offset patch export to a copy, changed-block comparison | No general function-matching binary diff or automatic patch-correctness proof |
+| Local projects | `.prism` archives, binary integrity checks, annotations, chat history, SQLite storage | Project archives retain bounded conversation history; tool installations are configured per machine |
+| Patches and comparison | File-offset patch export; [cross-version function matching](docs/CROSS_VERSION.md), reviewed label/note/bookmark transfer | Heuristic matches need review; no semantic-equivalence or patch-correctness proof |
 | Android | jadx method inventory and Java source integration | Split packages, SMALI, JNI, and resource workflows are incomplete; live coverage is limited |
 | Debugging | LLDB DAP launch/attach, breakpoints, stepping, threads, stack, evaluation commands | End-to-end sessions and stopped-event presentation still need validation |
 | Reconstruction | Persistent generations, dependency and interface tracking, batch work, evidence, source snapshots, builds, reports | No automatic behavioral equivalence proof or guaranteed complete resource recovery |
@@ -100,22 +102,21 @@ In **Settings > Engines**, configure the tools for the route you want to use:
 
 | Route | External requirements |
 | --- | --- |
-| Ghidra, the default | A compatible REA installation and Node runtime, Java home, and a Ghidra installation |
+| Ghidra, the default | Native `nanashili/rea-rust` and its matching Ghidra worker; use a source build until releases are published |
 | Rizin | Rizin; pseudocode also needs a compatible decompiler plugin |
 | Android | jadx |
-| Experimental Rust Ghidra | A compatible REA build, Node, and REA's separately built Rust worker |
 | Optional IDA or Hopper integration | REA support plus the corresponding installed application and any required license |
 | Debugger | LLDB DAP |
 
-No analysis engine is downloaded automatically. The Java route is compiled with the default `prism-ghidra-rea` feature. See [provider setup](docs/REFERENCE_BACKEND_PARITY.md) for the detailed integration notes.
+Setup links to the fork's install/build instructions. After installing it, browse to the native `rea` executable; Prism discovers the worker beside it. The native route is enabled by default with `rea-rust-ghidra`. See [native REA setup](docs/REA_RUST_PROVIDER.md) for installation and limits.
 
-To compile the optional Rust route alongside the default provider:
+To compile the native Rust route:
 
 ```sh
 cargo build --release --locked --features rea-rust-ghidra --bin prism
 ```
 
-Then select **Ghidra (Rust through REA)** in Engine settings. This route is experimental and is not the full Java Ghidra project service. See [Rust provider setup and limits](docs/REA_RUST_PROVIDER.md).
+Then select **Ghidra (Rust through REA)** in Engine settings. See [native REA provider setup](docs/REA_RUST_PROVIDER.md).
 
 ### Configure an agent
 
@@ -150,6 +151,11 @@ Cargo's target directory can be overridden locally, so adjust that path if neede
 
 Tools include project opening and state, function navigation, local annotations, function inventories, bounded byte reads, analysis discovery, durable decompilation, and reconstruction. Tokens are kept out of client command lines. The bridge is a local integration boundary, not a sandbox for independent MCP clients or agents.
 
+Agents can capture immutable analysis evidence and record claims with `verification_evidence`
+and `verification_claim`. Prism computes claim statuses and evidence strength, keeps revision
+history, and reopens claims when supporting analysis changes. See [evidence-backed claims](docs/VERIFICATION.md)
+for predicate checks, runtime observations, and semantic-verification limits.
+
 ## Architecture
 
 ```mermaid
@@ -162,7 +168,7 @@ flowchart LR
     Bridge <--> UI
     Worker <--> Store[SQLite and project archives]
     Worker <--> REA[REA]
-    REA <--> Ghidra[Java Ghidra or optional Rust worker]
+    REA <--> Ghidra[Native Rust worker]
     Worker <--> Other[Rizin / jadx / LLDB]
 ```
 
@@ -201,31 +207,32 @@ The macOS bundler builds both executables, includes resources and license notice
 python3 scripts/bundle-macos.py
 ```
 
-The default output is `build/Prism.app`, with bundle identity `io.github.nanashili.prism`. Ad-hoc signing is for local use and does not provide notarization. External analysis tools remain separate in the default bundle. Optional Rust-provider packaging requires explicit runtime inputs, described in the [provider guide](docs/REA_RUST_PROVIDER.md).
+The default output is `build/Prism.app`, with bundle identity `io.github.nanashili.prism`. Ad-hoc signing is for local use and does not provide notarization. The default bundle expects the native `rea-rust` release to be installed separately. To embed an extracted release, pass `--rea-package /absolute/path/to/rea-rust`; see the [provider guide](docs/REA_RUST_PROVIDER.md).
 
-Useful source checks:
+Repository-wide source checks:
 
 ```sh
-cargo fmt --all -- --check
-cargo check --locked --all-targets
-cargo test --locked -- --test-threads=1
-cargo clippy --locked --all-targets -- -D warnings
-cargo check --locked --no-default-features --bin prism-mcp
+python3 scripts/check-rust.py
 ```
+
+The command formats-checks, lints, tests, and documents both maintained Rust crates,
+including the headless and desktop feature combinations. Logs and a hashed inventory
+of every Rust source file are written to `build/rust-review/`. See [project standards](AGENTS.md)
+and the [Rust review](docs/RUST_REVIEW.md) for scope and design findings.
 
 Keep provider-dependent verification separate from deterministic tests. Report the target format, engine version, operating system, reproduction steps, and actual observed behavior when filing an issue. For code changes, preserve clear ownership, bounded work, explicit errors, and recoverable storage operations.
 
 ## Documentation
 
+- [Autonomous investigation planner](docs/INVESTIGATION_PLANNER.md)
 - [Decompilation jobs](docs/DECOMPILATION.md)
+- [Shared type and structure recovery](docs/TYPE_RECOVERY.md)
 - [Generational source reconstruction](docs/RECONSTRUCTION.md)
 - [Rust Ghidra provider](docs/REA_RUST_PROVIDER.md)
-- [Performance roadmap](docs/PERFORMANCE_ROADMAP.md)
-- [Resource-efficiency research](docs/RESOURCE_EFFICIENCY_RESEARCH.md)
-- [Rust review and measured limitations](docs/RUST_REVIEW.md)
-- [Accumulated implementation notes](docs/IMPLEMENTATION_NOTES.md)
+- [Current implementation notes](docs/IMPLEMENTATION_NOTES.md)
+- [Profiling with hotpath-rs](docs/PROFILING.md)
 
-Engineering reports retain historical measurements and reference-application comparisons. They are development evidence, not blanket performance claims or a substitute for the current setup instructions.
+Current performance and provider behavior are workload-dependent. Use the native smoke report and build receipts for reproducible verification details.
 
 ## License and attribution
 

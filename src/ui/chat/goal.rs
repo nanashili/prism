@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::model::ConnectionState;
 use crate::model::GoalStatus;
 use crate::ui::{app::Prism, icons::Icon, theme::Palette};
 use eframe::egui::{self, FontId, Rect, Sense, Stroke};
@@ -61,10 +62,11 @@ impl Prism {
             .inner_margin(egui::Margin::symmetric(12, 4))
             .show(ui, |ui| {
                 let title = format!("{} · {}", goal.status.label(), goal.objective);
+                let elapsed_ms = goal
+                    .elapsed(ConnectionState::from(self.chat.connected))
+                    .saturating_mul(1000);
                 let elapsed = crate::ui::activity_view::duration(
-                    goal.elapsed(self.chat.connected)
-                        .saturating_mul(1000)
-                        .min(i64::MAX as u64) as i64,
+                    i64::try_from(elapsed_ms).unwrap_or(i64::MAX),
                 );
                 if header(ui, &title, &elapsed, open).clicked() {
                     open = !open;

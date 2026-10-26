@@ -123,15 +123,15 @@ impl Prism {
             let center = rect.center() + egui::vec2((index as f32 - 0.5) * 70.0, 0.0);
             ui.painter().circle_filled(center, 30.0, Color32::WHITE);
             let icon = Rect::from_center_size(center, egui::vec2(30.0, 30.0));
-            if !name.is_empty() {
-                super::agent_logos::paint(ui, name, icon);
-            } else {
+            if name.is_empty() {
                 (if art == "apps" {
                     Icon::App
                 } else {
                     Icon::Thread
                 })
                 .paint(ui, icon, Color32::from_gray(40));
+            } else {
+                super::agent_logos::paint(ui, name, icon);
             }
         }
         let close = Rect::from_min_size(

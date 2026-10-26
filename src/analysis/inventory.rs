@@ -4,7 +4,10 @@ use crate::model::Procedure;
 use crate::storage::Store;
 use serde_json::{Value, json};
 
+const RETAINED_PROCEDURE_PAGE_LIMIT: usize = 4096;
+
 impl Rea {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn index(&mut self, store: &mut Store, project: &str) -> Result<usize> {
         let reply = self.tool("list_procedures", json!({}))?;
         let normalized = reply.get("normalized_result").unwrap_or(&reply);
@@ -26,7 +29,7 @@ impl Rea {
                 "inspect_analysis_view",
                 json!({
                     "source":{"kind":"retained-evidence","evidence_id":evidence},
-                    "view":{"kind":"page","collection":"procedures","offset":offset,"limit":256}
+                    "view":{"kind":"page","collection":"procedures","offset":offset,"limit":RETAINED_PROCEDURE_PAGE_LIMIT}
                 }),
             )?;
             let page = page.get("normalized_result").unwrap_or(&page);

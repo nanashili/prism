@@ -1,5 +1,6 @@
 use crate::storage::resources::ResourcePage;
 use crate::ui::app::Prism;
+use crate::ui::presentation::Disclosure;
 use crate::worker::Job;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -34,7 +35,9 @@ impl Resources {
 }
 
 impl Prism {
-    pub(super) fn toggle_resource_folder(&mut self, path: &str, open: bool) {
+    pub(super) fn toggle_resource_folder(&mut self, path: &str, open: Disclosure) {
+        let open = open == Disclosure::Open;
+
         let resources = &mut self.workspace.navigation.resources;
         if open {
             resources.discard_branch(path);

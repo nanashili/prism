@@ -1,5 +1,6 @@
 use super::{icons::Icon, theme::Palette};
 use crate::agent::options::Choice;
+use crate::ui::presentation::Selection;
 use eframe::egui::{self, Color32, FontId, Rect, Sense};
 use std::sync::Arc;
 
@@ -14,19 +15,23 @@ pub(super) fn choice(
     ui: &mut egui::Ui,
     choice: &Choice,
     category: &str,
-    selected: bool,
+    selected: Selection,
 ) -> egui::Response {
+    let selected = selected == Selection::Selected;
+
     ChoiceRow {
         label: &choice.name,
         description: &choice.description,
         icon: (category == "mode").then(|| mode_icon(&choice.value, &choice.name)),
         warning: false,
     }
-    .show(ui, selected)
+    .show(ui, Selection::from(selected))
 }
 
 impl ChoiceRow<'_> {
-    pub(super) fn show(self, ui: &mut egui::Ui, selected: bool) -> egui::Response {
+    pub(super) fn show(self, ui: &mut egui::Ui, selected: Selection) -> egui::Response {
+        let selected = selected == Selection::Selected;
+
         let p = Palette::for_context(ui.ctx());
         let color = if self.warning {
             if ui.visuals().dark_mode {

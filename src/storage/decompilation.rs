@@ -11,3 +11,5 @@ pub(crate) struct DecompilationError<'a> {
     pub message: &'a str,
     pub details: Option<&'a str>,
 }
+
+pub(crate) use pages::ResultDetail;

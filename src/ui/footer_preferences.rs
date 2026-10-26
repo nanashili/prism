@@ -8,13 +8,8 @@ impl Prism {
         popup::heading(ui, "Reads the file");
         ui.add_enabled_ui(self.pending == 0 && !self.chat.busy, |ui| {
             for (id, name) in [
-                #[cfg(all(
-                    feature = "rea-rust-ghidra",
-                    any(target_os = "macos", target_os = "linux")
-                ))]
+                #[cfg(feature = "rea-rust-ghidra")]
                 ("ghidra-rust-rea", "Ghidra (Rust through REA)"),
-                #[cfg(feature = "prism-ghidra-rea")]
-                ("ghidra-rea", "Ghidra (Java through REA)"),
                 ("rizin", "Rizin"),
                 ("ida", "IDA"),
                 ("hopper", "Hopper"),

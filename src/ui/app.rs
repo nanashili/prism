@@ -39,6 +39,7 @@ pub(crate) struct Prism {
     pub(super) chat_list: super::chat_list::ChatList,
     pub(super) status: String,
     pub(super) analysis: Option<crate::events::AnalysisProgress>,
+    pub(super) investigation: super::investigation::Panel,
     pub(super) error: Option<String>,
     pub(super) notifications: super::notifications::Center,
     pub(super) pending: usize,
@@ -55,6 +56,7 @@ pub(crate) struct Prism {
 }
 
 impl Prism {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub fn new(context: &eframe::CreationContext<'_>, initial: Option<PathBuf>) -> Result<Self> {
         let settings = Settings::load()?;
         theme::fonts(&context.egui_ctx);
@@ -105,6 +107,7 @@ impl Prism {
             chat_list: Default::default(),
             status: String::new(),
             analysis: None,
+            investigation: Default::default(),
             error: None,
             notifications: Default::default(),
             pending: 0,
@@ -181,6 +184,7 @@ impl Prism {
 }
 
 impl eframe::App for Prism {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     fn update(&mut self, context: &egui::Context, frame: &mut eframe::Frame) {
         self.finish_capture(context);
         self.receive(context);
@@ -231,17 +235,57 @@ impl eframe::App for Prism {
             eprintln!("Prism: couldn't save settings while closing: {error}");
         }
 
-        if let Some(agent) = &self.agent {
-            agent.cancel();
+        self.close_background_work();
+    }
+}
+
+impl Prism {
+    fn close_background_work(&mut self) {
+        if let Some(agent) = &mut self.agent {
+            agent.stop();
         }
-        if let Some(worker) = &self.worker {
-            worker.cancel();
+        for tab in &mut self.chat_tabs.parked {
+            if let Some(agent) = &mut tab.agent {
+                agent.stop();
+            }
+        }
+        for agent in &mut self.chat_tabs.retired {
+            agent.stop();
+        }
+        if let Some(worker) = &mut self.worker {
+            worker.stop();
         }
         self.events.take();
-        self.bridge.take();
-        self.agent.take();
-        self.chat_tabs.parked.clear();
-        self.chat_tabs.retired.clear();
-        self.worker.take();
+
+        if let Some(bridge) = self.bridge.take()
+            && let Err(error) = bridge.close()
+        {
+            eprintln!("Prism: couldn't close the window bridge: {error}");
+        }
+        if let Some(agent) = self.agent.take() {
+            close_agent(agent);
+        }
+        for mut tab in self.chat_tabs.parked.drain(..) {
+            if let Some(agent) = tab.agent.take() {
+                close_agent(agent);
+            }
+        }
+        for agent in self.chat_tabs.retired.drain(..) {
+            close_agent(agent);
+        }
+        if let Some(worker) = self.worker.take()
+            && let Err(error) = worker.close()
+        {
+            eprintln!("Prism: couldn't close the analysis worker: {error}");
+        }
+        if let Err(error) = self.agent_catalog.close() {
+            eprintln!("Prism: couldn't close the agent catalog: {error}");
+        }
+    }
+}
+
+fn close_agent(agent: Agent) {
+    if let Err(error) = agent.close() {
+        eprintln!("Prism: couldn't close an agent: {error}");
     }
 }

@@ -1,9 +1,15 @@
+mod workspace;
+
 use super::app::{Permission, Prism};
-use super::notifications::Level;
+use crate::error::Result;
 use crate::events::Event;
-use crate::model::Screen;
+use crate::model::Approval;
+use crate::ui::presentation::{AgentLaunch, ChatOrigin, TurnEnd};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, mpsc::SyncSender};
 
 impl Prism {
+    #[cfg_attr(feature = "profiling", hotpath::measure)]
     pub(super) fn receive(&mut self, context: &eframe::egui::Context) {
         self.capture_error();
         for _ in 0..64 {
@@ -29,50 +35,48 @@ impl Prism {
                 if let Some(progress) = &mut self.analysis
                     && progress.total.is_none()
                 {
-                    progress.label = text.clone();
+                    progress.label.clone_from(&text);
                 }
                 self.status = text;
             }
             Event::Analysis(progress) => self.analysis = progress,
+            Event::InvestigationCreated(graph) => self.receive_investigation(*graph),
+            Event::ExecutionEvidenceChanged(project) => {
+                if let Err(error) = self.refresh_execution_evidence(&project) {
+                    self.report_error(error);
+                }
+            }
+            Event::InvestigationChanged { project, id } => {
+                if self
+                    .workspace
+                    .project
+                    .as_ref()
+                    .is_some_and(|opened| opened.target.sha256 == project)
+                    && let Err(error) = self.refresh_investigation(Some(&id))
+                {
+                    self.report_error(error);
+                }
+            }
             Event::Reconstruction {
                 project,
                 status,
                 start_agent,
             } => {
-                self.receive_reconstruction(&project, *status, start_agent);
+                self.receive_reconstruction(&project, *status, AgentLaunch::from(start_agent));
+            }
+            Event::Comparison(report) => {
+                if self
+                    .workspace
+                    .project
+                    .as_ref()
+                    .is_some_and(|project| project.target.sha256 == report.target_sha256)
+                {
+                    self.workspace.comparison = Some(report);
+                    self.workspace.reviewed_matches.clear();
+                }
             }
             Event::Opened(project, document) => {
-                self.reconstruction = Default::default();
-                self.reconstruction_root = None;
-                self.restore_document_chat(&project, document);
-
-                self.workspace = super::app::Workspace {
-                    project: Some(*project),
-                    ..Default::default()
-                };
-                self.restore_sidebar_preferences();
-                if self.settings.conversation.notify_when_ready {
-                    self.notify(
-                        Level::Success,
-                        "File ready",
-                        "Your file is ready to explore.",
-                        "",
-                    );
-                }
-                self.screen = if self.settings.conversation.open_workbench == "Only when I ask"
-                    || (self.chat.busy && self.settings.conversation.open_workbench != "Always")
-                {
-                    Screen::Home
-                } else {
-                    Screen::Workbench
-                };
-                if let Err(error) = self.refresh_chats() {
-                    self.report_error(error);
-                }
-                match self.store.recent(self.settings.recent_limit) {
-                    Ok(recent) => self.recent = recent,
-                    Err(error) => self.report_error(error),
-                }
+                self.receive_opened(context, *project, ChatOrigin::from(document));
             }
             Event::Functions { rows, offset } => {
                 self.workspace.rows = rows;
@@ -103,73 +107,10 @@ impl Prism {
                 view,
                 address,
                 text,
-            } => {
-                let active = self.workspace.active;
-                let pane = match request {
-                    Some(request) => self
-                        .workspace
-                        .panes
-                        .iter_mut()
-                        .flat_map(|pane| pane.tabs.iter_mut())
-                        .find(|tab| request == tab.request && !tab.tab_closed),
-                    None => {
-                        let tab = &mut self.workspace.tabs[active];
-                        tab.view = view;
-                        tab.tab_closed = false;
-                        Some(tab)
-                    }
-                };
-                if let Some(pane) = pane
-                    && let Err(error) = pane.receive_content(view, &address, text)
-                {
-                    self.report_error(error);
-                }
-            }
-            Event::Exported(path) => {
-                self.notify(
-                    Level::Success,
-                    "Export saved",
-                    &path.display().to_string(),
-                    "",
-                );
-                if self.settings.desktop.reveal_exports
-                    && let Err(error) = super::settings_files::reveal(&path)
-                {
-                    self.notify(
-                        Level::Warning,
-                        "Couldn't show the export",
-                        "Your export was saved. Finder could not open its location.",
-                        &error.to_string(),
-                    );
-                }
-            }
-            Event::Saved(path) => {
-                if let Some(project) = &mut self.workspace.project {
-                    project.source_document = Some(path.clone());
-                }
-                self.notify(
-                    Level::Success,
-                    "Project saved",
-                    &path.display().to_string(),
-                    "",
-                );
-                self.workspace.document = Some(path);
-            }
-            Event::Finished(result) => {
-                self.pending = self.pending.saturating_sub(1);
-                match result {
-                    Ok(text) if !text.is_empty() => self.status = text,
-                    Err(error) if error.to_string() == "Cancelled" => {
-                        self.status = "Stopped".into();
-                    }
-                    Err(error) => {
-                        self.status.clear();
-                        self.report_error(error);
-                    }
-                    Ok(_) if self.pending == 0 => self.status = "Ready".into(),
-                    _ => {}
-                }
-            }
+            } => self.receive_content(request, view, &address, text),
+            Event::Exported(path) => self.receive_exported(&path),
+            Event::Saved(path) => self.receive_saved(path),
+            Event::Finished(result) => self.finish_operation(result),
             Event::AgentText(text) => self.append_agent_text(text),
             Event::AgentThought(text) => {
                 if let Some(activity) = self
@@ -197,19 +138,7 @@ impl Prism {
                 request,
                 answer,
                 active,
-            } => {
-                if !active.load(std::sync::atomic::Ordering::Relaxed) {
-                    return;
-                }
-                if self.settings.conversation.notify_when_asked {
-                    self.notify_permission(&request.title);
-                }
-                self.chat.permission = Some(Permission {
-                    request,
-                    answer,
-                    active,
-                })
-            }
+            } => self.receive_permission(request, answer, active),
             Event::Question {
                 question,
                 answer,
@@ -219,9 +148,9 @@ impl Prism {
             }
             Event::AgentFinished { result, stopped } => {
                 if (result.is_ok() || stopped) && self.settings.conversation.notify_when_done {
-                    self.notify_agent_complete(stopped);
+                    self.notify_agent_complete(TurnEnd::from(stopped));
                 }
-                self.finish_agent(result, stopped);
+                self.finish_agent(result, TurnEnd::from(stopped));
             }
             Event::Navigate {
                 tool,
@@ -230,5 +159,40 @@ impl Prism {
                 lifetime,
             } => self.receive_window_request(context, &tool, &args, answer, lifetime),
         }
+    }
+
+    fn finish_operation(&mut self, result: Result<String>) {
+        self.pending = self.pending.saturating_sub(1);
+        match result {
+            Ok(text) if !text.is_empty() => self.status = text,
+            Err(error) if error.to_string() == "Cancelled" => {
+                self.status = "Stopped".into();
+            }
+            Err(error) => {
+                self.status.clear();
+                self.report_error(error);
+            }
+            Ok(_) if self.pending == 0 => self.status = "Ready".into(),
+            _ => {}
+        }
+    }
+
+    fn receive_permission(
+        &mut self,
+        request: Approval,
+        answer: SyncSender<Option<String>>,
+        active: Arc<AtomicBool>,
+    ) {
+        if !active.load(Ordering::Relaxed) {
+            return;
+        }
+        if self.settings.conversation.notify_when_asked {
+            self.notify_permission(&request.title);
+        }
+        self.chat.permission = Some(Permission {
+            request,
+            answer,
+            active,
+        });
     }
 }

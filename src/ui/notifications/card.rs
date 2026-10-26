@@ -1,4 +1,5 @@
 use super::state::{Level, Notice};
+use crate::ui::presentation::{ChatNavigation, NoticeContext};
 use crate::ui::{icons::Icon, theme::Palette, widgets};
 use eframe::egui::{self, Color32, Frame, RichText, Stroke};
 use std::time::{Duration, Instant};
@@ -6,9 +7,12 @@ use std::time::{Duration, Instant};
 pub(super) fn show(
     ui: &mut egui::Ui,
     entry: &mut Notice,
-    can_open_chat: bool,
-    history: bool,
+    can_open_chat: ChatNavigation,
+    history: NoticeContext,
 ) -> bool {
+    let can_open_chat = can_open_chat == ChatNavigation::Available;
+    let history = history == NoticeContext::History;
+
     let p = Palette::for_context(ui.ctx());
     let color = tone(entry.level, ui.visuals().dark_mode);
     let card = Frame::NONE
@@ -19,7 +23,7 @@ pub(super) fn show(
         .show(ui, |ui| contents(ui, entry, can_open_chat, history));
     let response = card.response;
     if !history {
-        let focused = ui.memory(|memory| memory.focused()).is_some_and(|id| {
+        let focused = ui.memory(eframe::egui::Memory::focused).is_some_and(|id| {
             ui.ctx()
                 .read_response(id)
                 .is_some_and(|r| response.rect.intersects(r.rect))

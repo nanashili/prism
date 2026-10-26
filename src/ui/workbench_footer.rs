@@ -4,6 +4,7 @@ use super::{
     agent_picker, icons::Icon, popup, settings_navigation::SettingsPage, theme::Palette, widgets,
 };
 use crate::model::Screen;
+use crate::ui::presentation::{OpenTarget, SaveDestination};
 use eframe::egui::{self, Align2, FontId, Rect, Sense};
 
 #[derive(Clone, Copy)]
@@ -116,7 +117,7 @@ impl Prism {
         )
         .clicked()
         {
-            self.choose_open(false);
+            self.choose_open(OpenTarget::File);
             ui.close();
         }
         if footer_rows::row(
@@ -128,7 +129,7 @@ impl Prism {
         )
         .clicked()
         {
-            self.save_document(false);
+            self.save_document(SaveDestination::Current);
             ui.close();
         }
     }
@@ -144,8 +145,7 @@ impl Prism {
             Section::Engine => (
                 Lead::Engine(&self.settings.provider),
                 match self.settings.provider.as_str() {
-                    "ghidra-rea" => "Ghidra (Java through REA)",
-                    "ghidra" | "ghidra-rust-rea" => "Ghidra (Rust through REA)",
+                    "ghidra-rust-rea" => "Ghidra (Rust through REA)",
                     "rizin" => "Rizin",
                     "ida" => "IDA",
                     "hopper" => "Hopper",

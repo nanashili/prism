@@ -1,5 +1,5 @@
 use super::State;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 use crate::analysis::DecompilationItem;
 use crate::error::{Result, failure};
 use crate::reconstruction::Database;
@@ -93,7 +93,7 @@ impl State {
             ));
         }
 
-        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        #[cfg(feature = "rea-rust-ghidra")]
         if self.settings.analysis_backend().retains_prepared_session() {
             let items = self.saved_decompilation_batch(addresses)?;
             return Ok(items.into_iter().map(batch_item).collect());
@@ -105,7 +105,7 @@ impl State {
     }
 }
 
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+#[cfg(feature = "rea-rust-ghidra")]
 fn batch_item(item: DecompilationItem) -> (String, Value) {
     let mut value = json!({"address": item.address, "cached": false});
     match item.result {

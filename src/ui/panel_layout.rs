@@ -1,7 +1,10 @@
 use super::{app::Prism, theme::Palette};
+use crate::ui::presentation::Disclosure;
 use eframe::egui::{self, Rect, Sense, UiBuilder};
 
-pub(super) fn expansion(context: &egui::Context, name: &str, expanded: bool) -> f32 {
+pub(super) fn expansion(context: &egui::Context, name: &str, expanded: Disclosure) -> f32 {
+    let expanded = expanded == Disclosure::Open;
+
     let progress = context.animate_bool_with_time(egui::Id::new(name), expanded, 0.24);
     progress * progress * (3.0 - 2.0 * progress)
 }
@@ -12,7 +15,7 @@ impl Prism {
         let expanded = expansion(
             ui.ctx(),
             "conversation-expansion",
-            !self.workspace.agent_closed,
+            Disclosure::from(!self.workspace.agent_closed),
         );
         let maximum = (rect.width() - 240.0).clamp(0.0, 760.0);
         let width = conversation_width(ui, self.settings.desktop.chat_panel_width, maximum);

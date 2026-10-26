@@ -1,4 +1,5 @@
 use super::app::Prism;
+use crate::ui::presentation::{AgentMenuContext, Selection};
 mod menu;
 mod providers;
 
@@ -20,10 +21,18 @@ impl Prism {
             &self.settings,
             &self.chat,
             selected.as_deref(),
-            false,
+            AgentMenuContext::Existing,
         );
         ui.separator();
-        if popup::row(ui, Some(Icon::Gear), "Manage agents…", "", false).clicked() {
+        if popup::row(
+            ui,
+            Some(Icon::Gear),
+            "Manage agents…",
+            "",
+            Selection::Unselected,
+        )
+        .clicked()
+        {
             self.settings_ui
                 .select(super::settings_navigation::SettingsPage::Agents);
             self.screen = crate::model::Screen::Settings;
@@ -43,7 +52,7 @@ impl Prism {
             self.apply_agent_pick(crate::agent::options::Pick {
                 id: crate::agent::options::MODEL_PICK.into(),
                 value,
-                legacy: false,
+                modes_api: false,
             });
         }
         self.prepare_agent_session();

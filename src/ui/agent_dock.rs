@@ -1,3 +1,4 @@
+use crate::ui::presentation::Selection;
 pub(super) mod history;
 pub(super) mod inspector;
 mod tabs;
@@ -107,7 +108,14 @@ impl Prism {
                             );
                         }
                         for playbook in playbooks {
-                            if widgets::row(ui, Icon::Bolt, &playbook.title, false, 36.0).clicked()
+                            if widgets::row(
+                                ui,
+                                Icon::Bolt,
+                                &playbook.title,
+                                Selection::Unselected,
+                                36.0,
+                            )
+                            .clicked()
                             {
                                 self.run_playbook(&playbook);
                             }

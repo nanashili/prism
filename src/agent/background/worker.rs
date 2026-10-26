@@ -138,10 +138,14 @@ impl Worker {
     }
 
     fn close_session(&mut self) -> Result<()> {
-        if self.session.take().is_some() {
+        let Some(mut session) = self.session.take() else {
+            return Ok(());
+        };
+        crate::error::finish(
+            session.close(),
             self.sink
-                .send(Event::AgentUpdate(AgentUpdate::SessionClosed))?;
-        }
-        Ok(())
+                .send(Event::AgentUpdate(AgentUpdate::SessionClosed)),
+            "Reporting the closed agent session",
+        )
     }
 }

@@ -1,3 +1,4 @@
+use crate::ui::presentation::Interaction;
 use eframe::egui;
 use std::time::Duration;
 
@@ -23,7 +24,9 @@ impl Rotation {
         self.deadline = None;
     }
 
-    pub fn update(&mut self, context: &egui::Context, interacting: bool) {
+    pub fn update(&mut self, context: &egui::Context, interacting: Interaction) {
+        let interacting = interacting == Interaction::Active;
+
         let (now, focused, holding) =
             context.input(|input| (input.time, input.focused, input.pointer.any_down()));
         if interacting

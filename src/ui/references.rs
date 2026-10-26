@@ -1,6 +1,7 @@
 use super::{app::Prism, icons::Icon, theme::Palette, widgets};
 use crate::analysis::references::Reference;
 use crate::model::View;
+use crate::ui::presentation::Selection;
 use eframe::egui;
 
 impl Prism {
@@ -55,7 +56,7 @@ fn reference_row(ui: &mut egui::Ui, reference: &Reference) -> egui::Response {
         ui,
         Icon::Function,
         &label,
-        false,
+        Selection::Unselected,
         28.0,
         egui::FontId::monospace(12.0),
     );
