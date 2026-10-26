@@ -32,9 +32,27 @@ impl ExportRunner {
         let limit = page_limit(args)?;
         let include_data = args["include_data"].as_bool().unwrap_or(false);
         let (rows, more) = store.decompilation_results_page(id, offset, limit, include_data)?;
-        let next = offset + rows.len();
-        Ok(json!({"job": id, "offset": offset, "results": rows,
-            "next_offset": more.then_some(next)}))
+        let results = warning_results(&rows)?;
+        let more = more || results.len() < rows.len();
+        let next = offset + results.len();
+        let saved_context = Context {
+            project: job.project,
+            provider: job.provider,
+            configuration: job.options,
+        };
+        let analyzer = crate::worker::analysis_cache_identity::namespace(&saved_context);
+        let addresses: Vec<&str> = rows
+            .iter()
+            .take(results.len())
+            .map(|row| row.address.as_str())
+            .collect();
+        let types = if addresses.is_empty() {
+            None
+        } else {
+            store.recovered_type_context(&context.project, &analyzer, &addresses)?
+        };
+        Ok(json!({"job": id, "offset": offset, "results": results,
+            "next_offset": more.then_some(next), "type_recovery": types}))
     }
 
     pub(crate) fn list(store: &Store, context: &Context, args: &Value) -> Result<Value> {
@@ -64,6 +82,34 @@ impl ExportRunner {
     ) -> Result<Value> {
         control(store, &self.job.id, context, action)
     }
+}
+
+fn warning_results(
+    rows: &[crate::storage::decompilation::DecompilationResult],
+) -> Result<Vec<Value>> {
+    let mut results = Vec::with_capacity(rows.len());
+    let mut bytes = 0usize;
+    for row in rows {
+        let mut result = serde_json::to_value(row)?;
+        if let Some(pseudocode) = result["pseudocode"].as_str() {
+            let signals = crate::analysis_repair::pseudocode_signals(pseudocode);
+            if !signals.is_empty() {
+                result["analysis_warnings"] = serde_json::to_value(signals)?;
+            }
+        }
+        let size = serde_json::to_vec(&result)?.len();
+        if bytes.saturating_add(size) > 1008 * 1024 {
+            if results.is_empty() {
+                return Err(failure(
+                    "The annotated result exceeds the response budget; read its summary and use analysis_repair evidence",
+                ));
+            }
+            break;
+        }
+        bytes += size;
+        results.push(result);
+    }
+    Ok(results)
 }
 
 fn control(store: &Store, id: &str, context: &Context, action: &str) -> Result<Value> {
