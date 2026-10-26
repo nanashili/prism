@@ -46,7 +46,15 @@ pub const BATCH_INSTRUCTIONS: &str = concat!(
     "next_offset until null, then use semantic_search. Refresh after evidence or notes change. ",
     "Inspect source excerpts and native structural exemplar explanations; retrieval scores are leads, not ",
     "verified behavior. Missing matches do not establish absence. Use decompile_batch for missing ",
-    "pseudocode; indexing never performs discovery or decompilation. "
+    "pseudocode; indexing never performs discovery or decompilation. ",
+    "When pseudocode contains suspicious diagnostics, unresolved jump tables, inconsistent ",
+    "function boundaries, calling conventions or types, use analysis_repair action=scan. ",
+    "Delegate the returned task to a specialist agent using your own delegation capability. ",
+    "If delegation is unavailable, report a blocker. Record its diagnosis and bounded ",
+    "adjustment with action=propose, rerun only supported experiments, then compare evidence. ",
+    "Never invent a specialist reference or claim that fewer warnings prove correctness. ",
+    "Keep all AI interpretations in the overlay; native overrides without a reversible ",
+    "provider capability remain blocked. Discard rejected overlays while retaining audit evidence."
 );
 
 /// Reply formatting shared by MCP clients and desktop chat sessions.

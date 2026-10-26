@@ -3,6 +3,7 @@ use serde_json::{Value, json};
 
 pub(super) fn definitions() -> Vec<Value> {
     vec![
+        super::analysis_repair::definition(),
         super::decompilation::definition(),
         super::type_recovery::definition(),
         tool(

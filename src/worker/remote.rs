@@ -25,6 +25,7 @@ impl State {
             }
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
+            "analysis_repair" => self.analysis_repair(&args),
             "inspect_selection" => self.inspect_selection(&args),
             "index_function_search" => self.index_function_search(&args),
             "semantic_search" => self.semantic_search(&args),

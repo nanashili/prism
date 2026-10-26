@@ -2,6 +2,7 @@ use super::Mode;
 use serde_json::{Value, json};
 
 mod analysis;
+mod analysis_repair;
 mod decompilation;
 mod reconstruction;
 mod reconstruction_modules;
