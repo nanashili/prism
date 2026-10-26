@@ -42,6 +42,7 @@ mod graph;
 mod home;
 mod home_chat;
 mod icons;
+mod investigation;
 mod key_combo;
 mod keyboard;
 mod keyboard_controls;

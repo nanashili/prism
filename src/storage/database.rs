@@ -101,6 +101,7 @@ impl Store {
         super::database_migrations::migrate_decompilation_schema(&db)?;
         migrate_draft_attachments(&db)?;
         super::chat_models::migrate(&db)?;
+        super::investigation::migrate(&db)?;
         super::analysis_repair::initialize(&db)?;
         super::function_search::initialize(&db)?;
         super::execution::migrate(&db)?;

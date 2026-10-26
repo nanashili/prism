@@ -15,6 +15,7 @@ pub(crate) mod function_search;
 mod functions;
 pub(crate) use functions::FunctionImport;
 mod history;
+mod investigation;
 mod message_page;
 pub(crate) use message_page::{MessagePage, MessageWindow};
 pub(crate) mod navigation;

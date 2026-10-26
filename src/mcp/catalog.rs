@@ -5,6 +5,7 @@ mod analysis;
 mod analysis_repair;
 mod decompilation;
 mod execution;
+mod investigation;
 mod reconstruction;
 mod reconstruction_modules;
 mod type_recovery;
@@ -12,6 +13,7 @@ mod window;
 
 pub fn definitions(mode: Mode) -> Value {
     let mut tools = Vec::new();
+    tools.push(investigation::definition());
     if matches!(mode, Mode::Combined | Mode::Window) {
         tools.extend(window::definitions());
         tools.push(super::question::definition());

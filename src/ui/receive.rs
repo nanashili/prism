@@ -34,6 +34,18 @@ impl Prism {
                 self.status = text;
             }
             Event::Analysis(progress) => self.analysis = progress,
+            Event::InvestigationCreated(graph) => self.receive_investigation(*graph),
+            Event::InvestigationChanged { project, id } => {
+                if self
+                    .workspace
+                    .project
+                    .as_ref()
+                    .is_some_and(|opened| opened.target.sha256 == project)
+                    && let Err(error) = self.refresh_investigation(Some(&id))
+                {
+                    self.report_error(error);
+                }
+            }
             Event::ExecutionEvidenceChanged(project) => {
                 if let Err(error) = self.refresh_execution_evidence(&project) {
                     self.report_error(error);
@@ -68,6 +80,10 @@ impl Prism {
                     ..Default::default()
                 };
                 self.restore_sidebar_preferences();
+                self.investigation.objective.clear();
+                if let Err(error) = self.refresh_investigation(None) {
+                    self.report_error(error);
+                }
                 if self.settings.conversation.notify_when_ready {
                     self.notify(
                         Level::Success,

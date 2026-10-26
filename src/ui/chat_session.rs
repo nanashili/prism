@@ -140,6 +140,11 @@ impl Prism {
         text.push_str("Use the prism MCP server to control this window and prism-analysis for decompile_batch and other analysis. Discover the selected engine's evidence methods with analysis_tools, then use analysis_call with the advertised schema. Reconstruction tools are on prism. Do not assume other analysis servers are available.\n");
         text.push_str(prism::mcp::BATCH_INSTRUCTIONS);
         text.push('\n');
+        text.push_str(prism::mcp::INVESTIGATION_INSTRUCTIONS);
+        text.push('\n');
+        if let Some(graph) = &self.investigation.graph {
+            text.push_str(&format!("Saved Prism investigation: {}. Read its status to recover the graph before continuing its objective.\n", graph.id));
+        }
         text.push_str(prism::mcp::RESPONSE_INSTRUCTIONS);
         text.push('\n');
         if self.settings.conversation.prism_tools {

@@ -49,6 +49,7 @@ fn category(title: &str) -> Tool {
             | "read_bytes"
             | "analysis_tools"
             | "decompile_batch"
+            | "investigation"
             | "semantic_search"
             | "index_function_search" => Tool::Read,
             "open_function"
@@ -83,6 +84,7 @@ fn category(title: &str) -> Tool {
             | "read_bytes"
             | "analysis_tools"
             | "decompile_batch"
+            | "investigation"
             | "semantic_search"
             | "index_function_search" => Tool::Read,
             _ => Tool::Shell,

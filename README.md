@@ -22,6 +22,8 @@ Prism keeps the target, its analysis, and the conversation together. Its workben
 
 The intended workflow is iterative: open a target, locate useful evidence, inspect it, ask a focused question, and record what was learned. Function renames and notes are local project annotations. File-offset patches are exported to a separate copy rather than written over the input binary.
 
+The [autonomous investigation planner](docs/INVESTIGATION_PLANNER.md) turns a goal into a Prism-owned task graph with dependencies, findings, blockers, and resource budgets. Agents gather evidence while Prism schedules the next step and saves progress for restart recovery.
+
 ### A desktop client for agents
 
 Prism communicates with agents through the **Agent Client Protocol (ACP)**. An agent can explain code and use Prism's **Model Context Protocol (MCP)** tools to inspect the open project, navigate functions, annotate findings, and coordinate reconstruction. The conversation supports streaming replies, tool activity, plans, attachments, model selection, and permission requests, subject to what the connected adapter advertises.
@@ -217,6 +219,7 @@ Keep provider-dependent verification separate from deterministic tests. Report t
 
 ## Documentation
 
+- [Autonomous investigation planner](docs/INVESTIGATION_PLANNER.md)
 - [Decompilation jobs](docs/DECOMPILATION.md)
 - [Shared type and structure recovery](docs/TYPE_RECOVERY.md)
 - [Generational source reconstruction](docs/RECONSTRUCTION.md)

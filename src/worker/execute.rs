@@ -9,6 +9,11 @@ impl State {
         match job {
             Job::Open(path) => self.open(path),
             Job::Index => self.index(),
+            Job::StartInvestigation {
+                project,
+                objective,
+                budget,
+            } => self.start_investigation(&project, &objective, budget),
             Job::Sidebar {
                 project,
                 generation,

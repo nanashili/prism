@@ -10,6 +10,7 @@ mod error;
 mod events;
 mod executable_paths;
 mod headless;
+mod investigation;
 mod migration;
 mod model;
 mod project;

@@ -12,6 +12,7 @@ mod exports;
 mod function_search;
 mod indexing;
 mod inspection;
+mod investigation;
 mod job;
 mod listing;
 mod open;
