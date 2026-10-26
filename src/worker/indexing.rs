@@ -6,6 +6,7 @@ impl State {
     pub(super) fn index(&mut self) -> Result<String> {
         self.sink.analysis("Starting analysis", 0, None)?;
         let project = self.project.as_ref().ok_or("Open a file first")?;
+        self.store.invalidate_verification(&project.target.sha256)?;
         let android = project.target.kind == "android";
         let count = if android {
             crate::analysis::android::index(

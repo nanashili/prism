@@ -39,7 +39,11 @@ impl State {
             self.decompile_tool_address(address)?
         } else {
             Self::reject_direct_decompilation_tool(name)?;
-            let result = self.engine()?.normalized(name, args)?;
+            let mut reply = self.analysis_call(name, args)?;
+            let result = reply
+                .get_mut("normalized_result")
+                .map(serde_json::Value::take)
+                .unwrap_or(reply);
             serde_json::to_string_pretty(&result)?
         };
 

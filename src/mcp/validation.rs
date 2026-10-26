@@ -65,12 +65,15 @@ fn validate_property(key: &str, value: &Value, schema: &Value) -> Result<(), Str
         Some("boolean") => value.is_boolean(),
         Some("object") => value.is_object(),
         Some("array") => value.is_array(),
+        None => true,
         _ => false,
     };
     if !valid_type {
         return Err(format!("Invalid type for {key}"));
     }
-    if let Some(items) = value.as_array() {
+    if let Some(items) = value.as_array()
+        && schema["type"] == "array"
+    {
         validate_array(key, items, schema)?;
     }
     if value.is_object() && schema.get("properties").is_some() {
@@ -113,4 +116,52 @@ fn validate_array(key: &str, items: &[Value], schema: &Value) -> Result<(), Stri
         validate_property(&format!("{key}[{index}]"), item, item_schema)?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Mode, validate_call};
+    use serde_json::json;
+
+    #[test]
+    fn claim_tools_accept_structured_predicates_but_reject_caller_verdicts() -> Result<(), String> {
+        for mode in [Mode::Combined, Mode::Window, Mode::Analysis, Mode::Headless] {
+            for expected in [
+                json!(null),
+                json!(-12),
+                json!([{"value":true}]),
+                json!({"calls":[1,2]}),
+            ] {
+                let mut params = json!({
+                    "name":"verification_claim",
+                    "arguments":{
+                        "action":"propose",
+                        "draft":{
+                            "statement":"The captured value equals the declared value",
+                            "scope":"predicate",
+                            "checks":[{
+                                "evidence":"a".repeat(64),"pointer":"",
+                                "predicate":{"operation":"equals","expected":expected}
+                            }]
+                        }
+                    }
+                });
+                validate_call(mode, &params)?;
+                params["arguments"]["draft"]["confidence"] = json!(0.99);
+                assert!(
+                    validate_call(mode, &params).is_err(),
+                    "caller confidence in {mode:?}"
+                );
+            }
+            let caller_status = json!({
+                "name":"verification_claim",
+                "arguments":{"action":"verify","claim":1,"status":"corroborated"}
+            });
+            assert!(
+                validate_call(mode, &caller_status).is_err(),
+                "caller status in {mode:?}"
+            );
+        }
+        Ok(())
+    }
 }

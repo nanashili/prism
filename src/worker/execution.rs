@@ -9,32 +9,15 @@ impl State {
         &mut self,
         action: crate::debug::Action,
     ) -> Result<String> {
-        let project = self.debug_launch_identity(&action)?;
-        let text = crate::debug::execute(
-            &mut self.debugger,
-            action,
-            &self.settings,
-            self.cancelled.clone(),
-            self.sink.clone(),
-        )?;
-        if let Some(project) = project
+        let launches_target = matches!(action, crate::debug::Action::Launch { .. });
+        let text = self.execute_verified_debug(action)?;
+        if launches_target
+            && let Some(project) = &self.debug_project
             && let Some(debugger) = &mut self.debugger
         {
-            debugger.bind_project(&project);
+            debugger.bind_project(project);
         }
         Ok(text)
-    }
-
-    fn debug_launch_identity(&self, action: &crate::debug::Action) -> Result<Option<String>> {
-        let crate::debug::Action::Launch { path, .. } = action else {
-            return Ok(None);
-        };
-        let target = crate::project::files::inspect(path, &self.cancelled)?;
-        Ok(self
-            .project
-            .as_ref()
-            .filter(|project| project.target.sha256 == target.sha256)
-            .map(|_| target.sha256))
     }
 
     pub(super) fn execution_evidence(&mut self, args: &Value) -> Result<Value> {
@@ -137,6 +120,9 @@ impl State {
             .debugger
             .as_mut()
             .ok_or("Connect a debugger in the UI first")?;
+        if let Some(bound) = &self.debug_project {
+            self.store.invalidate_runtime_evidence(bound)?;
+        }
         trace.events.push(debugger.capture_sample(project, thread)?);
         self.store.save_execution_trace(project, &trace)?;
 

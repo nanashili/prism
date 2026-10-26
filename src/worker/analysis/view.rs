@@ -9,7 +9,7 @@ use std::io::Write;
 mod tests;
 
 impl State {
-    pub(super) fn engine_view(&mut self, view: View, address: &str) -> Result<String> {
+    pub(in crate::worker) fn engine_view(&mut self, view: View, address: &str) -> Result<String> {
         if address.is_empty()
             && matches!(
                 view,

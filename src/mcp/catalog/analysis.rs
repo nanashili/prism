@@ -39,7 +39,7 @@ pub(super) fn definitions() -> Vec<Value> {
         ),
         tool(
             "analysis_call",
-            "Call an analysis tool using the current window's worker. Use analysis_tools for names and schemas. Use decompile_batch for decompilation, inspection and explanation, regardless of saved reconstruction state. Use reconstruction_evidence only for explicitly requested reconstruction work. Direct procedure_pseudo_code, backend annotation and file-switch tools are blocked for every provider. Evidence may be incomplete.",
+            "Call an analysis tool using the current window's worker. Use analysis_tools for names and schemas. Successful replies contain result (the provider reply) and prism_evidence (Prism's immutable snapshot receipt). Verification JSON pointers select inside the provider reply. Use decompile_batch for decompilation, inspection and explanation, regardless of saved reconstruction state. Use reconstruction_evidence only for explicitly requested reconstruction work. Direct procedure_pseudo_code, backend annotation and file-switch tools are blocked for every provider. Evidence may be incomplete.",
             &["name"],
             json!({"name":{"type":"string","minLength":1,"maxLength":256},"arguments":{"type":"object"}}),
         ),

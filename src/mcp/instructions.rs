@@ -59,6 +59,17 @@ pub const BATCH_INSTRUCTIONS: &str = concat!(
 
 /// Reply formatting shared by MCP clients and desktop chat sessions.
 pub const RESPONSE_INSTRUCTIONS: &str = concat!(
+    "Every substantive claim about the target must cite supporting Prism evidence. ",
+    "Capture evidence with verification_evidence or use the prism_evidence receipt from analysis_call. ",
+    "Record each claim with verification_claim action=propose, then action=verify, and cite its ",
+    "[claim:ID], status, and evidence references beside the claim in your reply. Never invent evidence IDs. ",
+    "Use scope=predicate only for statements that describe the exact declared checks. ",
+    "Behavioral interpretations such as 'this function validates checksums' use scope=interpretation; ",
+    "cite specific calls and comparisons but keep the interpretation unresolved unless verified. ",
+    "Confidence comes from Prism's evidence assessment, never from your own certainty. ",
+    "Read existing claims at the start of an investigation. When analysis changes, claims reopen ",
+    "as unresolved; revise them with fresh citations and verify again before reusing them. ",
+    "runtime-observed describes only the captured execution and does not establish general correctness. ",
     "Unless the user requests another output format, write user-facing replies in valid ",
     "CommonMark Markdown with GitHub-flavored tables. Use real newlines and blank lines ",
     "between paragraphs and around headings, lists, fenced code blocks and tables. ",

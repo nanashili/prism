@@ -42,6 +42,8 @@ impl State {
                 self.store
                     .recover_types(&context.project, &analyzer, &payload)
             }
+            "verification_claim" => self.verification_claim_tool(&args),
+            "verification_evidence" => self.verification_evidence_tool(&args),
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
             "analysis_repair" => self.analysis_repair(&args),
@@ -92,7 +94,9 @@ impl State {
                         "Use decompile_batch for native decompilation, or reconstruction_evidence for a claimed reconstruction batch",
                     ));
                 }
-                self.analysis_call(name, args.get("arguments").cloned().unwrap_or(json!({})))
+                let arguments = args.get("arguments").cloned().unwrap_or(json!({}));
+                let reply = self.analysis_call(name, arguments.clone())?;
+                self.capture_analysis_reply(name, &arguments, reply)
             }
             _ => Err(failure(format!("Unknown Prism tool: {tool}"))),
         }

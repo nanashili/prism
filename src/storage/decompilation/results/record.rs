@@ -62,6 +62,19 @@ impl Store {
             digest.as_deref(),
             error,
         )?;
+        if let Some(text) = text {
+            let project: String = transaction.query_row(
+                "SELECT project FROM decompilation_jobs WHERE id=?1",
+                [id],
+                |row| row.get(0),
+            )?;
+            crate::storage::verification::observe_pseudocode(
+                &transaction,
+                &project,
+                address,
+                text,
+            )?;
+        }
         update_progress(&transaction, id, previous.as_ref(), status)?;
         advance_cursor(&transaction, id, next_offset, expected_offset)?;
         transaction.commit()?;
