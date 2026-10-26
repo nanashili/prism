@@ -6,6 +6,18 @@ pub(super) fn definitions() -> Vec<Value> {
         super::analysis_repair::definition(),
         super::decompilation::definition(),
         tool(
+            "index_function_search",
+            "Index a page of up to 300 saved native Rust Ghidra functions and their cached/durable evidence; follow next_offset until null. Builds normalized decompiler/CFG structural signatures in Rust. Does not run analysis or decompilation. Refresh after changing evidence or notes. reset=true clears derived search indexes for this binary across configurations. Requires the native Rust Ghidra backend.",
+            &[],
+            json!({"offset":{"type":"integer","minimum":0},"reset":{"type":"boolean"}}),
+        ),
+        tool(
+            "semantic_search",
+            "Find indexed native functions by behavior, e.g. 'parse a binary header' or 'implement an object pool'. Returns ranked evidence, excerpts and reasons. Uses term/synonym retrieval, behavior heuristics and native Rust decompiler/CFG structural similarity, not BSim or trained embeddings. Run index_function_search first. similar_to optionally selects a structural exemplar address. Scores are leads, not verified behavior.",
+            &["query"],
+            json!({"query":{"type":"string","minLength":1,"maxLength":1024},"limit":{"type":"integer","minimum":1,"maximum":100},"similar_to":{"type":"string","minLength":1,"maxLength":64}}),
+        ),
+        tool(
             "list_functions",
             "Read up to 300 indexed functions. Analyze the file first. Offset starts at zero.",
             &[],
