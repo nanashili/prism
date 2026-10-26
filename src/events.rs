@@ -10,6 +10,11 @@ pub(crate) enum Event {
     },
     Progress(String),
     Analysis(Option<AnalysisProgress>),
+    InvestigationChanged {
+        project: String,
+        id: String,
+    },
+    InvestigationCreated(Box<crate::investigation::Graph>),
     Reconstruction {
         project: String,
         status: Box<Value>,

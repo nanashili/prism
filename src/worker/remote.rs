@@ -5,6 +5,24 @@ use serde_json::{Value, json};
 impl State {
     pub(super) fn remote(&mut self, tool: &str, args: Value) -> Result<Value> {
         match tool {
+            "investigation" => {
+                let project = &self
+                    .project
+                    .as_ref()
+                    .ok_or("Open a file first")?
+                    .target
+                    .sha256;
+                let result = crate::investigation::call(&self.store, project, &args)?;
+                if !matches!(args["action"].as_str(), Some("list" | "status"))
+                    && let Some(id) = result["graph"]["id"].as_str()
+                {
+                    self.sink.send(crate::events::Event::InvestigationChanged {
+                        project: project.clone(),
+                        id: id.into(),
+                    })?;
+                }
+                Ok(result)
+            }
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
             "inspect_selection" => self.inspect_selection(&args),

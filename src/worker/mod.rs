@@ -8,6 +8,7 @@ mod execute;
 mod exports;
 mod indexing;
 mod inspection;
+mod investigation;
 mod job;
 mod listing;
 mod open;

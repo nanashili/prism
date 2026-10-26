@@ -3,12 +3,14 @@ use serde_json::{Value, json};
 
 mod analysis;
 mod decompilation;
+mod investigation;
 mod reconstruction;
 mod reconstruction_modules;
 mod window;
 
 pub fn definitions(mode: Mode) -> Value {
     let mut tools = Vec::new();
+    tools.push(investigation::definition());
     if matches!(mode, Mode::Combined | Mode::Window) {
         tools.extend(window::definitions());
         tools.push(super::question::definition());
