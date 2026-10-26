@@ -150,6 +150,11 @@ Cargo's target directory can be overridden locally, so adjust that path if neede
 
 Tools include project opening and state, function navigation, local annotations, function inventories, bounded byte reads, analysis discovery, durable decompilation, and reconstruction. Tokens are kept out of client command lines. The bridge is a local integration boundary, not a sandbox for independent MCP clients or agents.
 
+Agents can capture immutable analysis evidence and record claims with `verification_evidence`
+and `verification_claim`. Prism computes claim statuses and evidence strength, keeps revision
+history, and reopens claims when supporting analysis changes. See [evidence-backed claims](docs/VERIFICATION.md)
+for predicate checks, runtime observations, and semantic-verification limits.
+
 ## Architecture
 
 ```mermaid

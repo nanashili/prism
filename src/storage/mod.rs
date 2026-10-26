@@ -10,6 +10,7 @@ pub(crate) use chat_models::ChatModels;
 mod database;
 mod database_migrations;
 mod functions;
+pub(crate) mod verification;
 pub(crate) use functions::FunctionImport;
 mod history;
 mod message_page;

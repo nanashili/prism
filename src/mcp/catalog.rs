@@ -5,10 +5,12 @@ mod analysis;
 mod decompilation;
 mod reconstruction;
 mod reconstruction_modules;
+mod verification;
 mod window;
 
 pub fn definitions(mode: Mode) -> Value {
     let mut tools = Vec::new();
+    tools.extend(verification::definitions());
     if matches!(mode, Mode::Combined | Mode::Window) {
         tools.extend(window::definitions());
         tools.push(super::question::definition());

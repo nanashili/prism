@@ -98,6 +98,7 @@ impl State {
         self.settings = settings;
         if let Some(context) = context {
             self.runtime.set_context(context)?;
+            self.sync_verification_context()?;
         }
         Ok("Settings applied".into())
     }

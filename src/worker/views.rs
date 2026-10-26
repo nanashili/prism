@@ -19,13 +19,7 @@ impl State {
                 Ok("Comparison complete".into())
             }
             ViewJob::Debug(action) => {
-                let text = crate::debug::execute(
-                    &mut self.debugger,
-                    action,
-                    &self.settings,
-                    self.cancelled.clone(),
-                    self.sink.clone(),
-                )?;
+                let text = self.execute_verified_debug(action)?;
                 self.send_view(request, View::Debug, text)?;
                 Ok(String::new())
             }
@@ -45,7 +39,11 @@ impl State {
             self.decompile_tool_address(address)?
         } else {
             Self::reject_direct_decompilation_tool(name)?;
-            let result = self.engine()?.normalized(name, args)?;
+            let mut reply = self.analysis_call(name, args)?;
+            let result = reply
+                .get_mut("normalized_result")
+                .map(serde_json::Value::take)
+                .unwrap_or(reply);
             serde_json::to_string_pretty(&result)?
         };
 

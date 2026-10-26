@@ -20,6 +20,7 @@ mod runtime;
 mod scheduling;
 mod sidebar;
 mod thread;
+mod verification;
 mod views;
 
 pub(crate) use crate::decompilation::ExportRunner;
