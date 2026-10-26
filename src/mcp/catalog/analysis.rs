@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 pub(super) fn definitions() -> Vec<Value> {
     vec![
         super::decompilation::definition(),
+        super::execution::definition(),
         tool(
             "index_function_search",
             "Index a page of up to 300 saved native Rust Ghidra functions and their cached/durable evidence; follow next_offset until null. Builds normalized decompiler/CFG structural signatures in Rust. Does not run analysis or decompilation. Refresh after changing evidence or notes. reset=true clears derived search indexes for this binary across configurations. Requires the native Rust Ghidra backend.",

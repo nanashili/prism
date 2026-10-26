@@ -102,6 +102,7 @@ impl Store {
         migrate_draft_attachments(&db)?;
         super::chat_models::migrate(&db)?;
         super::function_search::initialize(&db)?;
+        super::execution::migrate(&db)?;
         let cache = super::cache::open(&path.with_extension("views.db"))?;
         Ok(Self { db, cache })
     }

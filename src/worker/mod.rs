@@ -5,6 +5,7 @@ mod decompilation_run;
 mod decompile_batch;
 mod durable_decompilation;
 mod execute;
+mod execution;
 mod exports;
 mod function_search;
 mod indexing;
