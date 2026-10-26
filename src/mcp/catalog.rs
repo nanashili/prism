@@ -3,6 +3,7 @@ use serde_json::{Value, json};
 
 mod analysis;
 mod decompilation;
+mod execution;
 mod reconstruction;
 mod reconstruction_modules;
 mod window;

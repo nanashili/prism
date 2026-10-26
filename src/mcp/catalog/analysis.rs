@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 pub(super) fn definitions() -> Vec<Value> {
     vec![
         super::decompilation::definition(),
+        super::execution::definition(),
         tool(
             "list_functions",
             "Read up to 300 indexed functions. Analyze the file first. Offset starts at zero.",

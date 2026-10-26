@@ -152,7 +152,7 @@ impl State {
             ));
         }
 
-        let text = match view {
+        let mut text = match view {
             View::Assembly if address.is_empty() && target.kind != "android" => {
                 self.whole_listing(offset)?
             }
@@ -208,6 +208,13 @@ impl State {
                 }
             },
         };
+        // Persist only static graphs and reapply current evidence after every cache read.
+        if view == View::Graph {
+            let mut graph: crate::analysis::graph::Graph = serde_json::from_str(&text)?;
+            let traces = self.store.execution_traces(&target.sha256)?;
+            graph.annotate(&traces);
+            text = serde_json::to_string(&graph)?;
+        }
         Ok(text)
     }
 }

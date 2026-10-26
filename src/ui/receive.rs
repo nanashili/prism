@@ -34,6 +34,11 @@ impl Prism {
                 self.status = text;
             }
             Event::Analysis(progress) => self.analysis = progress,
+            Event::ExecutionEvidenceChanged(project) => {
+                if let Err(error) = self.refresh_execution_evidence(&project) {
+                    self.report_error(error);
+                }
+            }
             Event::Reconstruction {
                 project,
                 status,
@@ -42,6 +47,7 @@ impl Prism {
                 self.receive_reconstruction(&project, *status, start_agent);
             }
             Event::Opened(project, document) => {
+                self.debug.isolated = false;
                 self.reconstruction = Default::default();
                 self.reconstruction_root = None;
                 self.restore_document_chat(&project, document);
