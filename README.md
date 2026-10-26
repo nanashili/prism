@@ -66,7 +66,7 @@ The output is a proposed implementation for review. Decompiled text, generated s
 | Project browser | Paged function trees, grouping and filters, imports, segments, macOS app resources | Specialized resource previews and Android resource browsing are incomplete |
 | Conversations | ACP sessions, streamed Markdown, tool activity, project chats, attachments, queued prompts, advertised model controls | Adapter capabilities vary; presence in the registry does not establish working authentication |
 | Local projects | `.prism` archives, binary integrity checks, annotations, chat history, SQLite storage | This standalone format and profile replace earlier development identities; no automatic old-profile conversion is provided |
-| Patches and comparison | File-offset patch export to a copy, changed-block comparison | No general function-matching binary diff or automatic patch-correctness proof |
+| Patches and comparison | File-offset patch export; [cross-version function matching](docs/CROSS_VERSION.md), reviewed label/note/bookmark transfer | Heuristic matches need review; no semantic-equivalence or patch-correctness proof |
 | Android | jadx method inventory and Java source integration | Split packages, SMALI, JNI, and resource workflows are incomplete; live coverage is limited |
 | Debugging | LLDB DAP launch/attach, breakpoints, stepping, threads, stack, evaluation commands | End-to-end sessions and stopped-event presentation still need validation |
 | Reconstruction | Persistent generations, dependency and interface tracking, batch work, evidence, source snapshots, builds, reports | No automatic behavioral equivalence proof or guaranteed complete resource recovery |

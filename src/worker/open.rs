@@ -31,6 +31,7 @@ impl State {
         self.sink.send(Event::Functions { rows, offset: 0 })?;
         let kind = project.target.kind.clone();
         self.project = Some(project);
+        self.comparison = None;
         self.runtime.set_context(context)?;
 
         match kind.as_str() {
@@ -47,7 +48,7 @@ impl State {
         }
     }
 
-    fn read_project(&self, path: &Path, document: bool) -> Result<Project> {
+    pub(super) fn read_project(&self, path: &Path, document: bool) -> Result<Project> {
         if document {
             let mut protected = vec![path];
             if let Some(project) = &self.project {

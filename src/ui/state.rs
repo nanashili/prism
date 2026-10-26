@@ -5,6 +5,8 @@ use std::sync::mpsc::SyncSender;
 #[derive(Default)]
 pub(super) struct Workspace {
     pub project: Option<Project>,
+    pub comparison: Option<std::sync::Arc<crate::comparison::Report>>,
+    pub reviewed_matches: Vec<crate::comparison::Selection>,
     pub agent_closed: bool,
     pub split: bool,
     pub split_fraction: Option<f32>,

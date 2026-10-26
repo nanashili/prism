@@ -1,6 +1,8 @@
 mod agent;
 mod analysis;
 mod bridge;
+mod cleanup;
+mod comparison;
 mod debug;
 mod decompilation;
 mod error;

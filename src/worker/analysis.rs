@@ -12,6 +12,13 @@ mod batch;
 mod view;
 
 impl State {
+    pub(super) fn close_engine(&mut self) -> Result<()> {
+        if let Some(engine) = self.engine.take() {
+            engine.close()?;
+        }
+        Ok(())
+    }
+
     pub(super) fn discard_unusable_engine(&mut self) {
         if self
             .engine

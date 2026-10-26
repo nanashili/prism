@@ -106,3 +106,5 @@ mod workspace_settings;
 mod skill_libraries;
 
 mod skill_browser;
+
+mod comparison;

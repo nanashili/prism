@@ -1,8 +1,7 @@
 use super::{State, ViewJob};
-use crate::error::{Result, failure};
+use crate::error::Result;
 use crate::events::Event;
 use crate::model::View;
-use crate::project::files;
 
 impl State {
     pub(super) fn execute_view(&mut self, request: u64, job: ViewJob) -> Result<String> {
@@ -14,7 +13,12 @@ impl State {
             } => self.content(view, address, offset, Some(request)),
             ViewJob::Tool { name, args } => self.execute_tool_view(request, &name, args),
             ViewJob::Diff(path) => {
-                let text = self.diff(&path)?;
+                self.compare_path(&path)?;
+                let text = super::comparison::text_report(
+                    self.comparison
+                        .as_ref()
+                        .ok_or("Missing comparison report")?,
+                )?;
                 self.send_view(request, View::Diff, text)?;
                 Ok("Comparison complete".into())
             }
@@ -69,39 +73,5 @@ impl State {
             address: String::new(),
             text,
         })
-    }
-
-    fn diff(&self, path: &std::path::Path) -> Result<String> {
-        use std::fmt::Write;
-        use std::io::Read;
-        let project = self.project.as_ref().ok_or("Open a file first")?;
-        let mut left = std::fs::File::open(&project.target.path)?;
-        let mut right = std::fs::File::open(path)?;
-        let mut before = [0u8; 4096];
-        let mut after = [0u8; 4096];
-        let mut report = format!(
-            "Byte changes against {}\nOffsets are file offsets.\n\n",
-            path.display()
-        );
-        let mut offset = 0;
-        loop {
-            if self.cancelled.load(std::sync::atomic::Ordering::Relaxed) {
-                return Err(failure("Cancelled"));
-            }
-            let a = left.read(&mut before)?;
-            let b = right.read(&mut after)?;
-            if a == 0 && b == 0 {
-                break;
-            }
-            if before[..a] != after[..b] {
-                writeln!(report, "0x{offset:012x}: changed block ({a} / {b} bytes)")?;
-            }
-            offset += 4096;
-            if report.len() > files::TEXT_LIMIT {
-                report.push_str("\nDisplay limit reached\n");
-                break;
-            }
-        }
-        Ok(report)
     }
 }

@@ -15,6 +15,7 @@ pub(crate) enum Event {
         status: Box<Value>,
         start_agent: bool,
     },
+    Comparison(std::sync::Arc<crate::comparison::Report>),
     Opened(Box<Project>, bool),
     Functions {
         rows: Vec<Procedure>,

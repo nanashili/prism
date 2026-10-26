@@ -1,29 +1,41 @@
-use super::{Rea, reply};
-use crate::error::{Result, failure};
+use super::Rea;
+#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+use super::reply;
+use crate::error::Result;
+#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+use crate::error::failure;
+#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 use crate::settings::AnalysisBackend;
+#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 use serde_json::{Value, json};
+#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 use std::time::{Duration, Instant};
 
+#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 const CLOSE_TIMEOUT: Duration = Duration::from_secs(2);
 
-impl Drop for Rea {
-    fn drop(&mut self) {
-        if self.backend != AnalysisBackend::RustGhidraRea
-            || !self.healthy
-            || !self.rpc.is_reusable()
-            || self.active_batch.is_some()
-            || self.abandoned.is_some()
-        {
-            return;
-        }
-
-        if let Err(error) = self.close_idle_session() {
-            eprintln!("Cannot finish closing the Rust REA session: {error}");
-        }
-    }
-}
-
 impl Rea {
+    pub(in crate::analysis) fn close(self) -> Result<()> {
+        let mut session = self;
+
+        #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
+        let result = if session.backend == AnalysisBackend::RustGhidraRea
+            && session.healthy
+            && session.rpc.is_reusable()
+            && session.active_batch.is_none()
+            && session.abandoned.is_none()
+        {
+            session.close_idle_session()
+        } else {
+            Ok(())
+        };
+        #[cfg(not(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra")))]
+        let result = Ok(());
+
+        crate::cleanup::finish(result, session.rpc.close(), "REA process cleanup")
+    }
+
+    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
     fn close_idle_session(&mut self) -> Result<()> {
         let started = Instant::now();
         let id = self
@@ -39,6 +51,7 @@ impl Rea {
         Ok(())
     }
 
+    #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
     fn wait_for_close(&mut self, id: u64, started: Instant) -> Result<Value> {
         // Attempt cleanup even when a caller cancelled the last operation.
         // Poll directly to retain that flag and bound acknowledgement waiting.

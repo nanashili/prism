@@ -5,6 +5,8 @@ use serde_json::{Value, json};
 impl State {
     pub(super) fn remote(&mut self, tool: &str, args: Value) -> Result<Value> {
         match tool {
+            "compare_versions" => self.compare_versions(&args),
+            "version_matches" => self.version_matches(&args),
             name if name.starts_with("reconstruction_") => self.reconstruct(name, &args),
             "decompile_batch" => self.decompile_batch(&args),
             "inspect_selection" => self.inspect_selection(&args),

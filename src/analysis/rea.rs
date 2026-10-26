@@ -27,7 +27,6 @@ mod launch;
 mod reply;
 mod rust_package;
 mod rust_runtime;
-#[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]
 mod shutdown;
 
 #[cfg(any(feature = "prism-ghidra-rea", feature = "rea-rust-ghidra"))]

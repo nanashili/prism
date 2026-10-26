@@ -37,6 +37,7 @@ pub fn window_tool(name: &str) -> bool {
             | "open_function"
             | "set_view"
             | "show_screen"
+            | "transfer_version_annotations"
             | "rename_function"
             | "add_note"
             | "bookmark"

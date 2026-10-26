@@ -23,6 +23,13 @@ enum Backend {
 }
 
 impl Engine {
+    pub fn close(self) -> Result<()> {
+        match self.backend {
+            Backend::Rea(engine) => engine.close(),
+            Backend::Rizin(engine) => engine.close(),
+        }
+    }
+
     pub fn open(
         settings: &Settings,
         path: &Path,

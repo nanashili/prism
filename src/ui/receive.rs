@@ -41,6 +41,17 @@ impl Prism {
             } => {
                 self.receive_reconstruction(&project, *status, start_agent);
             }
+            Event::Comparison(report) => {
+                if self
+                    .workspace
+                    .project
+                    .as_ref()
+                    .is_some_and(|project| project.target.sha256 == report.target_sha256)
+                {
+                    self.workspace.comparison = Some(report);
+                    self.workspace.reviewed_matches.clear();
+                }
+            }
             Event::Opened(project, document) => {
                 self.reconstruction = Default::default();
                 self.reconstruction_root = None;

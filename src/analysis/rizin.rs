@@ -14,6 +14,10 @@ pub(super) struct Rizin {
 }
 
 impl Rizin {
+    pub fn close(mut self) -> Result<()> {
+        self.rpc.close()
+    }
+
     pub fn is_reusable(&self) -> bool {
         self.rpc.is_reusable()
     }

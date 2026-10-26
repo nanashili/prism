@@ -3,6 +3,11 @@ use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+mod reaper;
+use reaper::Reaper;
+mod managed;
+pub(crate) use managed::Managed;
+
 pub(crate) fn prepare(command: &mut Command) {
     if let Ok(path) = std::env::join_paths(crate::executable_paths::search_path()) {
         command.env("PATH", path);
@@ -142,4 +147,20 @@ pub(super) fn read_capped(mut reader: impl std::io::Read, limit: usize) -> Resul
         text.push_str("\n[Output truncated to its display limit]\n");
     }
     Ok(text)
+}
+
+/// Request termination without waiting for the process or its output readers.
+#[cfg(unix)]
+pub(crate) fn signal(child: &mut Child) -> Result<()> {
+    let group = i32::try_from(child.id())?;
+    // SAFETY: kill accepts this integer process-group ID and signal without any pointers.
+    // The child was started as a new group; the negative pid addresses only that group.
+    let result = unsafe { libc::kill(-group, libc::SIGKILL) };
+    if result != 0 {
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() != Some(libc::ESRCH) {
+            return Err(error.into());
+        }
+    }
+    Ok(())
 }
